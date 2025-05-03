@@ -57,11 +57,23 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
 
     // Orders
-    Route::resource('orders', AdminOrderController::class)->except(['store', 'create', 'edit']);
-    Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
+    Route::resource('orders', AdminOrderController::class)->names([
+       'index' => 'admin.delivery-options.index',
+        'show' => 'admin.delivery-options.show',
+        'edit' => 'admin.delivery-options.edit',
+        'update' => 'admin.delivery-options.update',
+    ]);
+    Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update-status');
 
     // Coupons
-    Route::resource('coupons', AdminCouponController::class)->except(['create', 'edit']);
+    Route::resource('coupons', AdminCouponController::class)->names([
+        'index' => 'admin.coupons.index',
+        'create' => 'admin.coupons.create',
+        'store' => 'admin.coupons.store',
+        'edit' => 'admin.coupons.edit',
+        'update' => 'admin.coupons.update',
+        'destroy' => 'admin.coupons.destroy'
+    ]);
 
     // Delivery Options
     Route::resource('delivery-options', AdminDeliveryOptionController::class)->names([

@@ -1,96 +1,76 @@
 <?php
 
+// app/Http/Controllers/Admin/CouponController.php
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AdminCouponController extends Controller
 {
     public function index()
     {
-        $coupons = Coupon::all();
+        $coupons = Coupon::latest()->paginate(10);
+        return view('admin.pages.coupons.index', compact('coupons'));
+    }
 
-        return response()->json([
-            'success' => true,
-            'data' => $coupons
-        ]);
+    public function create()
+    {
+        return view('admin.pages.coupons.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'code' => 'required|string|unique:coupons,code',
+        $validated = $request->validate([
+            'code' => 'nullable|string|unique:coupons,code',
             'amount' => 'required|numeric|min:0',
-            'type' => 'required|string|in:fixed,percentage',
+            'type' => 'required|in:fixed,percentage',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'min_purchase' => 'required|numeric|min:0',
-            'is_active' => 'nullable|boolean',
+            'is_active' => 'boolean',
         ]);
 
-        $coupon = Coupon::create([
-            'code' => strtoupper($request->code),
-            'amount' => $request->amount,
-            'type' => $request->type,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'min_purchase' => $request->min_purchase,
-            'is_active' => $request->is_active ?? true,
-        ]);
+        // Generate random code if not provided
+        if (empty($validated['code'])) {
+            $validated['code'] = Str::upper(Str::random(8));
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Coupon created successfully',
-            'data' => $coupon
-        ], 201);
+        Coupon::create($validated);
+
+        return redirect()->route('admin.coupons.index')
+            ->with('success', 'Coupon created successfully');
     }
 
-    public function show(Coupon $coupon)
+    public function edit(Coupon $coupon)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $coupon
-        ]);
+        return view('admin.pages.coupons.edit', compact('coupon'));
     }
 
     public function update(Request $request, Coupon $coupon)
     {
-        $request->validate([
-            'code' => 'required|string|unique:coupons,code,' . $coupon->id,
+        $validated = $request->validate([
+            'code' => 'required|string|unique:coupons,code,'.$coupon->id,
             'amount' => 'required|numeric|min:0',
-            'type' => 'required|string|in:fixed,percentage',
+            'type' => 'required|in:fixed,percentage',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'min_purchase' => 'required|numeric|min:0',
-            'is_active' => 'nullable|boolean',
+            'is_active' => 'boolean',
         ]);
 
-        $coupon->update([
-            'code' => strtoupper($request->code),
-            'amount' => $request->amount,
-            'type' => $request->type,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'min_purchase' => $request->min_purchase,
-            'is_active' => $request->is_active ?? $coupon->is_active,
-        ]);
+        $coupon->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Coupon updated successfully',
-            'data' => $coupon
-        ]);
+        return redirect()->route('admin.coupons.index')
+            ->with('success', 'Coupon updated successfully');
     }
 
     public function destroy(Coupon $coupon)
     {
         $coupon->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Coupon deleted successfully'
-        ]);
+        return redirect()->route('admin.coupons.index')
+            ->with('success', 'Coupon deleted successfully');
     }
 }
