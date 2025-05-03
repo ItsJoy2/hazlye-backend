@@ -10,71 +10,53 @@ class AdminDeliveryOptionController extends Controller
 {
     public function index()
     {
-        $deliveryOptions = DeliveryOption::all();
+        $deliveryOptions = DeliveryOption::paginate(10);
+        return view('admin.pages.delivery-options.index', compact('deliveryOptions'));
+    }
 
-        return response()->json([
-            'success' => true,
-            'data' => $deliveryOptions
-        ]);
+    public function create()
+    {
+        return view('admin.pages.delivery-options.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'charge' => 'required|numeric|min:0',
-            'is_active' => 'nullable|boolean',
+            'is_active' => 'boolean'
         ]);
 
-        $deliveryOption = DeliveryOption::create([
-            'name' => $request->name,
-            'charge' => $request->charge,
-            'is_active' => $request->is_active ?? true,
-        ]);
+        DeliveryOption::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Delivery option created successfully',
-            'data' => $deliveryOption
-        ], 201);
+        return redirect()->route('admin.delivery-options.index')
+            ->with('success', 'Delivery option created successfully.');
     }
 
-    public function show(DeliveryOption $deliveryOption)
+    public function edit(DeliveryOption $deliveryOption)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $deliveryOption
-        ]);
+        return view('admin.pages.delivery-options.edit', compact('deliveryOption'));
     }
 
     public function update(Request $request, DeliveryOption $deliveryOption)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'charge' => 'required|numeric|min:0',
-            'is_active' => 'nullable|boolean',
+            'is_active' => 'boolean'
         ]);
 
-        $deliveryOption->update([
-            'name' => $request->name,
-            'charge' => $request->charge,
-            'is_active' => $request->is_active ?? $deliveryOption->is_active,
-        ]);
+        $deliveryOption->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Delivery option updated successfully',
-            'data' => $deliveryOption
-        ]);
+        return redirect()->route('admin.delivery-options.index')
+            ->with('success', 'Delivery option updated successfully.');
     }
 
     public function destroy(DeliveryOption $deliveryOption)
     {
         $deliveryOption->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Delivery option deleted successfully'
-        ]);
+        return redirect()->route('admin.delivery-options.index')
+            ->with('success', 'Delivery option deleted successfully.');
     }
 }

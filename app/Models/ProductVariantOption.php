@@ -25,4 +25,8 @@ class ProductVariantOption extends Model
     {
         return $this->belongsTo(Size::class);
     }
+    public function variants()
+{
+    return $this->hasMany(ProductVariant::class);
+}
 }

@@ -23,6 +23,7 @@ class Order extends Model
         'comment',
     ];
 
+    
     protected $casts = [
         'subtotal' => 'decimal:2',
         'delivery_charge' => 'decimal:2',

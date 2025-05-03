@@ -24,7 +24,7 @@ use App\Http\Controllers\API\SearchController;
 // Public routes
 // Route::post('/register', [AuthController::class, 'register']);
 // Route::post('/login', [AuthController::class, 'login']);
-
+Route::middleware(['throttle:20,1'])->group(function () {
 // Categories
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
@@ -48,8 +48,8 @@ Route::delete('/cart/{session_id}/items/{item_id}', [CartController::class, 'rem
 
 // Checkout
 Route::post('/orders', [OrderController::class, 'store']);
-Route::get('/{order}', [OrderController::class, 'show']);
-    Route::get('/user/{user}', [OrderController::class, 'userOrders']);
+Route::get('/orders', [OrderController::class, 'index']);
+Route::get('/orders/{order}', [OrderController::class, 'show']);
 
 // Coupons
 Route::post('/coupons/validate', [CouponController::class, 'validate']);
@@ -66,8 +66,5 @@ Route::get('/colors', [ColorController::class, 'index']);
 
 // Sizes
 Route::get('/sizes', [SizeController::class, 'index']);
-
-// Admin routes (protected)
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 });

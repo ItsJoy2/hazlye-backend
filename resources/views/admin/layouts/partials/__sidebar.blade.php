@@ -158,6 +158,27 @@
 							</div>
 						</li>
                         <li class="nav-item">
+							<a data-bs-toggle="collapse" href="#delivery-options">
+								<i class="far fa-money-bill-alt"></i>
+								<p>Delivery Options</p>
+								<span class="caret"></span>
+							</a>
+							<div class="collapse" id="delivery-options">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a href="{{route('admin.delivery-options.index')}}">
+											<span class="sub-item">All Options</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{route('admin.delivery-options.create')}}">
+											<span class="sub-item">Add Delivery Options</span>
+										</a>
+									</li>
+								</ul>
+							</div>
+						</li>
+                        <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#settings">
 								<i class="fas fa-cog"></i>
 								<p>Settings</p>

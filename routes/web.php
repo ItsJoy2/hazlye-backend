@@ -64,7 +64,15 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::resource('coupons', AdminCouponController::class)->except(['create', 'edit']);
 
     // Delivery Options
-    Route::resource('delivery-options', AdminDeliveryOptionController::class)->except(['create', 'edit']);
+    Route::resource('delivery-options', AdminDeliveryOptionController::class)->names([
+        'index' => 'admin.delivery-options.index',
+        'create' => 'admin.delivery-options.create',
+        'store' => 'admin.delivery-options.store',
+        'show' => 'admin.delivery-options.show',
+        'edit' => 'admin.delivery-options.edit',
+        'update' => 'admin.delivery-options.update',
+        'destroy' => 'admin.delivery-options.destroy'
+    ]);
 
     // Colors
     Route::resource('colors', AdminColorController::class)->names([
@@ -76,7 +84,6 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'update' => 'admin.colors.update',
         'destroy' => 'admin.colors.destroy'
     ]);
-;
 
     // Sizes
     Route::resource('sizes', AdminSizeController::class)->names([
