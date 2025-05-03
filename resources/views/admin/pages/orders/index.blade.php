@@ -4,12 +4,7 @@
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Colors Management</h3>
-            <div class="card-tools">
-                <a href="{{ route('admin.colors.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> Add New Color
-                </a>
-            </div>
+            <h3 class="card-title">All Orders</h3>
         </div>
         <div class="card-body">
             @include('admin.layouts.partials.__alerts')
@@ -17,31 +12,35 @@
             <table class="table table-striped table-hover table-head-bg-primary mt-4">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Color Code</th>
-                        <th>Preview</th>
-                        <th>Products</th>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($colors as $index=> $color)
+                    @forelse($orders  as $index=> $order )
                     <tr>
                         <td>{{ $index + 1}}</td>
-                        <td>{{ $color->name }}</td>
-                        <td>{{ $color->code }}</td>
+                        <td>{{ $order->name }}</td>
+                        <td>{{ $order->phone }}</td>
+                        <td>{{ $order->created_at->format('M d, Y') }}</td>
+                        <td>${{ number_format($order->total, 2) }}</td>
                         <td>
-                            <span class="color-preview" style="background-color: {{ $color->code }}"></span>
+                            <span class="badge badge-{{ $order->status == 'completed' ? 'success' : ($order->status == 'cancelled' ? 'danger' : 'warning') }}">
+                                {{ ucfirst($order->status) }}
+                            </span>
                         </td>
-                        <td>{{ $color->products()->count() }}</td>
                         <td>
-                           @include('admin.pages.colors.partials.__actions')
+                            @include('admin.pages.orders.partials.__actions')
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center">No colors found</td>
+                        <td colspan="6" class="text-center">No Order found</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -49,7 +48,7 @@
         </div>
         <div class="card-footer clearfix">
             <div class="mt-4">
-                {{ $colors->links('admin.layouts.partials.__pagination') }}
+                {{ $orders->links('admin.layouts.partials.__pagination') }}
             </div>
         </div>
     </div>

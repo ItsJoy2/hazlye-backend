@@ -58,10 +58,10 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
     // Orders
     Route::resource('orders', AdminOrderController::class)->names([
-       'index' => 'admin.delivery-options.index',
-        'show' => 'admin.delivery-options.show',
-        'edit' => 'admin.delivery-options.edit',
-        'update' => 'admin.delivery-options.update',
+       'index' => 'admin.orders.index',
+        'show' => 'admin.orders.show',
+        'edit' => 'admin.orders.edit',
+        'update' => 'admin.orders.update',
     ]);
     Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update-status');
 

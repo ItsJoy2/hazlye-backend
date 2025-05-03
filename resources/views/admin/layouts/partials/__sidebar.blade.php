@@ -36,41 +36,61 @@
 							</a>
 						</li>
                         <li class="nav-item">
-							<a  href="">
+							<a  data-bs-toggle="collapse" href="#orders">
 								<i class="fas fa-users"></i>
-								<p>Users</p>
-								{{-- <span class="caret"></span> --}}
+								<p>Orders</p>
+								<span class="caret"></span>
 							</a>
-							{{-- <div class="collapse" id="users">
+							<div class="collapse" id="orders">
 								<ul class="nav nav-collapse">
 									<li>
-										<a href="{{route('admin.users.index')}}">
-											<span class="sub-item">All Users</span>
+										<a href="{{route('admin.orders.index')}}">
+											<span class="sub-item">All Orders</span>
 										</a>
 									</li>
-									<li>
-										<a href="{{route('admin.users.active')}}">
-											<span class="sub-item">Active Users</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.users.inactive')}}">
-											<span class="sub-item">Inactive Users</span>
-										</a>
-									</li>
-                                    <li>
-										<a href="{{route('admin.users.block')}}">
-											<span class="sub-item">Block Users</span>
-										</a>
-									</li>
-                                    <li>
-										<a href="{{route('admin.wallet.block')}}">
-											<span class="sub-item">Wallet Block Users</span>
-										</a>
-									</li>
+									<li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="nav-link">
+                                            <span class="sub-item">Pending Orders</span>
+                                            <span class="badge badge-warning float-right">
+                                                {{ App\Models\Order::where('status', 'pending')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'processing']) }}" class="nav-link">
+                                            <span class="sub-item">Processing Orders</span>
+                                            <span class="badge badge-info float-right">
+                                                {{ App\Models\Order::where('status', 'processing')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'shipped']) }}" class="nav-link">
+                                            <span class="sub-item">Shipped Orders</span>
+                                            <span class="badge badge-primary float-right">
+                                                {{ App\Models\Order::where('status', 'shipped')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'completed']) }}" class="nav-link">
+                                            <span class="sub-item">Completed Orders</span>
+                                            <span class="badge badge-success float-right">
+                                                {{ App\Models\Order::where('status', 'completed')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" class="nav-link">
+                                            <span class="sub-item">Cancelled Orders</span>
+                                            <span class="badge badge-danger float-right">
+                                                {{ App\Models\Order::where('status', 'cancelled')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
 
 								</ul>
-							</div> --}}
+							</div>
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#categories">

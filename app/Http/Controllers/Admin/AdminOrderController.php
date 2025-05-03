@@ -14,16 +14,21 @@ class AdminOrderController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.orders.index', compact('orders'));
+        return view('admin.pages.orders.index', compact('orders'));
     }
 
+    public function edit(Order $order)
+    {
+        $order->load(['items.product', 'coupon']);
+
+        return view('admin.pages.orders.edit', compact('order'));
+    }
     public function show(Order $order)
     {
         $order->load(['items.product', 'coupon']);
 
-        return view('admin.orders.show', compact('order'));
+        return view('admin.pages.orders.show', compact('order'));
     }
-
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
