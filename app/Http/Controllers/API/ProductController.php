@@ -15,6 +15,9 @@ class ProductController extends Controller
             ->latest()
             ->paginate(12);
 
+        // Add full URL to all images
+        $this->addFullImageUrls($products);
+
         return response()->json([
             'success' => true,
             'data' => $products
@@ -31,6 +34,24 @@ class ProductController extends Controller
                 $query->withCount('options');
             }
         ]);
+
+        // Add full URL to all images
+        if ($product->main_image) {
+            $product->main_image = $this->getFullImageUrl($product->main_image);
+        }
+
+        if ($product->category && $product->category->image) {
+            $product->category->image = $this->getFullImageUrl($product->category->image);
+        }
+
+        if ($product->variants) {
+            $product->variants->transform(function ($variant) {
+                if ($variant->image) {
+                    $variant->image = $this->getFullImageUrl($variant->image);
+                }
+                return $variant;
+            });
+        }
 
         // Calculate inventory summary
         $inventorySummary = [
@@ -61,6 +82,28 @@ class ProductController extends Controller
             ->take(8)
             ->get();
 
+        // Add full URL to all images
+        $products->transform(function ($product) {
+            if ($product->main_image) {
+                $product->main_image = $this->getFullImageUrl($product->main_image);
+            }
+
+            if ($product->category && $product->category->image) {
+                $product->category->image = $this->getFullImageUrl($product->category->image);
+            }
+
+            if ($product->variants) {
+                $product->variants->transform(function ($variant) {
+                    if ($variant->image) {
+                        $variant->image = $this->getFullImageUrl($variant->image);
+                    }
+                    return $variant;
+                });
+            }
+
+            return $product;
+        });
+
         return response()->json([
             'success' => true,
             'data' => $products
@@ -74,12 +117,44 @@ class ProductController extends Controller
             ->latest()
             ->paginate(12);
 
+        // Add full URL to all images
+        $this->addFullImageUrls($products);
+
         return response()->json([
             'success' => true,
             'data' => [
-                'category' => $category,
+                'category' => $category->image ? $category->only(['id', 'name', 'slug', 'image']) : $category->only(['id', 'name', 'slug']),
                 'products' => $products
             ]
         ]);
+    }
+
+    protected function getFullImageUrl($path)
+    {
+        return $path ? url('storage/' . $path) : null;
+    }
+
+    protected function addFullImageUrls($products)
+    {
+        $products->getCollection()->transform(function ($product) {
+            if ($product->main_image) {
+                $product->main_image = $this->getFullImageUrl($product->main_image);
+            }
+
+            if ($product->category && $product->category->image) {
+                $product->category->image = $this->getFullImageUrl($product->category->image);
+            }
+
+            if ($product->variants) {
+                $product->variants->transform(function ($variant) {
+                    if ($variant->image) {
+                        $variant->image = $this->getFullImageUrl($variant->image);
+                    }
+                    return $variant;
+                });
+            }
+
+            return $product;
+        });
     }
 }
