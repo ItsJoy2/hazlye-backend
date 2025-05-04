@@ -11,19 +11,26 @@ class Review extends Model
 
     protected $fillable = [
         'product_id',
-        'name',
+        'user_id',
+        'guest_name',
+        'guest_email',
         'rating',
         'comment',
-        'is_approved',
-    ];
-
-    protected $casts = [
-        'rating' => 'integer',
-        'is_approved' => 'boolean',
+        'is_approved'
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function images()
+{
+    return $this->hasMany(ReviewImage::class);
+}
+
 }

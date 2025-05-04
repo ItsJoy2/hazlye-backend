@@ -17,6 +17,7 @@ class Product extends Model
         'regular_price',
         'category_id',
         'main_image',
+        'main_image_2',
         'featured',
     ];
 
@@ -36,8 +37,19 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function getMainImageAttribute()
+    public function getImageUrlAttribute()
     {
-        return $this->variants->first()->image ?? null;
+        if ($this->main_image) {
+            return asset('storage/'.$this->main_image);
+        }
+        return null;
     }
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+    public function approvedReviews()
+{
+    return $this->reviews()->where('approved', true); 
+}
 }

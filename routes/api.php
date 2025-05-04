@@ -28,7 +28,8 @@ Route::middleware(['throttle:20,1'])->group(function () {
 // Categories
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
-Route::get('/categories/{category}/products', [CategoryController::class, 'products']);
+Route::get('/categories/{category:slug}/products', [ProductController::class, 'byCategory']);
+
 
 // Products
 Route::get('/products', [ProductController::class, 'index']);
@@ -56,7 +57,7 @@ Route::post('/coupons/validate', [CouponController::class, 'validate']);
 
 // Reviews
 Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
-Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+Route::post('/products/{product:slug}/reviews', [ReviewController::class, 'store']);
 
 // Delivery Options
 Route::get('/delivery-options', [DeliveryOptionController::class, 'index']);

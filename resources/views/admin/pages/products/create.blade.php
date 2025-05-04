@@ -44,7 +44,16 @@
                             <label for="main_image">Main Product Image</label>
                             <input type="file" name="main_image" id="main_image" class="form-control-file" required>
                         </div>
-
+                        <div class="form-group">
+                            <label for="main_image_2">Secondary Product Image (Optional)</label>
+                            <input type="file" name="main_image_2" id="main_image_2" class="form-control-file">
+                            @if(isset($product) && $product->main_image_2)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/'.$product->main_image_2) }}" width="100">
+                                    <input type="hidden" name="existing_main_image_2" value="{{ $product->main_image_2 }}">
+                                </div>
+                            @endif
+                        </div>
 
                         <div class="form-group form-check">
                             <input type="checkbox" name="featured" id="featured" class="form-check-input" value="1" {{ old('featured', $product->featured ?? false) ? 'checked' : '' }}>
@@ -103,7 +112,7 @@
                                                 </div>
                                                 <div class="col-md-3">
                                                     <button type="button" class="btn btn-sm btn-danger remove-option">
-                                                        Remove
+                                                        <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
                                             </div>

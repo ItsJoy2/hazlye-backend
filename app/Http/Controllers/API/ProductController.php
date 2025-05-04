@@ -40,6 +40,10 @@ class ProductController extends Controller
             $product->main_image = $this->getFullImageUrl($product->main_image);
         }
 
+        if ($product->main_image_2) {
+            $product->main_image_2 = $this->getFullImageUrl($product->main_image_2);
+        }
+
         if ($product->category && $product->category->image) {
             $product->category->image = $this->getFullImageUrl($product->category->image);
         }
@@ -88,6 +92,10 @@ class ProductController extends Controller
                 $product->main_image = $this->getFullImageUrl($product->main_image);
             }
 
+            if ($product->main_image_2) {
+                $product->main_image_2 = $this->getFullImageUrl($product->main_image_2);
+            }
+
             if ($product->category && $product->category->image) {
                 $product->category->image = $this->getFullImageUrl($product->category->image);
             }
@@ -110,24 +118,24 @@ class ProductController extends Controller
         ]);
     }
 
-    public function byCategory(Category $category)
-    {
-        $products = Product::with(['category', 'variants.color', 'variants.options.size'])
-            ->where('category_id', $category->id)
-            ->latest()
-            ->paginate(12);
+    // public function byCategory(Category $category)
+    // {
+    //     $products = Product::with(['category', 'variants.color', 'variants.options.size'])
+    //         ->where('category_id', $category->id)
+    //         ->latest()
+    //         ->paginate(12);
 
-        // Add full URL to all images
-        $this->addFullImageUrls($products);
+    //     // Add full URL to all images
+    //     $this->addFullImageUrls($products);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'category' => $category->image ? $category->only(['id', 'name', 'slug', 'image']) : $category->only(['id', 'name', 'slug']),
-                'products' => $products
-            ]
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => [
+    //             'category' => $category->image ? $category->only(['id', 'name', 'slug', 'image']) : $category->only(['id', 'name', 'slug']),
+    //             'products' => $products
+    //         ]
+    //     ]);
+    // }
 
     protected function getFullImageUrl($path)
     {
@@ -139,6 +147,10 @@ class ProductController extends Controller
         $products->getCollection()->transform(function ($product) {
             if ($product->main_image) {
                 $product->main_image = $this->getFullImageUrl($product->main_image);
+            }
+
+            if ($product->main_image_2) {
+                $product->main_image_2 = $this->getFullImageUrl($product->main_image_2);
             }
 
             if ($product->category && $product->category->image) {
@@ -157,4 +169,42 @@ class ProductController extends Controller
             return $product;
         });
     }
+
+    public function byCategory(Category $category, Request $request)
+    {
+        try {
+            $perPage = $request->input('per_page', 12);
+
+            $products = Product::with(['category', 'variants.color', 'variants.options.size'])
+                ->where('category_id', $category->id)
+                ->withCount('reviews')
+                ->withAvg('reviews', 'rating')
+                ->latest()
+                ->paginate($perPage);
+
+            // Add full URL to all images
+            $this->addFullImageUrls($products);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'category' => [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                        'image' => $category->image ? $this->getFullImageUrl($category->image) : null
+                    ],
+                    'products' => $products
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load products',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

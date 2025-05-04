@@ -71,29 +71,50 @@
                     </div>
                 </div>
 
-                <!-- Main Image Column -->
+                <!-- Main Images Column -->
                 <div class="col-md-6">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
                             <h5 class="mb-0">Product Images</h5>
                         </div>
-                        <div class="card-body text-center">
-                            <h6>Main Image</h6>
-                            @if( $product->main_image )
-                                <img src="{{ asset('storage/' .  $product->main_image) }}"
-                                     alt="Main Product Image"
-                                     class="img-fluid rounded border"
-                                     style="max-height: 300px;">
-                            @else
-                                <div class="alert alert-warning p-2">
-                                    <i class="fas fa-exclamation-circle"></i> No main image uploaded
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Required Main Image -->
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-center">Main Image (Required)</h6>
+                                    @if($product->main_image)
+                                        <img src="{{ asset('storage/' . $product->main_image) }}"
+                                             alt="Main Product Image"
+                                             class="img-fluid rounded border d-block mx-auto"
+                                             style="max-height: 200px;">
+                                    @else
+                                        <div class="alert alert-warning p-2 text-center">
+                                            <i class="fas fa-exclamation-circle"></i> No main image uploaded
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
+
+                                <!-- Optional Secondary Image -->
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-center">Secondary Image (Optional)</h6>
+                                    @if($product->main_image_2)
+                                        <img src="{{ asset('storage/' . $product->main_image_2) }}"
+                                             alt="Secondary Product Image"
+                                             class="img-fluid rounded border d-block mx-auto"
+                                             style="max-height: 200px;">
+                                    @else
+                                        <div class="alert alert-info p-2 text-center">
+                                            <i class="fas fa-info-circle"></i> No secondary image uploaded
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Rest of your existing code for variants and inventory summary -->
             <!-- Variants Section -->
             <div class="card mb-4">
                 <div class="card-header bg-light">
@@ -122,7 +143,7 @@
                                                         <img src="{{ asset('storage/' . $variant->image) }}"
                                                              alt="Variant Image"
                                                              class="img-fluid rounded border"
-                                                             style="max-height: 150px; ">
+                                                             style="max-height: 150px;">
                                                     @else
                                                         <div class="alert alert-warning p-2">
                                                             <i class="fas fa-exclamation-circle"></i> No image
@@ -220,7 +241,6 @@
     </div>
 </div>
 @endsection
-
 
 <style>
     .card-header {

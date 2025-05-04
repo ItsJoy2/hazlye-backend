@@ -6,42 +6,47 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
 {
-    public function index(Product $product)
-    {
-        $reviews = $product->reviews()
-            ->where('is_approved', true)
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return response()->json([
-            'success' => true,
-            'data' => $reviews
-        ]);
-    }
-
     public function store(Request $request, Product $product)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'rating' => 'required|integer|between:1,5',
+        'comment' => 'nullable|string|max:500',
+        'guest_name' => 'required_without:user_id|string|max:100',
+        'guest_email' => 'required_without:user_id|email|max:100',
+        'images' => 'nullable|array',
+        'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
 
-        $review = Review::create([
-            'product_id' => $product->id,
-            'name' => $request->name,
-            'rating' => $request->rating,
-            'comment' => $request->comment,
-            'is_approved' => false, // Require admin approval
-        ]);
-
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Review submitted successfully and awaiting approval',
-            'data' => $review
-        ]);
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    $review = Review::create([
+        'product_id' => $product->id,
+        'user_id' => auth()->id(),
+        'guest_name' => $request->guest_name,
+        'guest_email' => $request->guest_email,
+        'rating' => $request->rating,
+        'comment' => $request->comment
+    ]);
+
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('review_images', 'public');
+            $review->images()->create(['image_path' => $path]);
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $review->load('images')
+    ], 201);
+}
 }
