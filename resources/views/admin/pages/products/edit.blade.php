@@ -37,7 +37,16 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="regular_price">Regular Price</label>
+                            <label for="Purchase_price">Buy Price</label>
+                            <input type="number" step="0.01" name="Purchase_price" id="Purchase_price"
+                                   class="form-control" value="{{ old('Purchase_price', $product->Purchase_price) }}" required>
+                            @error('Purchase_price')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regular_price">Regular Sell Price</label>
                             <input type="number" step="0.01" name="regular_price" id="regular_price" class="form-control" value="{{ old('regular_price', $product->regular_price) }}" required>
                         </div>
 

@@ -20,7 +20,8 @@
                         <th>#</th>
                         <th>Name</th>
                         <th>Image</th>
-                        <th>Regular Price</th>
+                        <th>Buy Price</th>
+                        <th>Regular sell Price</th>
                         <th>Total Stock</th>
                         <th>Category</th>
                         <th>Variants</th>
@@ -43,6 +44,7 @@
                                 <img src="{{ asset('storage/'.$product->main_image_2) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
                             @endif
                         </td>
+                        <td>{{ number_format($product->Purchase_price, 2) }}</td>
                         <td>{{ number_format($product->regular_price, 2) }}</td>
                         <td>{{ $product->variants->sum(function($variant) { return $variant->options->sum('stock'); }) }}</td>
                         <td>{{ $product->category->name ?? 'N/A' }}</td>

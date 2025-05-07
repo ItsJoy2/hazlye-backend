@@ -11,10 +11,12 @@ class Product extends Model
 
     protected $fillable = [
         'productId',
+        'sku',
         'name',
         'slug',
         'description',
         'regular_price',
+        'Purchase_price',
         'category_id',
         'main_image',
         'main_image_2',
@@ -22,7 +24,10 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'regular_price' => 'decimal:2',
+        'regular_price' => 'float',
+        'Purchase_price' => 'float',
+        'id' => 'integer',
+        'category_id' => 'integer',
         'featured' => 'boolean',
     ];
     protected $primaryKey = 'id';
@@ -50,6 +55,7 @@ class Product extends Model
     }
     public function approvedReviews()
 {
-    return $this->reviews()->where('approved', true); 
+    return $this->reviews()->where('approved', true);
 }
+
 }

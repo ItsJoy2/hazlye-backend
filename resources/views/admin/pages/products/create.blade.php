@@ -14,13 +14,21 @@
                     <div class="card-header">Basic Information</div>
                     <div class="card-body">
                         <div class="form-group">
+                            <label for="sku">SKU</label>
+                            <input type="text" name="sku" id="sku" class="form-control"
+                                   value="{{ old('sku') }}">
+                            @error('sku')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="name">Product Name</label>
-                            <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $product->name ?? '') }}" required>
+                            <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required>
                         </div>
 
                         <div class="form-group">
                             <label for="description">Description</label>
-                            <textarea name="description" id="description" class="form-control" rows="3" required>{{ old('description', $product->description ?? '') }}</textarea>
+                            <textarea name="description" id="description" class="form-control" rows="3" required>{{ old('description') }}</textarea>
                         </div>
 
                         <div class="form-group">
@@ -28,7 +36,7 @@
                             <select name="category_id" id="category_id" class="form-control" required>
                                 <option value="">Select Category</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" @isset($product) @if($product->category_id == $category->id) selected @endif @endisset>
+                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
@@ -36,8 +44,16 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="regular_price">Regular Price</label>
-                            <input type="number" step="0.01" name="regular_price" id="regular_price" class="form-control" value="{{ old('regular_price', $product->regular_price ?? '') }}" required>
+                            <label for="Purchase_price">Buy Price</label>
+                            <input type="number" step="0.01" name="Purchase_price" id="Purchase_price"
+                                   class="form-control" value="{{ old('Purchase_price') }}" required>
+                            @error('Purchase_price')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="regular_price">Regular Selling Price</label>
+                            <input type="number" step="0.01" name="regular_price" id="regular_price" class="form-control" value="{{ old('regular_price') }}" required>
                         </div>
 
                         <div class="form-group">
@@ -47,22 +63,16 @@
                         <div class="form-group">
                             <label for="main_image_2">Secondary Product Image (Optional)</label>
                             <input type="file" name="main_image_2" id="main_image_2" class="form-control-file">
-                            @if(isset($product) && $product->main_image_2)
-                                <div class="mt-2">
-                                    <img src="{{ asset('storage/'.$product->main_image_2) }}" width="100">
-                                    <input type="hidden" name="existing_main_image_2" value="{{ $product->main_image_2 }}">
-                                </div>
-                            @endif
                         </div>
 
                         <div class="form-group form-check">
-                            <input type="checkbox" name="featured" id="featured" class="form-check-input" value="1" {{ old('featured', $product->featured ?? false) ? 'checked' : '' }}>
+                            <input type="checkbox" name="featured" id="featured" class="form-check-input" value="1" {{ old('featured') ? 'checked' : '' }}>
                             <label class="form-check-label" for="featured">Featured Product</label>
                         </div>
-
                     </div>
                 </div>
 
+                <!-- Rest of your form remains the same -->
                 <div class="card mb-4">
                     <div class="card-header">Variants</div>
                     <div class="card-body">
@@ -135,8 +145,5 @@
     </div>
 </div>
 @endsection
-
-
-
 
 @include('admin.pages.products.partials.__additionalScript')

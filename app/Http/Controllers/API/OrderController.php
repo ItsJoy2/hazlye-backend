@@ -14,13 +14,25 @@ use App\Models\ProductVariantOption;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
     public function deliveryOptions()
     {
         $options = DeliveryOption::where('is_active', true)->get();
-        return response()->json($options);
+
+        return response()->json([
+            'success' => true,
+            'data' => $options->map(function($option) {
+                return [
+                    'id' => $option->id,
+                    'name' => $option->name,
+                    'charge' => (float) $option->charge,
+                    'estimated_days' => $option->estimated_days
+                ];
+            })
+        ]);
     }
 
     public function store(Request $request)
@@ -40,7 +52,11 @@ class OrderController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         try {
@@ -49,6 +65,10 @@ class OrderController extends Controller
             $deliveryOption = DeliveryOption::findOrFail($request->delivery_option_id);
             $subtotal = 0;
             $items = [];
+            $inventoryUpdates = [
+                'items_updated' => 0,
+                'total_stock_reduced' => 0
+            ];
 
             foreach ($request->items as $itemData) {
                 $product = Product::with(['variants.color', 'variants.options.size'])
@@ -60,38 +80,23 @@ class OrderController extends Controller
                 });
 
                 if (!$variant) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Color not available for product: ' . $product->name,
-                        'product_id' => $product->id,
-                        'available_colors' => $product->variants->pluck('color.name')
-                    ], 400);
+                    throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: " .
+                        $product->variants->pluck('color.name')->implode(', '));
                 }
 
                 // Find option with matching size
                 $option = $variant->options->first(function ($option) use ($itemData) {
-                    return $option->size->name === ($itemData['size_name'] ?? null);
+                    return $option->size->name == ($itemData['size_name'] ?? null);
                 });
 
                 if (!$option) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Size not available for product: ' . $product->name,
-                        'product_id' => $product->id,
-                        'available_sizes' => $variant->options->pluck('size.name')
-                    ], 400);
+                    throw new \Exception("Size '{$itemData['size_name']}' not available for product: {$product->name}. Available sizes: " .
+                        $variant->options->pluck('size.name')->implode(', '));
                 }
 
                 // Verify stock
                 if ($option->stock < $itemData['quantity']) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Insufficient stock for product: ' . $product->name,
-                        'product_id' => $product->id,
-                        'color' => $variant->color->name,
-                        'size' => $option->size->name,
-                        'available_stock' => $option->stock
-                    ], 400);
+                    throw new \Exception("Insufficient stock for product: {$product->name}. Available: {$option->stock}, Requested: {$itemData['quantity']}");
                 }
 
                 $itemPrice = $product->regular_price * $itemData['quantity'];
@@ -100,54 +105,58 @@ class OrderController extends Controller
                 $items[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
-                    'price' => $product->regular_price,
-                    'quantity' => $itemData['quantity'],
+                    'price' => (float) $product->regular_price,
+                    'quantity' => (int) $itemData['quantity'],
                     'size_name' => $itemData['size_name'] ?? null,
                     'color_name' => $itemData['color_name'] ?? null,
                     'size_id' => $option->size->id ?? null,
                     'color_id' => $variant->color->id ?? null,
                     'variant_id' => $variant->id,
-                    'option_id' => $option->id
+                    'option_id' => $option->id,
+                    'color_code' => $variant->color->code ?? null
                 ];
             }
 
             // Coupon handling
             $discount = 0;
             $couponCode = null;
+            $couponDetails = null;
 
             if ($request->coupon_code) {
                 $coupon = Coupon::where('code', $request->coupon_code)->first();
 
-                if ($coupon && !$coupon->isValid($subtotal)) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Coupon is not valid for this order',
-                        'reasons' => [
-                            'is_active' => $coupon->is_active,
-                            'date_valid' => now()->between($coupon->start_date, $coupon->end_date),
-                            'min_purchase' => $subtotal >= $coupon->min_purchase
-                        ]
-                    ], 400);
-                }
-
                 if ($coupon) {
+                    if (!$coupon->isValid($subtotal)) {
+                        throw new \Exception('Coupon is not valid for this order. Minimum purchase: ' . $coupon->min_purchase);
+                    }
+
                     $discount = $coupon->calculateDiscount($subtotal);
                     $couponCode = $coupon->code;
+                    $couponDetails = [
+                        'code' => $coupon->code,
+                        'discount_type' => $coupon->discount_type,
+                        'discount_value' => (float) $coupon->discount_value,
+                        'min_purchase' => (float) $coupon->min_purchase
+                    ];
                 }
             }
 
             $total = $subtotal + $deliveryOption->charge - $discount;
 
             // Create order
+
+            $latestOrder = Order::latest()->first();
+            $nextId = $latestOrder ? $latestOrder->id + 1 : 1;
+            $orderNumber = 'H-' . str_pad($nextId, 5, '101', STR_PAD_LEFT);
             $order = Order::create([
-                'order_number' => 'ORD-' . now()->format('Ymd') . '-' . Str::upper(Str::random(4)),
+                'order_number' => $orderNumber,
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'subtotal' => $subtotal,
-                'delivery_charge' => $deliveryOption->charge,
-                'discount' => $discount,
-                'total' => $total,
+                'subtotal' => (float) $subtotal,
+                'delivery_charge' => (float) $deliveryOption->charge,
+                'discount' => (float) $discount,
+                'total' => (float) $total,
                 'coupon_code' => $couponCode,
                 'status' => 'pending',
                 'comment' => $request->comment,
@@ -157,34 +166,84 @@ class OrderController extends Controller
             foreach ($items as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
-                    ...$item
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'],
+                    'size_id' => $item['size_id'],
+                    'color_id' => $item['color_id'],
+                    'product_name' => $item['product_name'],
+                    'price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'size_name' => $item['size_name'],
+                    'color_name' => $item['color_name'],
                 ]);
 
-                ProductVariantOption::where('id', $item['option_id'])
+                $rowsAffected = ProductVariantOption::where('id', $item['option_id'])
                     ->decrement('stock', $item['quantity']);
+
+                if ($rowsAffected) {
+                    $inventoryUpdates['items_updated']++;
+                    $inventoryUpdates['total_stock_reduced'] += $item['quantity'];
+                }
             }
 
             DB::commit();
 
+            // Prepare response data
+            $responseData = [
+                'order' => [
+                    'order_number' => $order->order_number,
+                    'status' => $order->status,
+                    'customer' => [
+                        'name' => $order->name,
+                        'phone' => $order->phone,
+                        'address' => $order->address
+                    ],
+                    'delivery' => [
+                        'method' => $deliveryOption->name,
+                        'charge' => (float) $deliveryOption->charge,
+                        'estimated_days' => $deliveryOption->estimated_days
+                    ],
+                    'payment' => [
+                        'subtotal' => (float) $order->subtotal,
+                        'discount' => (float) $order->discount,
+                        'delivery_charge' => (float) $order->delivery_charge,
+                        'total' => (float) $order->total,
+                        'coupon_applied' => $order->coupon_code,
+                        'coupon_details' => $couponDetails
+                    ],
+                    'items' => array_map(function($item) {
+                        return [
+                            'product_id' => $item['product_id'],
+                            'product_name' => $item['product_name'],
+                            'variant' => [
+                                'color' => $item['color_name'],
+                                'color_code' => $item['color_code'],
+                                'size' => $item['size_name']
+                            ],
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['price'],
+                            'total_price' => $item['price'] * $item['quantity']
+                        ];
+                    }, $items),
+                    'created_at' => $order->created_at->toIso8601String()
+                ],
+                'inventory_updates' => $inventoryUpdates
+            ];
+
             return response()->json([
+                'success' => true,
                 'message' => 'Order created successfully',
-                'order_number' => $order->order_number,
-                'order' => $order->load('items', 'coupon'),
-                'summary' => [
-                    'subtotal' => $subtotal,
-                    'delivery_charge' => $deliveryOption->charge,
-                    'discount' => $discount,
-                    'total' => $total
-                ]
+                'data' => $responseData
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
+                'success' => false,
                 'message' => 'Order creation failed',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTrace()
-            ], 500);
+                'error' => $e->getMessage()
+            ], 400);
         }
     }
 }

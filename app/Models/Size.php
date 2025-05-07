@@ -12,7 +12,9 @@ class Size extends Model
     protected $fillable = [
         'name',
     ];
-
+    protected $casts = [
+        'name' => 'float',
+    ];
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_sizes')

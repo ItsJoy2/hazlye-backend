@@ -24,9 +24,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+                    }
+            // Ensure form submission isn't prevented
+            // form.addEventListener('submit', function(e) {
+            //     const submitBtn = form.querySelector('button[type="submit"]');
+            //     if (submitBtn) {
+            //         submitBtn.disabled = true;
+            //         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            //     }
+            // });
+                    const data = await response.json();
 
             // Create new variant card
             const div = document.createElement('div');
