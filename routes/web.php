@@ -74,6 +74,8 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'update' => 'admin.coupons.update',
         'destroy' => 'admin.coupons.destroy'
     ]);
+    Route::get('coupons/search-products', [AdminCouponController::class, 'searchProducts'])
+    ->name('admin.coupons.search-products');
 
     // Delivery Options
     Route::resource('delivery-options', AdminDeliveryOptionController::class)->names([

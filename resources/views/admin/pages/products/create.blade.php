@@ -7,7 +7,7 @@
             <h3>Create New Product</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" style="width: 600px;">
+            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" style="width: 680px;">
                 @csrf
 
                 <div class="card mb-4">
@@ -121,13 +121,17 @@
                                                            class="form-control" placeholder="Stock" required>
                                                 </div>
                                                 <div class="col-md-3">
+                                                    <input type="text" step="0.01" name="variants[0][options][0][sku]"
+                                                           class="form-control" placeholder="SKU" required>
+                                                </div>
+                                                <div class="col-md-3 trash-btn">
                                                     <button type="button" class="btn btn-sm btn-danger remove-option">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-secondary add-option" data-variant="0">
+                                        <button type="button" class="btn btn-sm btn-secondary add-option mt-3" data-variant="0">
                                             Add Option
                                         </button>
                                     </div>
@@ -147,3 +151,4 @@
 @endsection
 
 @include('admin.pages.products.partials.__additionalScript')
+

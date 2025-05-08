@@ -258,3 +258,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+    @media (min-width: 768px) {
+    .col-md-3 {
+        margin: -19px;
+        margin-top: 10px !important;
+        margin-left: 1px;
+    }
+    .trash-btn{
+        width: 13% !important;
+    }
+}
+</style>

@@ -117,26 +117,67 @@ class OrderController extends Controller
                 ];
             }
 
+            if ($request->coupon_code) {
+                $coupon = Coupon::where('code', $request->coupon_code)->first();
+
+                if ($coupon) {
+                    $productIds = collect($request->items)->pluck('product_id')->toArray();
+
+                    // Calculate subtotal for applicable products if coupon is product-specific
+                    $applicableSubtotal = $subtotal;
+                    if (!$coupon->apply_to_all) {
+                        $applicableSubtotal = collect($request->items)
+                            ->filter(fn($item) => in_array($item['product_id'], $coupon->products->pluck('id')->toArray()))
+                            ->sum(fn($item) => $item['price'] * $item['quantity']);
+                    }
+
+                    if (!$coupon->isValid($subtotal, $productIds)) {
+                        throw new \Exception('Coupon is not valid for this order. Minimum purchase: ' . $coupon->min_purchase);
+                    }
+
+                    $discount = $coupon->calculateDiscount($subtotal, $productIds, $applicableSubtotal);
+                    $couponCode = $coupon->code;
+                    $couponDetails = [
+                        'code' => $coupon->code,
+                        'discount_type' => $coupon->type,
+                        'discount_value' => (float) $coupon->amount,
+                        'min_purchase' => (float) $coupon->min_purchase,
+                        'apply_to_all' => $coupon->apply_to_all,
+                        'applicable_products' => $coupon->apply_to_all ? null : $coupon->products->pluck('id')
+                    ];
+                }
+            }
+
             // Coupon handling
             $discount = 0;
             $couponCode = null;
             $couponDetails = null;
 
             if ($request->coupon_code) {
-                $coupon = Coupon::where('code', $request->coupon_code)->first();
+                $coupon = Coupon::with('products')->where('code', $request->coupon_code)->first();
 
                 if ($coupon) {
-                    if (!$coupon->isValid($subtotal)) {
+                    // Calculate subtotal for applicable products if coupon is product-specific
+                    $applicableSubtotal = $subtotal;
+                    if (!$coupon->apply_to_all) {
+                        $applicableSubtotal = collect($items)
+                            ->filter(fn($item) => $coupon->products->contains('id', $item['product_id']))
+                            ->sum(fn($item) => $item['price'] * $item['quantity']);
+                    }
+
+                    if (!$coupon->isValid($subtotal, $productIds)) {
                         throw new \Exception('Coupon is not valid for this order. Minimum purchase: ' . $coupon->min_purchase);
                     }
 
-                    $discount = $coupon->calculateDiscount($subtotal);
+                    $discount = $coupon->calculateDiscount($subtotal, $productIds, $applicableSubtotal);
                     $couponCode = $coupon->code;
                     $couponDetails = [
                         'code' => $coupon->code,
-                        'discount_type' => $coupon->discount_type,
-                        'discount_value' => (float) $coupon->discount_value,
-                        'min_purchase' => (float) $coupon->min_purchase
+                        'discount_type' => $coupon->type,
+                        'discount_value' => (float) $coupon->amount,
+                        'min_purchase' => (float) $coupon->min_purchase,
+                        'apply_to_all' => $coupon->apply_to_all,
+                        'applicable_products' => $coupon->apply_to_all ? null : $coupon->products->pluck('id')
                     ];
                 }
             }

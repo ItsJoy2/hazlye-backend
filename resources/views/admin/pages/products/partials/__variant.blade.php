@@ -28,7 +28,7 @@
             ])
         </div>
 
-        <button type="button" class="btn btn-sm btn-secondary add-option mt-2"
+        <button type="button" class="btn btn-sm btn-secondary add-option mt-4"
                 data-variant="{{ $variantIndex }}">
             Add Option
         </button>

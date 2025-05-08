@@ -14,6 +14,7 @@ class ProductVariantOption extends Model
         'size_id',
         'price',
         'stock',
+        'sku',
     ];
     protected $casts = [
         'variant_id' => 'float',

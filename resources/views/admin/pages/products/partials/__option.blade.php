@@ -1,4 +1,4 @@
-<div class="option-row row mb-2">
+<div class="option-row row mb-2 mt-4">
     <div class="col-md-3">
         <select name="variants[{{ $variantIndex }}][options][{{ $optionIndex }}][size_id]" class="form-control" required>
             <option value="">Select Size</option>
@@ -20,6 +20,11 @@
                value="{{ $option['stock'] ?? '' }}">
     </div>
     <div class="col-md-3">
+        <input type="text" name="variants[{{ $variantIndex }}][options][{{ $optionIndex }}][sku]"
+               class="form-control" placeholder="SKU"
+               value="{{ $option['sku'] ?? '' }}" required>
+    </div>
+    <div class="col-md-3 trash-btn">
         <button type="button" class="btn btn-sm btn-danger remove-option">
             <i class="fas fa-trash"></i>
         </button>

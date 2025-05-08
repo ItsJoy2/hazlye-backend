@@ -47,6 +47,7 @@ class AdminProductController extends Controller
             'variants.*.image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'variants.*.options' => 'required|array|min:1',
             'variants.*.options.*.size_id' => 'required|exists:sizes,id',
+            'variants.*.options.*.sku' => 'nullable|string',
             'variants.*.options.*.price' => 'required|numeric|min:0',
             'variants.*.options.*.stock' => 'required|integer|min:0',
         ]);
@@ -92,6 +93,7 @@ class AdminProductController extends Controller
                         'size_id' => $optionData['size_id'],
                         'price' => $optionData['price'],
                         'stock' => $optionData['stock'],
+                        'sku' => $optionData['sku'] ?? null,
                     ]);
                 }
             }
@@ -116,171 +118,185 @@ class AdminProductController extends Controller
     }
 
     public function update(Request $request, Product $product)
-    {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|unique:products,sku,'.$product->id,
-            'description' => 'required|string',
-            'regular_price' => 'required|numeric|min:0',
-            'Purchase_price' => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'main_image_2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'variants' => 'required|array|min:1',
-            'variants.*.id' => 'sometimes|exists:product_variants,id',
-            'variants.*.color_id' => 'required|exists:colors,id',
-            'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'variants.*.existing_image' => 'sometimes|string',
-            'variants.*.options' => 'required|array|min:1',
-            'variants.*.options.*.id' => 'sometimes|exists:product_variant_options,id',
-            'variants.*.options.*.size_id' => 'required|exists:sizes,id',
-            'variants.*.options.*.price' => 'required|numeric|min:0',
-            'variants.*.options.*.stock' => 'required|integer|min:0',
-        ]);
+{
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'sku' => 'nullable|string|unique:products,sku,'.$product->id,
+        'description' => 'required|string',
+        'regular_price' => 'required|numeric|min:0',
+        'Purchase_price' => 'required|numeric|min:0',
+        'category_id' => 'required|exists:categories,id',
+        'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'main_image_2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'variants' => 'required|array|min:1',
+        'variants.*.id' => 'sometimes|exists:product_variants,id',
+        'variants.*.color_id' => 'required|exists:colors,id',
+        'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'variants.*.existing_image' => 'sometimes|string',
+        'variants.*.options' => 'required|array|min:1',
+        'variants.*.options.*.id' => 'sometimes|exists:product_variant_options,id',
+        'variants.*.options.*.size_id' => 'required|exists:sizes,id',
+        'variants.*.options.*.price' => 'required|numeric|min:0',
+        'variants.*.options.*.stock' => 'required|integer|min:0',
+        'variants.*.options.*.sku' => 'nullable|string',
+    ]);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            // Update product basic info
-            $updateData = [
-                'sku' => $validatedData['sku'],
-                'name' => $validatedData['name'],
-                'slug' => Str::slug($validatedData['name']),
-                'description' => $validatedData['description'],
-                'regular_price' => $validatedData['regular_price'],
-                'Purchase_price' => $validatedData['Purchase_price'],
-                'category_id' => $validatedData['category_id'],
-                'featured' => $request->has('featured'),
-            ];
+    try {
+        // Update product basic info
+        $updateData = [
+            'sku' => $validatedData['sku'],
+            'name' => $validatedData['name'],
+            'slug' => Str::slug($validatedData['name']),
+            'description' => $validatedData['description'],
+            'regular_price' => $validatedData['regular_price'],
+            'Purchase_price' => $validatedData['Purchase_price'],
+            'category_id' => $validatedData['category_id'],
+            'featured' => $request->has('featured'),
+        ];
 
-            // Handle main image update
-            if ($request->hasFile('main_image')) {
-                if ($product->main_image) {
-                    Storage::disk('public')->delete($product->main_image);
+        // Handle main image update
+        if ($request->hasFile('main_image')) {
+            if ($product->main_image) {
+                Storage::disk('public')->delete($product->main_image);
+            }
+            $updateData['main_image'] = $request->file('main_image')->store('products', 'public');
+        } elseif ($request->has('existing_main_image')) {
+            $updateData['main_image'] = $request->existing_main_image;
+        }
+
+        // Handle secondary image update
+        if ($request->hasFile('main_image_2')) {
+            if ($product->main_image_2) {
+                Storage::disk('public')->delete($product->main_image_2);
+            }
+            $updateData['main_image_2'] = $request->file('main_image_2')->store('products', 'public');
+        } elseif ($request->has('existing_main_image_2')) {
+            $updateData['main_image_2'] = $request->existing_main_image_2;
+        }
+
+        $product->update($updateData);
+
+        // Handle variants update
+        $existingVariantIds = $product->variants->pluck('id')->toArray();
+        $updatedVariantIds = [];
+
+        foreach ($validatedData['variants'] as $variantData) {
+            $variantImagePath = null;
+
+            // Handle image upload/retention
+            if (isset($variantData['image']) && $variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
+                // New image uploaded
+                $variantImagePath = $variantData['image']->store('products', 'public');
+
+                // Delete old image if it exists
+                if (isset($variantData['existing_image'])) {
+                    Storage::disk('public')->delete($variantData['existing_image']);
                 }
-                $updateData['main_image'] = $request->file('main_image')->store('products', 'public');
-            } elseif ($request->has('existing_main_image')) {
-                $updateData['main_image'] = $request->existing_main_image;
+            } elseif (isset($variantData['existing_image'])) {
+                // Keep existing image
+                $variantImagePath = $variantData['existing_image'];
             }
 
-            if ($request->hasFile('main_image_2')) {
-                if ($product->main_image_2) {
-                    Storage::disk('public')->delete($product->main_image_2);
-                }
-                $updateData['main_image_2'] = $request->file('main_image_2')->store('products', 'public');
-            } elseif ($request->has('existing_main_image_2')) {
-                $updateData['main_image_2'] = $request->existing_main_image_2;
-            }
+            if (isset($variantData['id']) && in_array($variantData['id'], $existingVariantIds)) {
+                // Update existing variant
+                $variant = ProductVariant::find($variantData['id']);
+                if ($variant) {
+                    $updatedVariantIds[] = $variant->id;
 
-            $product->update($updateData);
+                    $variantUpdateData = [
+                        'color_id' => $variantData['color_id'],
+                    ];
 
-            // Handle variants update
-            $existingVariantIds = $product->variants->pluck('id')->toArray();
-            $updatedVariantIds = [];
+                    // Only update image path if we have one (either new or existing)
+                    if ($variantImagePath) {
+                        $variantUpdateData['image'] = $variantImagePath;
+                    }
 
-            foreach ($validatedData['variants'] as $variantData) {
-                $variantImagePath = null;
+                    $variant->update($variantUpdateData);
 
-                if (isset($variantData['image']) && $variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
-                    $variantImagePath = $variantData['image']->store('products', 'public');
-                } elseif (isset($variantData['existing_image'])) {
-                    $variantImagePath = $variantData['existing_image'];
-                }
+                    // Handle options
+                    $existingOptionIds = $variant->options->pluck('id')->toArray();
+                    $updatedOptionIds = [];
 
-                if (isset($variantData['id']) && in_array($variantData['id'], $existingVariantIds)) {
-                    // Update existing variant
-                    $variant = ProductVariant::find($variantData['id']);
-                    if ($variant) {
-                        $updatedVariantIds[] = $variant->id;
-
-                        if (isset($variantData['image']) && $variant->image) {
-                            Storage::disk('public')->delete($variant->image);
-                        }
-
-                        $variant->update([
-                            'color_id' => $variantData['color_id'],
-                            'image' => $variantImagePath ?? $variant->image,
-                        ]);
-
-                        // Handle options
-                        $existingOptionIds = $variant->options->pluck('id')->toArray();
-                        $updatedOptionIds = [];
-
-                        foreach ($variantData['options'] as $optionData) {
-                            if (isset($optionData['id'])) {
-                                $option = ProductVariantOption::find($optionData['id']);
-                                if ($option) {
-                                    $updatedOptionIds[] = $option->id;
-                                    $option->update([
-                                        'size_id' => $optionData['size_id'],
-                                        'price' => $optionData['price'],
-                                        'stock' => $optionData['stock'],
-                                    ]);
-                                }
-                            } else {
-                                $option = ProductVariantOption::create([
-                                    'variant_id' => $variant->id,
+                    foreach ($variantData['options'] as $optionData) {
+                        if (isset($optionData['id'])) {
+                            $option = ProductVariantOption::find($optionData['id']);
+                            if ($option) {
+                                $updatedOptionIds[] = $option->id;
+                                $option->update([
                                     'size_id' => $optionData['size_id'],
                                     'price' => $optionData['price'],
                                     'stock' => $optionData['stock'],
+                                    'sku' => $optionData['sku'] ?? null,
                                 ]);
-                                $updatedOptionIds[] = $option->id;
                             }
+                        } else {
+                            $option = ProductVariantOption::create([
+                                'variant_id' => $variant->id,
+                                'size_id' => $optionData['size_id'],
+                                'price' => $optionData['price'],
+                                'stock' => $optionData['stock'],
+                                'sku' => $optionData['sku'] ?? null,
+                            ]);
+                            $updatedOptionIds[] = $option->id;
                         }
-
-                        // Delete removed options
-                        ProductVariantOption::where('variant_id', $variant->id)
-                            ->whereNotIn('id', $updatedOptionIds)
-                            ->delete();
-                    }
-                } else {
-                    // Create new variant
-                    if (!$variantImagePath) {
-                        throw new \Exception("Variant image is required for new variants");
                     }
 
-                    $variant = ProductVariant::create([
-                        'product_id' => $product->id,
-                        'color_id' => $variantData['color_id'],
-                        'image' => $variantImagePath,
+                    // Delete removed options
+                    ProductVariantOption::where('variant_id', $variant->id)
+                        ->whereNotIn('id', $updatedOptionIds)
+                        ->delete();
+                }
+            } else {
+                // Create new variant - image is required
+                if (!$variantImagePath) {
+                    throw new \Exception("Variant image is required for new variants");
+                }
+
+                $variant = ProductVariant::create([
+                    'product_id' => $product->id,
+                    'color_id' => $variantData['color_id'],
+                    'image' => $variantImagePath,
+                ]);
+
+                $updatedVariantIds[] = $variant->id;
+
+                // Create options
+                foreach ($variantData['options'] as $optionData) {
+                    ProductVariantOption::create([
+                        'variant_id' => $variant->id,
+                        'size_id' => $optionData['size_id'],
+                        'price' => $optionData['price'],
+                        'stock' => $optionData['stock'],
+                        'sku' => $optionData['sku'] ?? null,
                     ]);
-
-                    $updatedVariantIds[] = $variant->id;
-
-                    // Create options
-                    foreach ($variantData['options'] as $optionData) {
-                        ProductVariantOption::create([
-                            'variant_id' => $variant->id,
-                            'size_id' => $optionData['size_id'],
-                            'price' => $optionData['price'],
-                            'stock' => $optionData['stock'],
-                        ]);
-                    }
                 }
             }
-
-            // Delete removed variants
-            $variantsToDelete = array_diff($existingVariantIds, $updatedVariantIds);
-            if (!empty($variantsToDelete)) {
-                $variants = ProductVariant::whereIn('id', $variantsToDelete)->get();
-                foreach ($variants as $variant) {
-                    if ($variant->image) {
-                        Storage::disk('public')->delete($variant->image);
-                    }
-                    $variant->delete();
-                }
-            }
-
-            DB::commit();
-            return redirect()->route('admin.products.index')->with('success', 'Product updated successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Product update failed: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Error updating product: ' . $e->getMessage());
         }
-    }
 
+        // Delete removed variants
+        $variantsToDelete = array_diff($existingVariantIds, $updatedVariantIds);
+        if (!empty($variantsToDelete)) {
+            $variants = ProductVariant::whereIn('id', $variantsToDelete)->get();
+            foreach ($variants as $variant) {
+                if ($variant->image) {
+                    Storage::disk('public')->delete($variant->image);
+                }
+                $variant->delete();
+            }
+        }
+
+        DB::commit();
+        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Product update failed: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Error updating product: ' . $e->getMessage());
+    }
+}
     public function destroy(Product $product)
     {
         DB::transaction(function () use ($product) {
@@ -307,17 +323,30 @@ class AdminProductController extends Controller
 
     public function variant(Request $request)
     {
-        $variantIndex = (int)$request->index;
-        $colors = Color::all();
-        $sizes = Size::all();
+        try {
+            $variantIndex = (int)$request->index;
+            $colors = Color::all();
+            $sizes = Size::all();
 
-        $html = view('admin.pages.products.partials.__variant', [
-            'variantIndex' => $variantIndex,
-            'colors' => $colors,
-            'sizes' => $sizes
-        ])->render();
+            $html = view('admin.pages.products.partials.__variant', [
+                'variantIndex' => $variantIndex,
+                'colors' => $colors,
+                'sizes' => $sizes,
+                'variant' => null // Important for create form
+            ])->render();
 
-        return response()->json(['html' => $html]);
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Variant generation failed: '.$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate variant form'
+            ], 500);
+        }
     }
 
     public function option(Request $request)

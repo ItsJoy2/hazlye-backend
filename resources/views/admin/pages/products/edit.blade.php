@@ -15,6 +15,14 @@
                     <div class="card-header">Basic Information</div>
                     <div class="card-body">
                         <div class="form-group">
+                            <label for="sku">SKU</label>
+                            <input type="text" name="sku" id="sku" class="form-control"
+                                   value="{{ old('sku', $product->sku) }}">
+                            @error('sku')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="name">Product Name</label>
                             <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $product->name) }}" required>
                         </div>
@@ -64,14 +72,13 @@
                         <div class="form-group">
                             <label for="main_image_2">Secondary Product Image (Optional)</label>
                             <input type="file" name="main_image_2" id="main_image_2" class="form-control-file">
-                            @if(isset($product) && $product->main_image_2)
+                            @if($product->main_image_2)
                                 <div class="mt-2">
                                     <img src="{{ asset('storage/'.$product->main_image_2) }}" width="100">
                                     <input type="hidden" name="existing_main_image_2" value="{{ $product->main_image_2 }}">
                                 </div>
                             @endif
                         </div>
-
 
                         <div class="form-group form-check">
                             <input type="checkbox" name="featured" id="featured" class="form-check-input" value="1" {{ old('featured', $product->featured) ? 'checked' : '' }}>
@@ -108,7 +115,7 @@
                                             <input type="file" name="variants[{{ $index }}][image]" class="form-control-file">
                                             @if($variant->image)
                                                 <div class="mt-2">
-                                                    <img src="{{ asset('storage/' . $variant->image) }}" width="50">
+                                                    <img src="{{ asset('storage/'.$variant->image) }}" width="50">
                                                     <input type="hidden" name="variants[{{ $index }}][existing_image]" value="{{ $variant->image }}">
                                                 </div>
                                             @endif
@@ -140,6 +147,14 @@
                                                                    value="{{ old("variants.$index.options.$optionIndex.stock", $option->stock) }}">
                                                         </div>
                                                         <div class="col-md-3">
+                                                            <input type="text" name="variants[{{ $index }}][options][{{ $optionIndex }}][sku]"
+                                                                   class="form-control" placeholder="SKU" required
+                                                                   value="{{ isset($option->sku) ? $option->sku : old('variants.'.$index.'.options.'.$optionIndex.'.sku') }}">
+                                                            @error("variants.$index.options.$optionIndex.sku")
+                                                                <span class="text-danger">{{ $message }}</span>
+                                                            @enderror
+                                                        </div>
+                                                        <div class="col-md-3 trash-btn ">
                                                             <input type="hidden" name="variants[{{ $index }}][options][{{ $optionIndex }}][id]" value="{{ $option->id }}">
                                                             <button type="button" class="btn btn-sm btn-danger remove-option">
                                                                 <i class="fas fa-trash"></i>
@@ -148,7 +163,7 @@
                                                     </div>
                                                 @endforeach
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-secondary add-option" data-variant="{{ $index }}">
+                                            <button type="button" class="btn btn-sm btn-secondary add-option mt-4" data-variant="{{ $index }}">
                                                 Add Option
                                             </button>
                                         </div>

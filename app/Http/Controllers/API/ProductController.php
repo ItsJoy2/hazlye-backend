@@ -18,6 +18,10 @@ class ProductController extends Controller
         // Add full URL to all images
         $this->addFullImageUrls($products);
 
+        $products->each(function ($product) {
+            $product->makeHidden('Purchase_price');
+        });
+
         return response()->json([
             'success' => true,
             'data' => $products
@@ -34,6 +38,8 @@ class ProductController extends Controller
                 $query->withCount('options');
             }
         ]);
+
+         $product->makeHidden('Purchase_price');
 
         // Add full URL to all images
         if ($product->main_image) {
@@ -85,6 +91,10 @@ class ProductController extends Controller
             ->latest()
             ->take(8)
             ->get();
+
+             $products->each(function ($product) {
+                $product->makeHidden('Purchase_price');
+            });
 
         // Add full URL to all images
         $products->transform(function ($product) {
@@ -139,7 +149,7 @@ class ProductController extends Controller
 
     protected function getFullImageUrl($path)
     {
-        return $path ? url('storage/' . $path) : null;
+        return $path ? url('public/storage/' . $path) : null;
     }
 
     protected function addFullImageUrls($products)
@@ -181,6 +191,10 @@ class ProductController extends Controller
                 ->withAvg('reviews', 'rating')
                 ->latest()
                 ->paginate($perPage);
+
+                $products->each(function ($product) {
+                    $product->makeHidden('Purchase_price');
+                });
 
             // Add full URL to all images
             $this->addFullImageUrls($products);

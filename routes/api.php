@@ -24,7 +24,7 @@ use App\Http\Controllers\API\SearchController;
 // Public routes
 // Route::post('/register', [AuthController::class, 'register']);
 // Route::post('/login', [AuthController::class, 'login']);
-Route::middleware(['throttle:20,1'])->group(function () {
+Route::middleware(['throttle:60,1'])->group(function () {
 // Categories
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
