@@ -1,3 +1,6 @@
+
+
+
 @extends('admin.layouts.app')
 
 @section('content')
@@ -18,8 +21,11 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Size</th>
-                        <th>Products</th>
+                        <th>Type</th>
+                        <th>Size Code</th>
+                        <th>Display Name</th>
+                        {{-- <th>Products</th> --}}
+                        {{-- <th>Sort Order</th> --}}
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -27,15 +33,18 @@
                     @forelse($sizes as $size)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
+                        <td>{{ ucfirst($size->type) }}</td>
                         <td>{{ $size->name }}</td>
-                        <td>{{ $size->products_count }}</td>
+                        <td>{{ $size->display_name ?? '-' }}</td>
+                        {{-- <td>{{ $size->products_count }}</td> --}}
+                        {{-- <td>{{ $size->sort_order }}</td> --}}
                         <td>
                             @include('admin.pages.sizes.partials.__actions')
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="text-center">No sizes found</td>
+                        <td colspan="7" class="text-center">No sizes found</td>
                     </tr>
                     @endforelse
                 </tbody>
