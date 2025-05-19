@@ -36,6 +36,7 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/featured', [ProductController::class, 'featured']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/products/{product}/related', [ProductController::class, 'related']);
+Route::post('/coupon-check', [ProductController::class, 'couponsCheck']);
 
 // Search
 Route::get('/search', [SearchController::class, 'search']);
