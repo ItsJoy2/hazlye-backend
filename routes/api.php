@@ -28,7 +28,7 @@ Route::middleware(['throttle:60,1'])->group(function () {
 // Categories
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
-Route::get('/categories/{category:slug}/products', [ProductController::class, 'byCategory']);
+Route::get('/categories/products/{category:slug}', [ProductController::class, 'byCategory']);
 
 
 // Products
@@ -39,6 +39,8 @@ Route::get('/products/{product}/related', [ProductController::class, 'related'])
 
 // Search
 Route::get('/search', [SearchController::class, 'search']);
+Route::get('/products/search', [SearchController::class, 'searchByName']);
+
 
 // Cart
 Route::post('/cart', [CartController::class, 'store']);
