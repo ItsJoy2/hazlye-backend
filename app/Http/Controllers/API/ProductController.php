@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -18,9 +19,7 @@ class ProductController extends Controller
         // Add full URL to all images
         $this->addFullImageUrls($products);
 
-        $products->each(function ($product) {
-            $product->makeHidden('Purchase_price');
-        });
+
 
         return response()->json([
             'success' => true,
@@ -39,7 +38,7 @@ class ProductController extends Controller
             }
         ]);
 
-         $product->makeHidden('Purchase_price');
+        $product->makeHidden('Purchase_price');
 
         // Add full URL to all images
         if ($product->main_image) {
@@ -92,9 +91,9 @@ class ProductController extends Controller
             ->take(8)
             ->get();
 
-             $products->each(function ($product) {
-                $product->makeHidden('Purchase_price');
-            });
+        $products->each(function ($product) {
+            $product->makeHidden('Purchase_price');
+        });
 
         // Add full URL to all images
         $products->transform(function ($product) {
@@ -192,9 +191,9 @@ class ProductController extends Controller
                 ->latest()
                 ->paginate($perPage);
 
-                $products->each(function ($product) {
-                    $product->makeHidden('Purchase_price');
-                });
+            $products->each(function ($product) {
+                $product->makeHidden('Purchase_price');
+            });
 
             // Add full URL to all images
             $this->addFullImageUrls($products);
@@ -219,6 +218,18 @@ class ProductController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    public function couponsCheck(Request $request)
+    {
+        $coupons = $request->input('coupon');
+        $data = Coupon::where('code', $coupons)->select('id', 'amount')->first();
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 
 }
