@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('product_variant_options', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('variant_id')->constrained('product_variants')->cascadeOnDelete();
-            $table->foreignId('size_id')->constrained();
+            $table->foreignId('variant_id')->constrained('product_variants')->onDelete('cascade');
+            $table->foreignId('size_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('price', 10, 2);
             $table->integer('stock')->default(0);
+            $table->string('sku')->nullable();
             $table->timestamps();
         });
     }

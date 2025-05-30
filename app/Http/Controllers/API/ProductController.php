@@ -12,7 +12,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'variants.color', 'variants.options.size'])
+        $products = Product::with(['images', 'category', 'variants.color', 'variants.options.size'])
             ->latest()
             ->paginate(12);
 
@@ -45,9 +45,13 @@ class ProductController extends Controller
             $product->main_image = $this->getFullImageUrl($product->main_image);
         }
 
-        if ($product->main_image_2) {
-            $product->main_image_2 = $this->getFullImageUrl($product->main_image_2);
+        if ($product->images) {
+            $product->images->transform(function ($image) {
+                $image->image_path = $this->getFullImageUrl($image->image_path);
+                return $image;
+            });
         }
+
 
         if ($product->category && $product->category->image) {
             $product->category->image = $this->getFullImageUrl($product->category->image);
@@ -101,9 +105,13 @@ class ProductController extends Controller
                 $product->main_image = $this->getFullImageUrl($product->main_image);
             }
 
-            if ($product->main_image_2) {
-                $product->main_image_2 = $this->getFullImageUrl($product->main_image_2);
+            if ($product->images) {
+                $product->images->transform(function ($image) {
+                    $image->image_path = $this->getFullImageUrl($image->image_path);
+                    return $image;
+                });
             }
+
 
             if ($product->category && $product->category->image) {
                 $product->category->image = $this->getFullImageUrl($product->category->image);
@@ -223,13 +231,34 @@ class ProductController extends Controller
 
 
     public function couponsCheck(Request $request)
-    {
-        $coupons = $request->input('coupon');
-        $data = Coupon::where('code', $coupons)->select('id', 'amount')->first();
+{
+    $couponCode = $request->input('coupon');
+
+    $coupon = Coupon::where('code', $couponCode)->first();
+
+    if (!$coupon) {
         return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+            'success' => false,
+            'message' => 'Coupon not found'
+        ], 404);
     }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $coupon->id,
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'amount' => $coupon->amount,
+            'minimum_purchase' => $coupon->min_purchase,
+            'start_date' => $coupon->start_date,
+            'end_date' => $coupon->end_date,
+            'is_active' => $coupon->is_active,
+            // You can add this if you want to show current validity (without subtotal check)
+            'is_currently_valid' => $coupon->is_active &&
+                                 now()->between($coupon->start_date, $coupon->end_date)
+        ]
+    ]);
+}
 
 }

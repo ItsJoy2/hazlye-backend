@@ -9,24 +9,10 @@ class ProductImage extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'product_id',
-        'image',
-        'is_primary',
-        'color_id',
-    ];
-
-    protected $casts = [
-        'is_primary' => 'boolean',
-    ];
+    protected $fillable = ['product_id', 'image_path', 'sort_order'];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function color()
-    {
-        return $this->belongsTo(Color::class);
     }
 }

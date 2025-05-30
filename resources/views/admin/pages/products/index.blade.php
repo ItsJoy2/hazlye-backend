@@ -39,14 +39,10 @@
                             @else
                                 <span class="text-muted">No main image</span>
                             @endif
-
-                            @if($product->main_image_2)
-                                <img src="{{ asset('storage/'.$product->main_image_2) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
-                            @endif
                         </td>
-                        <td>{{ number_format($product->Purchase_price, 2) }}</td>
+                        <td>{{ number_format($product->buy_price, 2) }}</td>
                         <td>{{ number_format($product->regular_price, 2) }}</td>
-                        <td>{{ $product->variants->sum(function($variant) { return $variant->options->sum('stock'); }) }}</td>
+                        <td>{{ number_format($product->total_stock) }} PCS</td>
                         <td>{{ $product->category->name ?? 'N/A' }}</td>
                         <td>
                             @foreach($product->variants as $variant)

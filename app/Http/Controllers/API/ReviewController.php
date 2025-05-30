@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
+use id;
 use App\Models\Review;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
@@ -38,11 +39,19 @@ class ReviewController extends Controller
     ]);
 
     if ($request->hasFile('images')) {
-        foreach ($request->file('images') as $image) {
-            $path = $image->store('review_images', 'public');
-            $review->images()->create(['image_path' => $path]);
+        foreach ($request->file('images') as $index => $image) {
+            if ($image->isValid()) {
+                logger("Uploading image #$index: " . $image->getClientOriginalName());
+                $path = $image->store('review_images', 'public');
+                $review->images()->create(['image_path' => $path]);
+            } else {
+                logger("Invalid image at index $index.");
+            }
         }
+    } else {
+        logger('No image files found in request.');
     }
+
 
     return response()->json([
         'success' => true,

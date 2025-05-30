@@ -60,7 +60,7 @@ Route::post('/coupons/validate', [CouponController::class, 'validate']);
 
 // Reviews
 Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
-Route::post('/products/{product:slug}/reviews', [ReviewController::class, 'store']);
+Route::post('/products/reviews/{product:slug}', [ReviewController::class, 'store']);
 
 // Delivery Options
 Route::get('/delivery-options', [DeliveryOptionController::class, 'index']);

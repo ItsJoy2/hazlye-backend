@@ -10,31 +10,40 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'productId',
         'sku',
         'name',
         'slug',
         'description',
-        'regular_price',
-        'Purchase_price',
         'category_id',
-        'main_image',
-        'main_image_2',
-        'featured',
+        'size_id',
+        'total_stock',
+        'buy_price',
+        'regular_price',
+        'discount_price',
+        'is_featured',
+        'is_offer',
+        'is_campaign',
+        'main_image'
     ];
 
     protected $casts = [
+        'is_featured' => 'boolean',
+        'is_offer' => 'boolean',
+        'is_campaign' => 'boolean',
+        'buy_price' => 'float',
+        'size_id' => 'float',
         'regular_price' => 'float',
-        'Purchase_price' => 'float',
-        'id' => 'integer',
-        'category_id' => 'integer',
-        'featured' => 'boolean',
+        'discount_price' => 'float',
     ];
-    protected $primaryKey = 'id';
-    public $incrementing = true;
+
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
     }
 
     public function variants()
@@ -42,20 +51,24 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function getImageUrlAttribute()
+    public function getHasVariantsAttribute()
     {
-        if ($this->main_image) {
-            return asset('storage/'.$this->main_image);
+        return $this->variants()->count() > 0;
+    }
+
+    public function updateStock()
+    {
+        if ($this->has_variants) {
+            $this->total_stock = $this->variants->sum(function($variant) {
+                return $variant->options->sum('stock');
+            });
         }
-        return null;
+        $this->save();
     }
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-    public function approvedReviews()
+    public function size()
 {
-    return $this->reviews()->where('approved', true);
+    return $this->belongsTo(Size::class);
 }
+
 
 }
