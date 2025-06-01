@@ -93,6 +93,27 @@
 							</div>
 						</li>
                         <li class="nav-item">
+							<a href="{{route('admin.customers.index')}}">
+								<i class="far fa-money-bill-alt"></i>
+								<p>Customers</p>
+								{{-- <span class="caret"></span> --}}
+							</a>
+							{{-- <div class="collapse" id="categories">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a href="{{route('admin.categories.index')}}">
+											<span class="sub-item">All Categories</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{route('admin.categories.create')}}">
+											<span class="sub-item">Create Category</span>
+										</a>
+									</li>
+								</ul>
+							</div> --}}
+						</li>
+                        <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#categories">
 								<i class="far fa-money-bill-alt"></i>
 								<p>Categories</p>

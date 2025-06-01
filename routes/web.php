@@ -65,6 +65,8 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     ]);
     Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update-status');
 
+    Route::get('/customers', [AdminOrderController::class, 'customerList'])->name('admin.customers.index');
+
     // Coupons
     Route::resource('coupons', AdminCouponController::class)->names([
         'index' => 'admin.coupons.index',
