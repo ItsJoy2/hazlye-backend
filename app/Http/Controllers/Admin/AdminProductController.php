@@ -54,6 +54,9 @@ class AdminProductController extends Controller
             'featured' => 'boolean',
             'Offer' => 'boolean',
             'campaign' => 'boolean',
+            'status' => 'boolean',
+            'keyword_tags' => 'nullable|array',
+            'keyword_tags.*' => 'string|max:255',
             'variants' => 'sometimes|array',
             'variants.*.color_id' => 'required_with:variants|exists:colors,id',
             'variants.*.image' => 'required_with:variants|image|max:2048',
@@ -86,6 +89,8 @@ class AdminProductController extends Controller
                 'is_featured' => $request->has('featured'),
                 'is_offer' => $request->has('Offer'),
                 'is_campaign' => $request->has('campaign'),
+                'status' => $request->has('status'),
+                'keyword_tags' => $validated['keyword_tags'] ?? null,
             ]);
 
             // Handle gallery images
@@ -233,6 +238,9 @@ public function show(Product $product)
         'featured' => 'boolean',
         'Offer' => 'boolean',
         'campaign' => 'boolean',
+        'status' => 'boolean',
+        'keyword_tags' => 'nullable|array',
+        'keyword_tags' => 'nullable|string|max:255',
         'variants' => 'sometimes|array',
         'variants.*.id' => 'nullable|exists:product_variants,id',
         'variants.*.color_id' => 'required_with:variants|exists:colors,id',
@@ -256,6 +264,7 @@ public function show(Product $product)
             $mainImagePath = $request->file('main_image')->store('products', 'public');
         }
 
+        
         // Update product
         $product->update([
             'sku' => $validated['sku'],
@@ -271,6 +280,8 @@ public function show(Product $product)
             'is_featured' => $request->has('featured'),
             'is_offer' => $request->has('Offer'),
             'is_campaign' => $request->has('campaign'),
+            'status' => $request->has('status'),
+            'keyword_tags' => $validated['keyword_tags'] ?? null,
         ]);
 
         // Handle gallery images

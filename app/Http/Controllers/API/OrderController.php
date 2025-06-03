@@ -192,8 +192,9 @@ class OrderController extends Controller
         $total = $subtotal + $deliveryOption->charge - $discount;
 
         $latestOrder = Order::latest()->first();
-        $nextId = $latestOrder ? $latestOrder->id + 1 : 1;
-        $orderNumber = 'H-' . str_pad($nextId, 5, '101', STR_PAD_LEFT);
+        $datePart = now()->format('Ymd');
+        $randomDigits = str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $orderNumber = "H-{$datePart}-{$randomDigits}"; 
 
         $order = Order::create([
             'order_number' => $orderNumber,

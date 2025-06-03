@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminColorController;
 use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\GeneralSettingsController;
+use App\Http\Controllers\Admin\HomepageSectionController;
 
 Route::get('/', function () {
     return redirect('/signin');
@@ -36,6 +37,17 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'edit' => 'admin.categories.edit',
         'update' => 'admin.categories.update',
         'destroy' => 'admin.categories.destroy'
+    ]);
+
+    //Homepage section
+    Route::resource('homepage-sections', HomepageSectionController::class)->names([
+        'index' => 'admin.homepage-sections.index',
+        'create' => 'admin.homepage-sections.create',
+        'store' => 'admin.homepage-sections.store',
+        'show' => 'admin.homepage-sections.show',
+        'edit' => 'admin.homepage-sections.edit',
+        'update' => 'admin.homepage-sections.update',
+        'destroy' => 'admin.homepage-sections.destroy'
     ]);
 
     // Products

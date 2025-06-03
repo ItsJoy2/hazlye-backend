@@ -174,6 +174,24 @@
                     </div>
                 </div>
 
+
+
+                <div class="card mb-4">
+                    <div class="form-group">
+                        <label>Keyword Tags (comma-separated)</label>
+                        <input type="text" name="keyword_tags[]" class="form-control" placeholder="Add tags..." value="{{ old('keyword_tags') }}">
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="status" name="status" value="1" {{ old('status', isset($product) ? $product->status : true) ? 'checked' : '' }}>
+                        <label class="custom-control-label" for="status">Active</label>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Save Product</button>
             </form>
         </div>

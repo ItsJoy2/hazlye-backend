@@ -3,16 +3,17 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\CategoryController;
-use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\CartController;
+use App\Http\Controllers\API\SizeController;
+use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\ReviewController;
-use App\Http\Controllers\API\DeliveryOptionController;
-use App\Http\Controllers\API\ColorController;
-use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\SearchController;
+use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\DeliveryOptionController;
+use App\Http\Controllers\API\HomepageSectionController;
 
 
 /*
@@ -33,10 +34,15 @@ Route::get('/categories/products/{category:slug}', [ProductController::class, 'b
 
 // Products
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/featured', [ProductController::class, 'featured']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/products/{product}/related', [ProductController::class, 'related']);
 Route::post('/coupon-check', [ProductController::class, 'couponsCheck']);
+Route::get('/products/featured', [ProductController::class, 'featured']);
+Route::get('/products/campaign', [ProductController::class, 'campaign']);
+Route::get('/products/offer', [ProductController::class, 'offer']);
+
+Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
+Route::get('/homepage-sections/{position}', [HomepageSectionController::class, 'show']);
 
 // Search
 Route::get('/search', [SearchController::class, 'search']);

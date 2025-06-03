@@ -23,7 +23,10 @@ class Product extends Model
         'is_featured',
         'is_offer',
         'is_campaign',
-        'main_image'
+        'main_image',
+        'main_image',
+        'status',
+        'keyword_tags',
     ];
 
     protected $casts = [
@@ -34,6 +37,8 @@ class Product extends Model
         'size_id' => 'float',
         'regular_price' => 'float',
         'discount_price' => 'float',
+        'status' => 'boolean',
+        'keyword_tags' => 'array',
     ];
 
     public function category()
@@ -72,6 +77,23 @@ class Product extends Model
 public function reviews()
 {
     return $this->hasMany(Review::class);
+}
+public function scopeActive($query)
+{
+    return $query->where('status', true);
+}
+
+public function getImageUrlAttribute()
+{
+    if (!$this->main_image) {
+        return null;
+    }
+
+    if (filter_var($this->main_image, FILTER_VALIDATE_URL)) {
+        return $this->main_image;
+    }
+
+    return asset('storage/' . $this->main_image);
 }
 
 }

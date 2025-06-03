@@ -13,6 +13,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with(['images', 'category', 'variants.color', 'variants.options.size'])
+            ->active()
             ->latest()
             ->paginate(12);
 
@@ -87,53 +88,53 @@ class ProductController extends Controller
         ]);
     }
 
-    public function featured()
-    {
-        $products = Product::with(['category', 'variants.color', 'variants.options.size'])
-            ->where('featured', true)
-            ->latest()
-            ->take(8)
-            ->get();
+    // public function featured()
+    // {
+    //     $products = Product::with(['category', 'variants.color', 'variants.options.size'])
+    //         ->where('featured', true)
+    //         ->latest()
+    //         ->take(8)
+    //         ->get();
 
-        $products->each(function ($product) {
-            $product->makeHidden('Purchase_price');
-        });
+    //     $products->each(function ($product) {
+    //         $product->makeHidden('Purchase_price');
+    //     });
 
-        // Add full URL to all images
-        $products->transform(function ($product) {
-            if ($product->main_image) {
-                $product->main_image = $this->getFullImageUrl($product->main_image);
-            }
+    //     // Add full URL to all images
+    //     $products->transform(function ($product) {
+    //         if ($product->main_image) {
+    //             $product->main_image = $this->getFullImageUrl($product->main_image);
+    //         }
 
-            if ($product->images) {
-                $product->images->transform(function ($image) {
-                    $image->image_path = $this->getFullImageUrl($image->image_path);
-                    return $image;
-                });
-            }
+    //         if ($product->images) {
+    //             $product->images->transform(function ($image) {
+    //                 $image->image_path = $this->getFullImageUrl($image->image_path);
+    //                 return $image;
+    //             });
+    //         }
 
 
-            if ($product->category && $product->category->image) {
-                $product->category->image = $this->getFullImageUrl($product->category->image);
-            }
+    //         if ($product->category && $product->category->image) {
+    //             $product->category->image = $this->getFullImageUrl($product->category->image);
+    //         }
 
-            if ($product->variants) {
-                $product->variants->transform(function ($variant) {
-                    if ($variant->image) {
-                        $variant->image = $this->getFullImageUrl($variant->image);
-                    }
-                    return $variant;
-                });
-            }
+    //         if ($product->variants) {
+    //             $product->variants->transform(function ($variant) {
+    //                 if ($variant->image) {
+    //                     $variant->image = $this->getFullImageUrl($variant->image);
+    //                 }
+    //                 return $variant;
+    //             });
+    //         }
 
-            return $product;
-        });
+    //         return $product;
+    //     });
 
-        return response()->json([
-            'success' => true,
-            'data' => $products
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $products
+    //     ]);
+    // }
 
     // public function byCategory(Category $category)
     // {
@@ -260,5 +261,44 @@ class ProductController extends Controller
         ]
     ]);
 }
+
+        public function featured()
+    {
+        $products = Product::where('is_featured', true)
+            ->with(['category', 'images', 'variants'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $products
+        ]);
+    }
+
+    public function offer()
+{
+    $products = Product::where('is_offer', true)
+        ->with(['category', 'images', 'variants'])
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'data' => $products
+    ]);
+}
+    public function campaign()
+    {
+        $products = Product::where('is_campaign', true)
+            ->with(['category', 'images', 'variants'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $products
+        ]);
+    }
+
 
 }
