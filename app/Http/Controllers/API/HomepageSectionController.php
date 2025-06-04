@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use Log;
+use Illuminate\Http\Request;
 use App\Models\HomepageSection;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class HomepageSectionController extends Controller
 {
@@ -13,7 +14,7 @@ class HomepageSectionController extends Controller
     $sections = HomepageSection::with(['categories' => function($query) {
             $query->with(['products' => function($query) {
                 $query->active()
-                      ->with('images') 
+                      ->with('images')
                       ->orderBy('created_at', 'desc');
             }]);
         }])
@@ -42,7 +43,7 @@ public function show($id)
         return response()->json($this->formatSection($section));
 
     } catch (\Exception $e) {
-        \Log::error('HomepageSection show error: '.$e->getMessage());
+        Log::error('HomepageSection show error: '.$e->getMessage());
         return response()->json([
             'error' => 'Server error',
             'message' => $e->getMessage()
@@ -66,24 +67,49 @@ protected function formatSection($section)
             return [
                 'id' => $category->id,
                 'name' => $category->name,
-                'order' => $category->pivot->order ?? 0, // Default value if pivot doesn't exist
+                'order' => $category->pivot->order ?? 0,
                 'products' => $category->products->map(function ($product) {
                     if (!$product) return null;
 
-                    return [
+                    $productData = [
                         'id' => $product->id,
                         'name' => $product->name,
                         'slug' => $product->slug,
                         'price' => $product->regular_price,
                         'discount_price' => $product->discount_price,
-                        'image' => $product->image_url ?? null, // Safe null access
-                        'images' => $product->images->pluck('image') ?? [], // Safe array access
+                        'total_stock' => $product->total_stock,
+                        'image' => $product->image_url ?? null,
+                        'images' => $product->images->pluck('image') ?? [],
                         'is_featured' => $product->is_featured,
-                        'is_offer' => $product->is_offer
+                        'is_offer' => $product->is_offer,
+                        'variants' => []
                     ];
-                })->filter()->values() // Remove nulls and reindex
+
+                    if ($product->variants->count() > 0) {
+                        $productData['variants'] = $product->variants->map(function ($variant) {
+                            return [
+                                'id' => $variant->id,
+                                'color_id' => $variant->color_id,
+                                'color_name' => $variant->color->name ?? null,
+                                'image' => $variant->image,
+                                'options' => $variant->options->map(function ($option) {
+                                    return [
+                                        'id' => $option->id,
+                                        'size_id' => $option->size_id,
+                                        'size_name' => $option->size->name ?? null,
+                                        'price' => $option->price,
+                                        'stock' => $option->stock,
+                                        'sku' => $option->sku
+                                    ];
+                                })
+                            ];
+                        });
+                    }
+
+                    return $productData;
+                })->filter()->values()
             ];
-        })->filter()->values() // Remove nulls and reindex
+        })->filter()->values()
     ];
 }
 }
