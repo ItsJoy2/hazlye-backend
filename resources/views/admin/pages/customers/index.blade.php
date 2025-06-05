@@ -5,6 +5,10 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Customer List</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+
             <div class="card-tools">
                 <form action="{{ route('admin.customers.index') }}" method="GET">
                     <div class="input-group input-group-sm" style="width: 250px;">
@@ -18,9 +22,6 @@
                     </div>
                 </form>
             </div>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
                 <table class="table table-striped table-hover table-head-bg-primary mt-4">
                     <thead class="thead-light">
                         <tr>
@@ -42,7 +43,7 @@
                             <td>{{ Str::limit($customer['primary_address'], 30) }}</td>
                             <td class="text-center">{{ $customer['order_count'] }}</td>
                             <td class="text-center">{{ $customer['total_products'] }}</td>
-                            <td class="text-right">${{ $customer['total_spent'] }}</td>
+                            <td class="text-right">&#2547;{{ $customer['total_spent'] }}</td>
                             <td class="text-center">{{ $customer['last_order_at'] }}</td>
                             <td class="text-center">
                                 <a href="{{ route('admin.orders.index', ['phone' => $customer['phone']]) }}"
@@ -77,6 +78,21 @@
         height: 30px;
         border-radius: 50%;
         border: 1px solid #ddd;
+    }
+    .container form{
+        background: none !important;
+        width: 100% !important;
+        border: none !important;
+        margin-bottom: -20px !important;
+    }
+    .card-tools form input{
+        background: none !important;
+        padding-right: -30px !important;
+        border-radius: 6px !important;
+    }
+    .container form i{
+        margin-left: -40px;
+        margin-top: 6px;
     }
 </style>
 {{-- <div class="card-footer clearfix">

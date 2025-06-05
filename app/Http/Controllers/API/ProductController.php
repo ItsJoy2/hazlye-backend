@@ -262,43 +262,130 @@ class ProductController extends Controller
     ]);
 }
 
-        public function featured()
-    {
-        $products = Product::where('is_featured', true)
-            ->with(['category', 'images', 'variants'])
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'status' => true,
-            'data' => $products
-        ]);
-    }
-
-    public function offer()
+public function featured()
 {
-    $products = Product::where('is_offer', true)
+    $products = Product::where('is_featured', true)
         ->with(['category', 'images', 'variants'])
         ->latest()
         ->get();
+
+    // Add full URL to all images
+    $products->transform(function ($product) {
+        if ($product->main_image) {
+            $product->main_image = $this->getFullImageUrl($product->main_image);
+        }
+
+        if ($product->images) {
+            $product->images->transform(function ($image) {
+                $image->image_path = $this->getFullImageUrl($image->image_path);
+                return $image;
+            });
+        }
+
+        if ($product->category && $product->category->image) {
+            $product->category->image = $this->getFullImageUrl($product->category->image);
+        }
+
+        if ($product->variants) {
+            $product->variants->transform(function ($variant) {
+                if ($variant->image) {
+                    $variant->image = $this->getFullImageUrl($variant->image);
+                }
+                return $variant;
+            });
+        }
+
+        return $product;
+    });
 
     return response()->json([
         'status' => true,
         'data' => $products
     ]);
 }
-    public function campaign()
-    {
-        $products = Product::where('is_campaign', true)
-            ->with(['category', 'images', 'variants'])
-            ->latest()
-            ->get();
 
-        return response()->json([
-            'status' => true,
-            'data' => $products
-        ]);
-    }
+public function offer()
+{
+    $products = Product::where('is_offer', true)
+        ->with(['category', 'images', 'variants'])
+        ->latest()
+        ->get();
 
+    // Add full URL to all images
+    $products->transform(function ($product) {
+        if ($product->main_image) {
+            $product->main_image = $this->getFullImageUrl($product->main_image);
+        }
+
+        if ($product->images) {
+            $product->images->transform(function ($image) {
+                $image->image_path = $this->getFullImageUrl($image->image_path);
+                return $image;
+            });
+        }
+
+        if ($product->category && $product->category->image) {
+            $product->category->image = $this->getFullImageUrl($product->category->image);
+        }
+
+        if ($product->variants) {
+            $product->variants->transform(function ($variant) {
+                if ($variant->image) {
+                    $variant->image = $this->getFullImageUrl($variant->image);
+                }
+                return $variant;
+            });
+        }
+
+        return $product;
+    });
+
+    return response()->json([
+        'status' => true,
+        'data' => $products
+    ]);
+}
+
+public function campaign()
+{
+    $products = Product::where('is_campaign', true)
+        ->with(['category', 'images', 'variants'])
+        ->latest()
+        ->get();
+
+    // Add full URL to all images
+    $products->transform(function ($product) {
+        if ($product->main_image) {
+            $product->main_image = $this->getFullImageUrl($product->main_image);
+        }
+
+        if ($product->images) {
+            $product->images->transform(function ($image) {
+                $image->image_path = $this->getFullImageUrl($image->image_path);
+                return $image;
+            });
+        }
+
+        if ($product->category && $product->category->image) {
+            $product->category->image = $this->getFullImageUrl($product->category->image);
+        }
+
+        if ($product->variants) {
+            $product->variants->transform(function ($variant) {
+                if ($variant->image) {
+                    $variant->image = $this->getFullImageUrl($variant->image);
+                }
+                return $variant;
+            });
+        }
+
+        return $product;
+    });
+
+    return response()->json([
+        'status' => true,
+        'data' => $products
+    ]);
+}
 
 }

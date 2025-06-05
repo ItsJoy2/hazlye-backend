@@ -67,6 +67,7 @@ protected function formatSection($section)
             return [
                 'id' => $category->id,
                 'name' => $category->name,
+                'slug' => $category->slug,
                 'order' => $category->pivot->order ?? 0,
                 'products' => $category->products->map(function ($product) {
                     if (!$product) return null;

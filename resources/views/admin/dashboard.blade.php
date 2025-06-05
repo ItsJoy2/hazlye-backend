@@ -2,114 +2,201 @@
 
 @section('content')
 <div class="container">
-    <h1 class="mb-4">Dashboard</h1>
-
-    <!-- Filter Form -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ route('admin.dashboard') }}">
-                <div class="row">
-                    <div class="col-md-4">
-                        <label for="date_range" class="form-label">Date Range</label>
-                        <input type="text" name="date_range" id="date_range" class="form-control date-range-picker"
-                               value="{{ $selectedDateRange }}" placeholder="Select date range">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="status" class="form-label">Order Status</label>
-                        <select name="status" id="status" class="form-select">
-                            <option value="">All Statuses</option>
-                            <option value="pending" {{ $selectedStatus == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="processing" {{ $selectedStatus == 'processing' ? 'selected' : '' }}>Processing</option>
-                            <option value="completed" {{ $selectedStatus == 'completed' ? 'selected' : '' }}>Completed</option>
-                            <option value="cancelled" {{ $selectedStatus == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary me-2">Filter</button>
-                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Reset</a>
-                    </div>
-                </div>
-            </form>
-        </div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard Overview</h1>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row">
+    <!-- Section 1: Summary Cards -->
+    <div class="row mb-4">
         <!-- Today's Orders -->
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card bg-primary text-white">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Today's Orders</h5>
-                    <h2 class="mb-0">{{ $todayOrders }}</h2>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Today's Orders</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $todayOrders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Revenue -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Today's Revenue</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">&#2547;{{ number_format($todayAmount, 2) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Total Products -->
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card bg-success text-white">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Total Products</h5>
-                    <h2 class="mb-0">{{ $totalProducts }}</h2>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Products</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalProducts }}</div>
+                            @if($lowStockProducts > 0)
+                            <div class="mt-2">
+                                <span class="badge badge-warning">{{ $lowStockProducts }} low stock</span>
+                            </div>
+                            @endif
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Today's Profit -->
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card bg-info text-white">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Today's Profit</h5>
-                    <h2 class="mb-0">{{ number_format($todayProfit, 2) }}</h2>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Profit -->
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5 class="card-title">Total Profit</h5>
-                    <h2 class="mb-0">{{ number_format($totalProfit, 2) }}</h2>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Today's Profit</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">&#2547;{{ number_format($todayProfit, 2) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtered Stats -->
+    <!-- Section 2: Date Filtered Data -->
     <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Filtered Statistics</h5>
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex  align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Date Range Report</h6>
                 </div>
                 <div class="card-body">
+                    <form method="GET" action="{{ route('admin.dashboard') }}" class="mb-4" id="dateFilterForm">
+                        <div class="row">
+                            <!-- Start Date -->
+                            <div class="col-md-4 col-sm-6 mb-3 mb-md-0">
+                                <div class="form-group">
+                                    <label for="start_date" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date"
+                                        value="{{ request('start_date') }}" required>
+                                </div>
+                            </div>
+
+                            <!-- End Date -->
+                            <div class="col-md-4 col-sm-6 mb-3 mb-md-0">
+                                <div class="form-group">
+                                    <label for="end_date" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date"
+                                        value="{{ request('end_date') }}" required>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="col-md-4 col-sm-12">
+                                <div class="form-group h-100 d-flex align-items-end">
+                                    <div class="d-flex w-100">
+                                        <input type="hidden" name="date_filter" value="1">
+                                        <button type="submit" class="btn btn-primary flex-grow-1 me-2">
+                                            <i class="fas fa-filter me-1"></i> Generate Report
+                                        </button>
+                                        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary flex-grow-1" id="resetFilter">
+                                            <i class="fas fa-undo me-1"></i> Reset
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                                <div>
-                                    <h6 class="mb-0">Total Orders</h6>
-                                    <h3 class="mb-0">{{ $totalOrders }}</h3>
+                        <!-- Orders Card -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shopping-cart fa-2x text-primary mb-3"></i>
+                                    <h5 class="card-title">Total Orders</h5>
+                                    <h2 class="mb-0">
+                                        @if(request('date_filter'))
+                                            {{ $dateRangeOrders }}
+                                        @else
+                                            {{ $totalOrders }}
+                                        @endif
+                                    </h2>
                                 </div>
-                                <i class="fas fa-shopping-cart fa-2x text-primary"></i>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                                <div>
-                                    <h6 class="mb-0">Total Products</h6>
-                                    <h3 class="mb-0">{{ $totalProducts }}</h3>
+
+                        <!-- Revenue Card -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-money-bill-wave fa-2x text-success mb-3"></i>
+                                    <h5 class="card-title">Total Revenue</h5>
+                                    <h2 class="mb-0">
+                                        @if(request('date_filter'))
+                                        &#2547;{{ number_format($dateRangeAmount, 2) }}
+                                        @else
+                                        &#2547;{{ number_format($totalAmount, 2) }}
+                                        @endif
+                                    </h2>
                                 </div>
-                                <i class="fas fa-boxes fa-2x text-success"></i>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                                <div>
-                                    <h6 class="mb-0">Total Profit</h6>
-                                    <h3 class="mb-0">{{ number_format($totalProfit, 2) }}</h3>
+
+                        <!-- Products Sold Card -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-boxes fa-2x text-warning mb-3"></i>
+                                    <h5 class="card-title">Products Sold</h5>
+                                    <h2 class="mb-0">
+                                        @if(request('date_filter'))
+                                            {{ $dateRangeProductsSold }}
+                                        @else
+                                            {{ $totalProductsSold }}
+                                        @endif
+                                    </h2>
                                 </div>
-                                <i class="fas fa-money-bill-wave fa-2x text-warning"></i>
+                            </div>
+                        </div>
+
+                        <!-- Profit Card -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x text-danger mb-3"></i>
+                                    <h5 class="card-title">Total Profit</h5>
+                                    <h2 class="mb-0">
+                                        @if(request('date_filter'))
+                                        &#2547;{{ number_format($dateRangeProfit, 2) }}
+                                        @else
+                                        &#2547;{{ number_format($totalProfit, 2) }}
+                                        @endif
+                                    </h2>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -117,31 +204,147 @@
             </div>
         </div>
     </div>
+
+    <!-- Section 3: Recent Orders -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-head-bg-primary mt-4" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Phone</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentOrders as $order)
+                                <tr>
+                                    <td>{{ $order->order_number }}</td>
+                                    <td>{{ $order->name }}</td>
+                                    <td>{{ $order->phone }}</td>
+                                    <td>{{ $order->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>&#2547;{{ number_format($order->total, 2) }}</td>
+                                    <td>
+                                        <span class="badge
+                                            @if($order->status == 'completed') badge-success
+                                            @elseif($order->status == 'processing') badge-primary
+                                            @elseif($order->status == 'cancelled') badge-danger
+                                            @else badge-secondary
+                                            @endif">
+                                            {{ ucfirst($order->status) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="text-center">No recent orders found</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
-@push('scripts')
-<!-- Date Range Picker -->
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
 <script>
-    $(document).ready(function() {
-        $('.date-range-picker').daterangepicker({
-            opens: 'left',
-            autoUpdateInput: false,
-            locale: {
-                format: 'YYYY-MM-DD',
-                cancelLabel: 'Clear'
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clear form inputs when reset button is clicked
+        document.getElementById('resetFilter').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('dateFilterForm').reset();
+            window.location.href = "{{ route('admin.dashboard') }}";
+        });
+
+        // Clear the filter when page is refreshed without form submission
+        if(performance.navigation.type == 1) {
+            if(!window.location.search.includes('date_filter')) {
+                document.getElementById('dateFilterForm').reset();
             }
-        });
-
-        $('.date-range-picker').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-        });
-
-        $('.date-range-picker').on('cancel.daterangepicker', function(ev, picker) {
-            $(this).val('');
-        });
+        }
     });
 </script>
-@endpush
+
+
+
+<style>
+    #dateFilterForm {
+        width: 100%;
+    }
+
+    @media (max-width: 768px) {
+        #dateFilterForm .form-group {
+            margin-bottom: 15px;
+        }
+
+        #dateFilterForm .btn {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        #dateFilterForm .d-flex {
+            flex-direction: column;
+        }
+
+        #dateFilterForm .me-2 {
+            margin-right: 0 !important;
+            margin-bottom: 10px;
+        }
+    }
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .border-left-secondary {
+        border-left: 0.25rem solid #858796 !important;
+    }
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .table {
+        font-size: 14px;
+    }
+    .table th {
+        white-space: nowrap;
+    }
+    .badge {
+        font-size: 12px;
+        padding: 5px 10px;
+        font-weight: 600;
+    }
+
+    @media only screen and (max-width: 600px) {
+
+}
+</style>

@@ -10,13 +10,34 @@ use App\Http\Controllers\Controller;
 
 class AdminOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with(['items', 'coupon'])
-            ->latest()
-            ->paginate(10);
+        $query = Order::with(['items', 'coupon'])
+            ->latest();
 
-        return view('admin.pages.orders.index', compact('orders'));
+        // Status filter
+        if ($request->has('status') && $request->status != 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Date range filter
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $orders = $query->paginate(10);
+
+        // For filter form values
+        $status = $request->status ?? 'all';
+        $dateFrom = $request->date_from ?? '';
+        $dateTo = $request->date_to ?? '';
+
+        return view('admin.pages.orders.index', compact('orders', 'status', 'dateFrom', 'dateTo'));
+
     }
 
     public function edit(Order $order)
@@ -37,6 +58,9 @@ class AdminOrderController extends Controller
             'status' => 'required|string|max:255',
             'comment' => 'nullable|string'
         ]);
+        if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+            $order->returnStock();
+        }
 
         $order->update($validated);
 

@@ -2,68 +2,165 @@
 
 namespace App\Http\Controllers\Admin;
 
-use view;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\OrderItem;
+use App\Models\ProductVariantOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
 
-
 class DashboardController extends Controller
 {
     public function index(Request $request)
-{
-    // Today's date
-    $today = Carbon::today();
+    {
+        // Date calculations
+        $today = Carbon::today();
+        $yesterday = Carbon::yesterday();
+        $currentMonth = Carbon::now()->startOfMonth();
 
-    // Initialize filter variables
-    $dateRange = $request->input('date_range', null);
-    $status = $request->input('status', null);
+        // Initialize all variables with default values
+        $todayOrders = $yesterdayOrders = $monthlyOrders = $totalOrders = 0;
+        $todayProfit = $yesterdayProfit = $monthlyProfit = $totalProfit = 0;
+        $todayAmount = $yesterdayAmount = $monthlyAmount = $totalAmount = 0;
+        $totalProducts = $lowStockProducts = $totalProductsSold = 0;
 
-    // Base queries
-    $orderQuery = Order::query();
-    $productQuery = Product::query();
+        // Order statistics
+        $todayOrders = Order::whereDate('created_at', $today)->count();
+        $yesterdayOrders = Order::whereDate('created_at', $yesterday)->count();
+        $monthlyOrders = Order::where('created_at', '>=', $currentMonth)->count();
+        $totalOrders = Order::count();
 
-    // Apply date filter if provided
-    if ($dateRange && strpos($dateRange, ' - ') !== false) {
-        $dates = explode(' - ', $dateRange);
-        try {
-            $startDate = Carbon::createFromFormat('Y-m-d', trim($dates[0]))->startOfDay();
-            $endDate = Carbon::createFromFormat('Y-m-d', trim($dates[1] ?? $dates[0]))->endOfDay();
-            $orderQuery->whereBetween('created_at', [$startDate, $endDate]);
-        } catch (\Exception $e) {
-            // Handle invalid date format
+        // Amount calculations (total order value)
+        $todayAmount = Order::whereDate('created_at', $today)->sum('total');
+        $yesterdayAmount = Order::whereDate('created_at', $yesterday)->sum('total');
+        $monthlyAmount = Order::where('created_at', '>=', $currentMonth)->sum('total');
+        $totalAmount = Order::sum('total');
+
+        // Profit calculations (updated to consider buy price)
+        $todayProfit = $this->calculateProfit(Order::whereDate('created_at', $today)->with('items')->get());
+        $yesterdayProfit = $this->calculateProfit(Order::whereDate('created_at', $yesterday)->with('items')->get());
+        $monthlyProfit = $this->calculateProfit(Order::where('created_at', '>=', $currentMonth)->with('items')->get());
+        $totalProfit = $this->calculateProfit(Order::with('items')->get());
+
+        // Product statistics
+        $totalProducts = Product::count();
+        $lowStockProducts = Product::where('total_stock', '<', 10)->count();
+
+        // Total products sold calculation
+        $totalProductsSold = OrderItem::sum('quantity');
+
+        // Recent orders for the activity feed
+        $recentOrders = Order::with('items')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        // Best selling products
+        $bestSellers = OrderItem::selectRaw('product_id, product_name, price, sum(quantity) as total_sold')
+            ->with('product')
+            ->groupBy('product_id', 'product_name', 'price')
+            ->orderBy('total_sold', 'desc')
+            ->take(5)
+            ->get();
+
+        // Date range statistics (if filter is applied)
+        $dateFilter = $request->input('date_filter');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $dateRangeOrders = null;
+        $dateRangeProductsSold = null;
+        $dateRangeProfit = null;
+        $dateRangeAmount = null;
+
+        if ($dateFilter && $startDate && $endDate) {
+            $dateRangeOrders = Order::whereBetween('created_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ])->count();
+
+            $dateRangeProductsSold = OrderItem::whereHas('order', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay()
+                ]);
+            })->sum('quantity');
+
+            $dateRangeOrdersCollection = Order::whereBetween('created_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ])->with('items')->get();
+
+            $dateRangeProfit = $this->calculateProfit($dateRangeOrdersCollection);
+            $dateRangeAmount = Order::whereBetween('created_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ])->sum('total');
         }
+
+        return view('admin.dashboard', compact(
+            'todayOrders',
+            'yesterdayOrders',
+            'monthlyOrders',
+            'totalOrders',
+            'todayAmount',
+            'yesterdayAmount',
+            'monthlyAmount',
+            'totalAmount',
+            'todayProfit',
+            'yesterdayProfit',
+            'monthlyProfit',
+            'totalProfit',
+            'totalProducts',
+            'lowStockProducts',
+            'totalProductsSold',
+            'recentOrders',
+            'bestSellers',
+            'dateFilter',
+            'startDate',
+            'endDate',
+            'dateRangeOrders',
+            'dateRangeProductsSold',
+            'dateRangeProfit',
+            'dateRangeAmount'
+        ));
     }
 
-    // Apply status filter if provided
-    if ($status && is_string($status)) {
-        $orderQuery->where('status', $status);
+    /**
+     * Calculate profit by subtracting buy price from order price for each item
+     */
+    private function calculateProfit($orders)
+    {
+        $profit = 0;
+
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $buyPrice = 0;
+
+                if ($item->variant_id) {
+                    // For variant products, get the buy price from the variant option
+                    $variantOption = ProductVariantOption::find($item->option_id);
+                    if ($variantOption) {
+                        $buyPrice = $variantOption->buy_price ?? 0;
+                    }
+                } else {
+                    // For regular products, get the buy price from the product
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $buyPrice = $product->buy_price ?? 0;
+                    }
+                }
+
+                // Calculate profit for this item: (sale price - buy price) * quantity
+                $itemProfit = ($item->price - $buyPrice) * $item->quantity;
+                $profit += $itemProfit;
+            }
+
+            // Subtract any discount from the profit
+            $profit -= $order->discount;
+        }
+
+        return $profit;
     }
-
-    // Calculate stats with proper null checks
-    $todayOrders = Order::whereDate('created_at', $today)->count();
-    $totalProducts = Product::count();
-
-    $todayProfit = Order::whereDate('created_at', $today)
-        ->where('status', '!=', 'cancelled')
-        ->sum('total') ?? 0;
-
-    $totalProfit = $orderQuery->clone()
-        ->where('status', '!=', 'cancelled')
-        ->sum('total') ?? 0;
-
-    $totalOrders = $orderQuery->clone()->count();
-
-    return view('admin.dashboard', [
-        'todayOrders' => $todayOrders,
-        'totalProducts' => $totalProducts,
-        'todayProfit' => $todayProfit,
-        'totalProfit' => $totalProfit,
-        'totalOrders' => $totalOrders,
-        'selectedStatus' => $status,
-        'selectedDateRange' => $dateRange,
-    ]);
-}
 }

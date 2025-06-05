@@ -14,48 +14,50 @@
         <div class="card-body">
             @include('admin.layouts.partials.__alerts')
 
-            <table class="table table-striped table-hover table-head-bg-primary mt-4">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Image</th>
-                        <th>Buy Price</th>
-                        <th>Regular sell Price</th>
-                        <th>Total Stock</th>
-                        <th>Category</th>
-                        <th>Variants</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($products as $index => $product)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $product->name }}</td>
-                        <td>
-                            @if($product->main_image)
-                                <img src="{{ asset('storage/'.$product->main_image) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
-                            @else
-                                <span class="text-muted">No main image</span>
-                            @endif
-                        </td>
-                        <td>{{ number_format($product->buy_price, 2) }}</td>
-                        <td>{{ number_format($product->regular_price, 2) }}</td>
-                        <td>{{ number_format($product->total_stock) }} PCS</td>
-                        <td>{{ $product->category->name ?? 'N/A' }}</td>
-                        <td>
-                            @foreach($product->variants as $variant)
-                                <span class="badge bg-secondary">{{ $variant->color->name }}</span>
-                            @endforeach
-                        </td>
-                        <td>
-                            @include('admin.pages.products.partials.__actions')
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-head-bg-primary mt-4" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Image</th>
+                            <th>Buy Price</th>
+                            <th>Regular sell Price</th>
+                            <th>Total Stock</th>
+                            <th>Category</th>
+                            <th>Variants</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($products as $index => $product)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $product->name }}</td>
+                            <td>
+                                @if($product->main_image)
+                                    <img src="{{ asset('storage/'.$product->main_image) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
+                                @else
+                                    <span class="text-muted">No main image</span>
+                                @endif
+                            </td>
+                            <td>{{ number_format($product->buy_price, 2) }}</td>
+                            <td>{{ number_format($product->regular_price, 2) }}</td>
+                            <td>{{ number_format($product->total_stock) }} PCS</td>
+                            <td>{{ $product->category->name ?? 'N/A' }}</td>
+                            <td>
+                                @foreach($product->variants as $variant)
+                                    <span class="badge bg-secondary">{{ $variant->color->name }}</span>
+                                @endforeach
+                            </td>
+                            <td>
+                                @include('admin.pages.products.partials.__actions')
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div class="card-footer clearfix">
             {{ $products->links('admin.layouts.partials.__pagination') }}

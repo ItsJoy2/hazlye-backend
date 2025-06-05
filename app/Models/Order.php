@@ -23,7 +23,7 @@ class Order extends Model
         'comment',
     ];
 
-    
+
     protected $casts = [
         'subtotal' => 'decimal:2',
         'delivery_charge' => 'decimal:2',
@@ -40,4 +40,21 @@ class Order extends Model
     {
         return $this->belongsTo(Coupon::class, 'coupon_code', 'code');
     }
+    public function returnStock()
+{
+    foreach ($this->items as $item) {
+        $product = $item->product;
+
+        if ($product->has_variants && $item->variant_option_id) {
+            $variantOption = ProductVariantOption::find($item->variant_option_id);
+            if ($variantOption) {
+                $variantOption->increment('stock', $item->quantity);
+                $product->updateStock();
+            }
+        } else {
+            $product->increment('total_stock', $item->quantity);
+        }
+    }
+}
+
 }
