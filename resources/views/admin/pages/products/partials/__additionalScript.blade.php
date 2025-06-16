@@ -213,9 +213,12 @@
         const galleryInput = document.getElementById('gallery_images');
         const galleryPreview = document.getElementById('gallery-preview');
         const addMoreBtn = document.getElementById('add-more-images');
+        const errorContainer = document.getElementById('gallery-error');
 
         // Internal store of files
         let galleryFiles = [];
+        
+        let existingImagesCount = {{ isset($product) && $product->images ? $product->images->count() : 0 }};
 
         // Create hidden file inputs container
         const hiddenFileInputsContainer = document.createElement('div');
@@ -231,26 +234,39 @@
                 const newFiles = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
 
                 if (newFiles.length === 0) {
-                    alert('Only image files are allowed.');
+                    showError('Only image files are allowed.');
                     return;
                 }
 
                 galleryFiles.push(...newFiles);
                 updatePreview();
                 updateHiddenFileInputs();
+                clearError(); // Clear error when files are selected
 
                 // Reset the input to allow re-selection
                 galleryInput.value = '';
             });
         }
 
+        function showError(message) {
+            errorContainer.innerHTML = `<span class="text-danger">${message}</span>`;
+        }
+
+        function clearError() {
+            errorContainer.innerHTML = '';
+        }
+
         function updatePreview() {
-            galleryPreview.innerHTML = '';
+            // Clear only the newly added images preview (not existing ones)
+            const newPreviews = galleryPreview.querySelectorAll('[data-new-image]');
+            newPreviews.forEach(el => el.remove());
+
             galleryFiles.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     const col = document.createElement('div');
                     col.className = 'col-md-3 mb-3';
+                    col.setAttribute('data-new-image', 'true');
                     col.innerHTML = `
                         <div class="card">
                             <img src="${e.target.result}" class="card-img-top" style="height: 150px; object-fit: cover;">
@@ -283,16 +299,113 @@
             });
         }
 
+        // Add form validation before submit
+        form.addEventListener('submit', function(e) {
+            const removedCount = document.getElementById('removed_images').value
+                ? document.getElementById('removed_images').value.split(',').length
+                : 0;
+            const totalImages = galleryFiles.length + existingImagesCount - removedCount;
+
+            if (totalImages <= 0) {
+                e.preventDefault();
+                showError('Please select at least one gallery image.');
+                // Scroll to the error message
+                errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        });
+
         galleryPreview.addEventListener('click', function (e) {
             const btn = e.target.closest('.remove-image');
             if (btn) {
-                const index = parseInt(btn.dataset.index);
-                galleryFiles.splice(index, 1);
-                updatePreview();
-                updateHiddenFileInputs();
+                if (btn.hasAttribute('data-index')) {
+                    // Remove new image
+                    const index = parseInt(btn.dataset.index);
+                    galleryFiles.splice(index, 1);
+                    updatePreview();
+                    updateHiddenFileInputs();
+
+                    // Check if we need to show error after removal
+                    const removedCount = document.getElementById('removed_images').value
+                        ? document.getElementById('removed_images').value.split(',').length
+                        : 0;
+                    if (galleryFiles.length === 0 && existingImagesCount - removedCount <= 0) {
+                        showError('Please select at least one gallery image.');
+                    }
+                }
             }
-        })
+        });
+    });
+
+    function removeExistingImage(button, imageId) {
+        // Add to removed images list
+        const removedInput = document.getElementById('removed_images');
+        let removed = removedInput.value ? removedInput.value.split(',') : [];
+        removed.push(imageId);
+        removedInput.value = removed.join(',');
+
+        // Remove the image element
+        button.closest('.existing-image').remove();
+
+        // Check if we need to show error after removal
+        const existingCount = document.querySelectorAll('.existing-image').length;
+        const galleryFiles = document.querySelectorAll('[data-new-image]').length;
+        const errorContainer = document.getElementById('gallery-error');
+
+        if (existingCount + galleryFiles <= 0) {
+            errorContainer.innerHTML = '<span class="text-danger">Please select at least one gallery image.</span>';
+        }
+    }
+</script>
+
+<script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+
+<script>
+
+    // Initialize CKEditor with full image upload capabilities
+    if (document.getElementById('description')) {
+        CKEDITOR.replace('description', {
+            toolbar: [
+                { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat'] },
+                { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Blockquote'] },
+                { name: 'links', items: ['Link', 'Unlink'] },
+                { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
+                { name: 'document', items: ['Source'] },
+                '/',
+                { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+                { name: 'colors', items: ['TextColor', 'BGColor'] },
+                { name: 'tools', items: ['Maximize'] }
+            ],
+            height: 300,
+            // Enable enhanced image upload features
+            extraPlugins: 'uploadimage,image2',
+            removePlugins: 'image',
+            // Upload configuration
+            filebrowserUploadUrl: "{{ route('ckeditor.upload', ['_token' => csrf_token()]) }}",
+            filebrowserImageUploadUrl: "{{ route('ckeditor.upload', ['_token' => csrf_token()]) }}?type=Images",
+            uploadUrl: "{{ route('ckeditor.upload', ['_token' => csrf_token()]) }}",
+            // Image dialog configuration
+            imageUpload_maxWidth: 1200,
+            imageUpload_maxHeight: 1200,
+            imageUpload_maxSize: 2, // MB
+            // Allow pasting images directly
+            pasteFromWordRemoveStyles: false,
+            pasteFromWordRemoveFontStyles: false,
+            // Enable drag and drop
+            uploadDrop: true
+        });
+    }
+
+    // Update CKEditor content before form submission
+    document.getElementById('product-form').addEventListener('submit', function() {
+        for (var instance in CKEDITOR.instances) {
+            CKEDITOR.instances[instance].updateElement();
+        }
     });
     </script>
 
-
+<style>
+    .cke_notifications_area {
+        display: none !important;
+    }
+</style>

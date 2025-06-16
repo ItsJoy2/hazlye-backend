@@ -28,13 +28,19 @@
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                         </div>
-
+                        <div class="form-group">
+                            <label for="short_description">Short Description</label>
+                            <textarea name="short_description" id="short_description" class="form-control" rows="3">{{ old('short_description', isset($product) ? $product->short_description : '') }}</textarea>
+                            @error('short_description')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
                         <div class="form-group">
                             <label for="description">Description</label>
-                            <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
+                            <textarea name="description" id="description" class="form-control ckeditor @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
                             @error('description')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
@@ -113,38 +119,27 @@
                                         <button type="button" id="add-more-images" class="btn btn-secondary">
                                             <i class="fas fa-plus"></i> Add Images
                                         </button>
-                                        <div class="row mt-2" id="gallery-preview"></div>
-                                        @error('gallery_images')
-                                            <div class="text-danger">{{ $message }}</div>
-                                        @enderror
+                                        <div id="gallery-error">
+                                            @error('gallery_images')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
 
                                     <!-- Image Preview Container -->
                                     <div class="row mt-3" id="gallery-preview">
-                                        @if(isset($product) && $product->galleryImages->count() > 0)
-                                            @foreach($product->galleryImages as $image)
-                                                <div class="col-md-3 mb-3 existing-image" data-id="{{ $image->id }}">
-                                                    <div class="position-relative">
-                                                        <img src="{{ asset('storage/' . $image->image_path) }}"
-                                                             class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
-                                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image"
-                                                                onclick="removeExistingImage(this, {{ $image->id }})">
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        @endif
+                                        <!-- No existing images in create form -->
                                     </div>
                                     @error('gallery_images')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-            @enderror
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
 
                             <input type="hidden" name="existing_images" id="existing_images" value="">
                             <input type="hidden" name="removed_images" id="removed_images" value="">
                         </div>
+
 
                         <div class="d-flex">
                             <div class="form-group form-check">
@@ -165,7 +160,7 @@
 
                 <!-- Rest of your form remains the same -->
                 <div class="card mb-4">
-                    <div class="card-header">Variants (Optional)</div> <!-- Changed header to indicate optional -->
+                    <div class="card-header">Variants (Optional)</div>
                     <div class="card-body">
                         <div id="variants-container">
                             <!-- No default variant - empty container -->
@@ -179,7 +174,7 @@
                 <div class="card mb-4">
                     <div class="form-group">
                         <label>Keyword Tags (comma-separated)</label>
-                        <input type="text" name="keyword_tags[]" class="form-control" placeholder="Add tags..." value="{{ old('keyword_tags') }}">
+                        <input type="text" name="keyword_tags" class="form-control" placeholder="Add tags..." value="{{ old('keyword_tags') }}">
                     </div>
                 </div>
 

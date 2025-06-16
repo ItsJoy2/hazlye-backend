@@ -10,12 +10,14 @@ class GeneralSetting extends Model
     use HasFactory;
 
     protected $fillable = [
-       'activation_amount',
-        'bonus_token',
-        'min_withdraw',
-        'max_withdraw',
         'app_name',
         'logo',
         'favicon',
+        'facebook_url',
+        'twitter_url',
+        'instagram_url',
+        'youtube_url',
+        'linkedin_url',
+        'tiktok_url'
     ];
 }

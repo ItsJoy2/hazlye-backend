@@ -30,13 +30,19 @@
                             <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                        <div class="form-group">
+                            <label for="short_description">Short Description</label>
+                            <textarea name="short_description" id="short_description" class="form-control" rows="3">{{ old('short_description', isset($product) ? $product->short_description : '') }}</textarea>
+                            @error('short_description')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
 
                         <div class="form-group">
                             <label for="description">Description</label>
-                            <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
-                                      rows="3">{{ old('description', $product->description) }}</textarea>
+                            <textarea name="description" id="description" class="form-control ckeditor @error('description') is-invalid @enderror" rows="10">{{ old('description', $product->description) }}</textarea>
                             @error('description')
-                            <span class="text-danger">{{ $message }}</span>
+                                <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
 
@@ -62,7 +68,7 @@
                                 <option value="">-- No specific size --</option>
                                 @foreach($sizes as $size)
                                     <option value="{{ $size->id }}"
-                                        {{ old('size_id', $product->size_id) == $size->id ? 'selected' : '' }}>
+                                        {{ old('size', $product->size) == $size->id ? 'selected' : '' }}>
                                         {{ $size->name }}
                                     </option>
                                 @endforeach
@@ -141,24 +147,26 @@
 
                                     <!-- Existing Images Preview -->
                                     <div class="row mt-3" id="existing-gallery-preview">
-                                        @foreach($product->images as $image)
-                                            <div class="col-md-3 mb-3 existing-image" data-id="{{ $image->id }}">
-                                                <div class="position-relative">
-                                                    <img src="{{ asset('storage/' . $image->image_path) }}"
-                                                         class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
-                                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image"
-                                                            onclick="removeExistingImage(this, {{ $image->id }})">
-                                                        ×
-                                                    </button>
+                                        @if($product->images && $product->images->count() > 0)
+                                            @foreach($product->images as $image)
+                                                <div class="col-md-3 mb-3 existing-image" data-id="{{ $image->id }}">
+                                                    <div class="position-relative">
+                                                        <img src="{{ asset('storage/' . $image->image_path) }}"
+                                                             class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
+                                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image"
+                                                                onclick="removeExistingImage(this, {{ $image->id }})">
+                                                            ×
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
+                                            @endforeach
+                                        @endif
                                     </div>
                                 </div>
                             </div>
 
                             <input type="hidden" name="existing_images" id="existing_images"
-                                   value="{{ $product->images->pluck('id')->implode(',') }}">
+                                   value="{{ $product->images ? $product->images->pluck('id')->implode(',') : '' }}">
                             <input type="hidden" name="removed_images" id="removed_images" value="">
                         </div>
 
@@ -210,7 +218,7 @@
                 <div class="card mb-4">
                     <div class="form-group">
                         <label>Keyword Tags (comma-separated)</label>
-                        <input type="text" name="keyword_tags[]" class="form-control"
+                        <input type="text" name="keyword_tags" class="form-control"
                                placeholder="Add tags..."
                                value="{{ old('keyword_tags.0', isset($product->keyword_tags) ? implode(',', $product->keyword_tags) : '') }}">
                     </div>

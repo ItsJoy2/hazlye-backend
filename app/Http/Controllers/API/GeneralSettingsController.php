@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\Controller;
+use App\Models\GeneralSetting;
+use Illuminate\Http\Request;
+
+class GeneralSettingsController extends Controller
+{
+    public function index()
+    {
+        $settings = GeneralSetting::first();
+
+        if (!$settings) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Settings not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'app_name' => $settings->app_name,
+                'logo' => $settings->logo ? asset('storage/' . $settings->logo) : null,
+                'favicon' => $settings->favicon ? asset('storage/' . $settings->favicon) : null,
+                'social_links' => [
+                    'facebook' => $settings->facebook_url,
+                    'twitter' => $settings->twitter_url,
+                    'instagram' => $settings->instagram_url,
+                    'youtube' => $settings->youtube_url,
+                    'linkedin' => $settings->linkedin_url,
+                    'tiktok' => $settings->tiktok_url,
+                ]
+            ]
+        ]);
+    }
+}

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminOrderController extends Controller
 {
@@ -98,4 +99,17 @@ class AdminOrderController extends Controller
 
     return view('admin.pages.customers.index', compact('customers'));
     }
+
+
+    public function download(Order $order)
+{
+     $order->load([
+        'items.product',
+        'coupon'
+    ]);
+
+    $pdf = Pdf::loadView('admin.layouts.invoice', compact('order'));
+
+    return $pdf->download('invoice-'.$order->order_number.'.pdf');
+}
 }

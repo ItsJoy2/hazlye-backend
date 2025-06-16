@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Models\GeneralSetting;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CartController;
@@ -13,8 +14,8 @@ use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\DeliveryOptionController;
+use App\Http\Controllers\API\GeneralSettingsController;
 use App\Http\Controllers\API\HomepageSectionController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -44,9 +45,12 @@ Route::get('/products/offer', [ProductController::class, 'offer']);
 Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 Route::get('/homepage-sections/{position}', [HomepageSectionController::class, 'show']);
 
+// GeneralSetting
+Route::get('/general-settings', [GeneralSettingsController::class, 'index']);
+
 // Search
 Route::get('/search', [SearchController::class, 'search']);
-Route::get('/products/search', [SearchController::class, 'searchByName']);
+// Route::get('/products/search', [SearchController::class, 'searchByName']);
 
 
 // Cart

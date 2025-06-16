@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\GeneralSettingsController;
 use App\Http\Controllers\Admin\HomepageSectionController;
+use App\Http\Controllers\CkeditorController;
 
 Route::get('/', function () {
     return redirect('/signin');
@@ -27,6 +28,10 @@ Route::post('logout', [AuthController::class, 'logout'])->name('admin.logout');
 Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+      // For profile route
+      Route::get('/profile', [AuthController::class, 'profileEdit'])->name('admin.profile');
+      Route::post('/profile', [AuthController::class, 'profileUpdate'])->name('admin.profile.update');
 
     // Categories
     Route::resource('categories', AdminCategoryController::class)->names([
@@ -76,6 +81,7 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'update' => 'admin.orders.update',
     ]);
     Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update-status');
+    Route::get('admin/orders/download/{order}', [AdminOrderController::class, 'download'])->name('admin.orders.download');
 
     Route::get('/customers', [AdminOrderController::class, 'customerList'])->name('admin.customers.index');
 
@@ -131,5 +137,9 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     // General Settings
     Route::get('general-settings', [GeneralSettingsController::class, 'index'])->name('admin.general.settings');
     Route::post('general-settings', [GeneralSettingsController::class, 'update'])->name('admin.general.settings.update');
+    Route::get('social-links', [GeneralSettingsController::class, 'socialLinks'])->name('admin.socials.links');
 
+
+    // CKE Editor
+    Route::post('ckeditor/upload', [CKEditorController::class, 'upload'])->name('ckeditor.upload');
 });

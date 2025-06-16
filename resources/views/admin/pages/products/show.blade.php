@@ -39,6 +39,10 @@
                                             <td>{{ $product->slug }}</td>
                                         </tr>
                                         <tr>
+                                            <th>Short Description</th>
+                                            <td>{!! $product->short_description !!}</td>
+                                        </tr>
+                                        <tr>
                                             <th>Description</th>
                                             <td>{!! $product->description !!}</td>
                                         </tr>
@@ -61,6 +65,10 @@
                                         <tr>
                                             <th>Discount Price</th>
                                             <td>{{ $product->discount_price ? number_format($product->discount_price, 2) : 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Keyword Tags</th>
+                                            <td>{{ is_array($product->keyword_tags) ? implode(', ', $product->keyword_tags) : $product->keyword_tags }}</td>
                                         </tr>
                                         <tr>
                                             <th>Status</th>
