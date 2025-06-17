@@ -13,6 +13,7 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\ProductSearchController;
 use App\Http\Controllers\API\DeliveryOptionController;
 use App\Http\Controllers\API\GeneralSettingsController;
 use App\Http\Controllers\API\HomepageSectionController;
@@ -35,12 +36,14 @@ Route::get('/categories/products/{category:slug}', [ProductController::class, 'b
 
 // Products
 Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/featured', [ProductController::class, 'featured']);
+Route::get('products/campaign', [ProductController::class, 'campaign']);
+Route::get('products/offer', [ProductController::class, 'offer']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/products/{product}/related', [ProductController::class, 'related']);
 Route::post('/coupon-check', [ProductController::class, 'couponsCheck']);
-Route::get('/products/featured', [ProductController::class, 'featured']);
-Route::get('/products/campaign', [ProductController::class, 'campaign']);
-Route::get('/products/offer', [ProductController::class, 'offer']);
+Route::get('/products/search', [ProductSearchController::class, 'search']);
+Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 
 Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 Route::get('/homepage-sections/{position}', [HomepageSectionController::class, 'show']);
@@ -48,9 +51,7 @@ Route::get('/homepage-sections/{position}', [HomepageSectionController::class, '
 // GeneralSetting
 Route::get('/general-settings', [GeneralSettingsController::class, 'index']);
 
-// Search
-Route::get('/search', [SearchController::class, 'search']);
-// Route::get('/products/search', [SearchController::class, 'searchByName']);
+
 
 
 // Cart
