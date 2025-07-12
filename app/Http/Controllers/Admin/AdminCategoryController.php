@@ -58,12 +58,12 @@ class AdminCategoryController extends Controller
         return view('admin.pages.categories.show', compact('category'));
     }
 
-    // Show edit form
     public function edit(Category $category)
     {
         $parentCategories = Category::whereNull('parent_id')
-                                   ->where('id', '!=', $category->id)
-                                   ->get();
+                                    ->where('id', '!=', $category->id)
+                                    ->get();
+
         return view('admin.pages.categories.edit', compact('category', 'parentCategories'));
     }
 
@@ -97,8 +97,7 @@ class AdminCategoryController extends Controller
             'image' => $imagePath,
         ]);
 
-        return redirect()->route('admin.categories.index')
-                        ->with('success', 'Category updated successfully');
+        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully');
     }
 
     // Delete category

@@ -217,7 +217,7 @@
 
         // Internal store of files
         let galleryFiles = [];
-        
+
         let existingImagesCount = {{ isset($product) && $product->images ? $product->images->count() : 0 }};
 
         // Create hidden file inputs container

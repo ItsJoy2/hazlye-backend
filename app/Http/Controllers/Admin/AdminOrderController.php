@@ -112,4 +112,25 @@ class AdminOrderController extends Controller
 
     return $pdf->download('invoice-'.$order->order_number.'.pdf');
 }
+public function update(Request $request, Order $order)
+{
+    // Validate input
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'phone' => 'required|string|max:20',
+        'address' => 'required|string|max:1000',
+    ]);
+
+    // Update order details
+    $order->update([
+        'name' => $request->name,
+        'phone' => $request->phone,
+        'address' => $request->address,
+    ]);
+
+    return redirect()
+        ->route('admin.orders.edit', $order)
+        ->with('success', 'Customer information updated successfully.');
+}
+
 }

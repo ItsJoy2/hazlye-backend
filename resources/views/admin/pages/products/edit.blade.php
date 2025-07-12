@@ -215,14 +215,14 @@
 
 
 
-                <div class="card mb-4">
+                {{-- <div class="card mb-4">
                     <div class="form-group">
                         <label>Keyword Tags (comma-separated)</label>
                         <input type="text" name="keyword_tags" class="form-control"
                                placeholder="Add tags..."
-                               value="{{ old('keyword_tags.0', isset($product->keyword_tags) ? implode(',', $product->keyword_tags) : '') }}">
+                               value="{{ old('keyword_tags', is_array($product->keyword_tags ?? null) ? implode(',', $product->keyword_tags) : ($product->keyword_tags ?? '')) }}">
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="form-group">
                     <div class="custom-control custom-switch">

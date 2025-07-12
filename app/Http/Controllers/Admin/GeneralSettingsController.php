@@ -14,11 +14,11 @@ class GeneralSettingsController extends Controller
         $generalSettings = GeneralSetting::first();
         return view('admin.pages.settings.general_settings', compact('generalSettings'));
     }
-    public function socialLinks()
-    {
-        $generalSettings = GeneralSetting::first();
-        return view('admin.pages.settings.social_links', compact('generalSettings'));
-    }
+    // public function socialLinks()
+    // {
+    //     $generalSettings = GeneralSetting::first();
+    //     return view('admin.pages.settings.social_links', compact('generalSettings'));
+    // }
     public function update(Request $request)
     {
         $request->validate([

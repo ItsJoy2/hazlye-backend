@@ -35,7 +35,7 @@
         <input type="file" class="custom-file-input @error('image') is-invalid @enderror"
                id="image" name="image">
         <label class="custom-file-label" for="image">
-            {{ isset($category) && $category->image ? : 'Choose file' }}
+            Choose file
         </label>
         @error('image')
             <span class="invalid-feedback" role="alert">
@@ -47,7 +47,11 @@
     @if(isset($category) && $category->image)
         <div class="mt-2">
             <small>Current image:</small>
-            <img src="{{ Storage::url($category->image) }}" width="100" class="img-thumbnail">
+            <img src="{{ asset('storage/'.$category->image) }}" width="50" alt="Category Image" class="img-thumbnail">
+        </div>
+    @elseif(isset($category))
+        <div class="mt-2">
+            <small>No image</small>
         </div>
     @endif
 </div>

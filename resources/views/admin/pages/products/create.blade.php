@@ -103,7 +103,7 @@
 
                         <div class="form-group">
                             <label for="main_image">Main Product Image</label>
-                            <input type="file" name="main_image" id="main_image" class="form-control-file @error('main_image') is-invalid @enderror">
+                            <input type="file" name="main_image" id="main_image" class="form-control-file @error('main_image') is-invalid @enderror" value="{{ old('main_image') }}">
                             @error('main_image')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -139,7 +139,6 @@
                             <input type="hidden" name="existing_images" id="existing_images" value="">
                             <input type="hidden" name="removed_images" id="removed_images" value="">
                         </div>
-
 
                         <div class="d-flex">
                             <div class="form-group form-check">

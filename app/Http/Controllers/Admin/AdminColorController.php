@@ -11,7 +11,7 @@ class AdminColorController extends Controller
 {
     public function index()
     {
-        $colors = Color::latest()->paginate(10);
+        $colors = Color::withCount('products')->latest()->paginate(10);
         return view('admin.pages.colors.index', compact('colors'));
     }
 

@@ -16,8 +16,14 @@ class Color extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'product_colors')
-            ->withTimestamps();
+        return $this->hasManyThrough(
+            Product::class,
+            ProductVariant::class,
+            'color_id',
+            'id',
+            'id',
+            'product_id'
+        )->distinct();
     }
 
     public function productImages()
@@ -26,7 +32,6 @@ class Color extends Model
     }
     public function setCodeAttribute($value)
 {
-    // Ensure hex codes start with #
     $value = ltrim($value, '#');
     $this->attributes['code'] = '#'.$value;
 }

@@ -7,7 +7,7 @@
             <h3>Edit Category: {{ $category->name }}</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.categories.update', $category->slug) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 @include('admin.pages.categories.partials.__form', ['category' => $category])

@@ -2,18 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\CKEditorController;
+use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\AdminCategoryController;
-use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminColorController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminCouponController;
-use App\Http\Controllers\Admin\AdminDeliveryOptionController;
-use App\Http\Controllers\Admin\AdminColorController;
-use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\GeneralSettingsController;
 use App\Http\Controllers\Admin\HomepageSectionController;
-use App\Http\Controllers\CkeditorController;
+use App\Http\Controllers\Admin\AdminDeliveryOptionController;
 
 Route::get('/', function () {
     return redirect('/signin');

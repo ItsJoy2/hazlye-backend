@@ -81,11 +81,27 @@
                 <div class="card-header">
                     <h5>Customer Details</h5>
                 </div>
-                <div class="card-body">
-                    <p><strong>Name:</strong> {{ $order->name }}</p>
-                    <p><strong>Phone:</strong> {{ $order->phone }}</p>
-                    <p><strong>Address:</strong> {{ $order->address }}</p>
-                </div>
+                <form action="{{ route('admin.orders.update', $order) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="form-group mb-2">
+                        <label for="name"><strong>Name</strong></label>
+                        <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $order->name) }}" required>
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label for="phone"><strong>Phone</strong></label>
+                        <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', $order->phone) }}" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="address"><strong>Address</strong></label>
+                        <textarea name="address" id="address" class="form-control" rows="2" required>{{ old('address', $order->address) }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-sm btn-primary">Update Customer</button>
+                </form>
             </div>
 
             <div class="card">

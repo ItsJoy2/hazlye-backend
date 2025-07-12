@@ -35,9 +35,6 @@ class AdminProductController extends Controller
 
     public function store(Request $request)
     {
-
-
-
         $validated = $request->validate([
             'sku' => 'required|unique:products,sku',
             'name' => 'required|string|max:255',
@@ -49,9 +46,9 @@ class AdminProductController extends Controller
             'Purchase_price' => 'required|numeric|min:0',
             'regular_price' => 'required|numeric|min:0|gt:Purchase_price',
             'discount_price' => 'nullable|numeric|min:0|lt:regular_price',
-            'main_image' => 'required|image|max:2048',
+            'main_image' => 'required|image|max:6144', // 6MB limit
             'gallery_images' => 'required|array|min:1',
-            'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'gallery_images.*' => 'image|mimes:jpeg,png,jpg|max:6144', // 6MB limit
             'featured' => 'boolean',
             'Offer' => 'boolean',
             'campaign' => 'boolean',
@@ -60,7 +57,7 @@ class AdminProductController extends Controller
             'keyword_tags.*' => 'string|max:255',
             'variants' => 'sometimes|array',
             'variants.*.color_id' => 'required_with:variants|exists:colors,id',
-            'variants.*.image' => 'required_with:variants|image|max:2048',
+            'variants.*.image' => 'required_with:variants|image|max:6144', // 6MB limit
             'variants.*.options' => 'required_with:variants|array',
             'variants.*.options.*.size_id' => 'required_with:variants.*.options|exists:sizes,id',
             'variants.*.options.*.price' => 'required_with:variants.*.options|numeric|min:0',
@@ -75,8 +72,8 @@ class AdminProductController extends Controller
             $mainImagePath = $request->file('main_image')->store('products', 'public');
 
             $keywordTags = $request->keyword_tags
-            ? explode(',', $request->keyword_tags)
-            : null;
+                ? explode(',', $request->keyword_tags)
+                : null;
 
             // Create product
             $product = Product::create([
@@ -96,7 +93,7 @@ class AdminProductController extends Controller
                 'is_offer' => $request->has('Offer'),
                 'is_campaign' => $request->has('campaign'),
                 'status' => $request->has('status'),
-                'keyword_tags' => 'nullable|string',
+                'keyword_tags' => $keywordTags,
             ]);
 
             // Handle gallery images
@@ -111,7 +108,6 @@ class AdminProductController extends Controller
                     ]);
                 }
             }
-
 
             // Handle variants if exists
             if ($request->has('variants')) {
@@ -144,12 +140,12 @@ class AdminProductController extends Controller
             DB::commit();
 
             return redirect()->route('admin.products.index')
-            ->with('success', 'Product created successfully');
-                } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Product creation failed: ' . $e->getMessage());
-                return back()->withInput()->with('error', 'Error creating product: ' . $e->getMessage());
-                }
+                ->with('success', 'Product created successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Product creation failed: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error creating product: ' . $e->getMessage());
+        }
     }
 
 
@@ -234,9 +230,7 @@ public function show(Product $product)
                 : $product->main_image;
 
 
-                $keywordTags = $request->keyword_tags
-                ? explode(',', $request->keyword_tags)
-                : null;
+                $keywordTags = $request->filled('keyword_tags') ? array_map('trim', explode(',', $request->keyword_tags)): [];
 
             // Update product
             $product->update([

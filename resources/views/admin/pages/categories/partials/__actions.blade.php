@@ -4,7 +4,7 @@
         <i class="fas fa-eye"></i>
     </a> --}}
 
-    <a href="{{ route('admin.categories.edit', $category->id) }}"
+    <a href="{{ route('admin.categories.edit', $category->slug) }}"
        class="btn btn-primary p-1 mx-1" title="Edit">
         <i class="fas fa-edit bg-none"></i>
     </a>

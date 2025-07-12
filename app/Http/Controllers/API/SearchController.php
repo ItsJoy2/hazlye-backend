@@ -19,7 +19,7 @@ class SearchController extends Controller
             ]);
         }
 
-        // Search in product names, descriptions, and keyword tags
+
         $products = Product::active()
             ->where(function($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
@@ -28,9 +28,21 @@ class SearchController extends Controller
                   ->orWhereJsonContains('keyword_tags', $query);
             })
             ->take(10)
-            ->get(['id', 'name', 'slug', 'main_image']);
+            ->get(['id', 'name', 'slug', 'main_image', 'regular_price', 'discount_price']);
 
-        // Get keyword suggestions from all products
+
+        $products = $products->map(function($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'main_image' => asset('public/storage/' . $product->main_image),
+                'regular_price' => $product->regular_price,
+                'discount_price' => $product->discount_price
+            ];
+        });
+
+
         $allKeywords = Product::active()
             ->pluck('keyword_tags')
             ->flatten()
@@ -42,7 +54,7 @@ class SearchController extends Controller
             return stripos($keyword, $query) !== false;
         });
 
-        // Limit suggestions and sort by relevance
+
         $suggestions = array_slice($suggestions, 0, 5);
 
         return response()->json([
