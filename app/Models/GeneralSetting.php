@@ -18,6 +18,12 @@ class GeneralSetting extends Model
         'instagram_url',
         'youtube_url',
         'linkedin_url',
-        'tiktok_url'
+        'tiktok_url',
+        'messenger_url',
+        'whatsapp_url',
+        'google_tag_manager',
+        'domain_verification',
+        'header_scripts',
+        'footer_scripts',
     ];
 }

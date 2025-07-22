@@ -32,6 +32,12 @@ class GeneralSettingsController extends Controller
             'youtube_url' => 'nullable|url|max:255',
             'linkedin_url' => 'nullable|url|max:255',
             'tiktok_url' => 'nullable|url|max:255',
+            'messenger_url' => 'nullable|url|max:255',
+            'Whatsapp_url' => 'nullable|url|max:255',
+            'google_tag_manager' => 'nullable|string',
+            'domain_verification' => 'nullable|string',
+            'header_scripts' => 'nullable|string',
+            'footer_scripts' => 'nullable|string',
 
         ]);
 
@@ -44,7 +50,13 @@ class GeneralSettingsController extends Controller
             'instagram_url',
             'youtube_url',
             'linkedin_url',
-            'tiktok_url'
+            'tiktok_url',
+            'messenger_url',
+            'whatsapp_url',
+            'google_tag_manager',
+            'domain_verification',
+            'header_scripts',
+            'footer_scripts',
         ]);
 
 

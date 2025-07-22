@@ -32,8 +32,14 @@ class GeneralSettingsController extends Controller
                     'youtube' => $settings->youtube_url,
                     'linkedin' => $settings->linkedin_url,
                     'tiktok' => $settings->tiktok_url,
+                    'messenger' => $settings->messenger_url,
+                    'whatsapp' => $settings->whatsapp_url,
+                ],
+                'google_tag_manager' => $settings->google_tag_manager,
+                'domain_verification' => $settings->domain_verification,
+                'header_scripts' => $settings->header_scripts,
+                'footer_scripts' => $settings->footer_scripts,
                 ]
-            ]
         ]);
     }
 }
