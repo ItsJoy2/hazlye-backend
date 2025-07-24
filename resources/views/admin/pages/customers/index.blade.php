@@ -10,15 +10,19 @@
             <div class="table-responsive">
 
             <div class="card-tools">
-                <form action="{{ route('admin.customers.index') }}" method="GET">
-                    <div class="input-group input-group-sm" style="width: 250px;">
-                        <input type="text" name="search" class="form-control float-right"
-                               placeholder="Search..." value="{{ request('search') }}">
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-default">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
+                <form method="GET" action="{{ route('admin.customers.index') }}" class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <input type="text" name="phone" class="form-control" placeholder="Phone" value="{{ request('phone') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="district" class="form-control" placeholder="District" value="{{ request('district') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="thana" class="form-control" placeholder="Thana" value="{{ request('thana') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary">Reset</a>
                     </div>
                 </form>
             </div>

@@ -73,10 +73,10 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.orders.index', ['status' => 'completed']) }}" class="nav-link">
-                                            <span class="sub-item">Completed Orders</span>
+                                        <a href="{{ route('admin.orders.index', ['status' => 'delivered']) }}" class="nav-link">
+                                            <span class="sub-item">Delivered Orders</span>
                                             <span class="badge badge-success float-right">
-                                                {{ App\Models\Order::where('status', 'completed')->count() }}
+                                                {{ App\Models\Order::where('status', 'delivered')->count() }}
                                             </span>
                                         </a>
                                     </li>

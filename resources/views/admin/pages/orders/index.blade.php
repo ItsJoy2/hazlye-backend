@@ -13,43 +13,43 @@
             @include('admin.layouts.partials.__alerts')
 
             <div class="mb-0">
-                <form action="{{ route('admin.orders.index') }}" method="GET" class="row g-2 align-items-end">
-                    <!-- Status Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
-                        <label for="status" class="form-label small mb-0">Status</label>
-                        <select name="status" id="status" class="form-select form-select-sm">
-                            <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Statuses</option>
+                <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 mb-4">
+                    {{-- Date Filters (Always Visible) --}}
+                    <div class="col-md-2">
+                        <input type="date" name="date_from" class="form-control" value="{{ $dateFrom }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="date_to" class="form-control" value="{{ $dateTo }}">
+                    </div>
+
+                    {{-- Extra Filters: Only visible when status == delivered --}}
+                    @if($status === 'delivered')
+                        <div class="col-md-2">
+                            <input type="text" name="district" class="form-control" placeholder="District" value="{{ $district }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="thana" class="form-control" placeholder="Thana" value="{{ $thana }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="product_search" class="form-control" placeholder="Product Name / SKU" value="{{ $productSearch }}">
+                        </div>
+                    @endif
+
+                    {{-- Status Dropdown --}}
+                    <div class="col-md-2">
+                        <select name="status" class="form-control">
+                            <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                             <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Processing</option>
+                            <option value="shipped" {{ $status == 'shipped' ? 'selected' : '' }}>Shipped</option>
                             <option value="delivered" {{ $status == 'delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="cancelled" {{ $status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select>
                     </div>
 
-                    <!-- Date From Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
-                        <label for="date_from" class="form-label small mb-0">From</label>
-                        <input type="date" name="date_from" id="date_from"
-                               class="form-control form-control-sm"
-                               value="{{ $dateFrom }}">
-                    </div>
-
-                    <!-- Date To Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
-                        <label for="date_to" class="form-label small mb-0">To</label>
-                        <input type="date" name="date_to" id="date_to"
-                               class="form-control form-control-sm"
-                               value="{{ $dateTo }}">
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
-                            <i class="fas fa-filter me-1"></i> Filter
-                        </button>
-                        <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-secondary flex-grow-1">
-                            <i class="fas fa-undo me-1"></i> Reset
-                        </a>
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Reset</a>
                     </div>
                 </form>
             </div>

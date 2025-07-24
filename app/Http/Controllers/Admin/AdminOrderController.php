@@ -26,23 +26,47 @@ class AdminOrderController extends Controller
         }
 
         // Date range filter
-        if ($request->has('date_from') && $request->date_from) {
+        if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
 
-        if ($request->has('date_to') && $request->date_to) {
+        if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Filter by district
+        if ($request->filled('district')) {
+            $query->where('district', 'like', '%' . $request->district . '%');
+        }
+
+        // Filter by thana
+        if ($request->filled('thana')) {
+            $query->where('thana', 'like', '%' . $request->thana . '%');
+        }
+
+        // Filter by product name or SKU from order items
+        if ($request->filled('product_search')) {
+            $searchTerm = $request->product_search;
+
+            $query->whereHas('items.product', function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')  // Assuming product name is in `products.name`
+                  ->orWhere('sku', 'like', '%' . $searchTerm . '%'); // `products.sku`
+            });
         }
 
         $orders = $query->paginate(10);
 
-        // For filter form values
+        // Preserve filter values
         $status = $request->status ?? 'all';
         $dateFrom = $request->date_from ?? '';
         $dateTo = $request->date_to ?? '';
+        $district = $request->district ?? '';
+        $thana = $request->thana ?? '';
+        $productSearch = $request->product_search ?? '';
 
-        return view('admin.pages.orders.index', compact('orders', 'status', 'dateFrom', 'dateTo'));
-
+        return view('admin.pages.orders.index', compact(
+            'orders', 'status', 'dateFrom', 'dateTo', 'district', 'thana', 'productSearch'
+        ));
     }
 
     public function edit(Order $order)
@@ -51,59 +75,83 @@ class AdminOrderController extends Controller
 
         return view('admin.pages.orders.edit', compact('order'));
     }
+
+    public function destroy($id)
+{
+    $order = Order::findOrFail($id);
+
+    // Allow only if status is cancelled
+    if ($order->status !== 'cancelled') {
+        return redirect()->back()->with('error', 'Only cancelled orders can be deleted.');
+    }
+
+    $order->delete();
+
+    return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
+}
+
     public function show(Order $order)
     {
         $order->load(['items.product', 'coupon']);
 
         return view('admin.pages.orders.show', compact('order'));
     }
-    public function updateStatus(Request $request, Order $order)
-    {
-        $validated = $request->validate([
-            'status' => 'required|string|max:255',
-            'comment' => 'nullable|string'
-        ]);
+    public function customerList(Request $request)
+{
+    $query = Order::select([
+        'name',
+        'phone',
+        DB::raw('MIN(address) as primary_address'),
+        DB::raw('MIN(district) as district'),
+        DB::raw('MIN(thana) as thana'),
+        DB::raw('COUNT(DISTINCT orders.id) as order_count'),
+        DB::raw('SUM(order_items.quantity) as total_products'),
+        DB::raw('SUM(orders.total) as total_spent'),
+        DB::raw('MAX(orders.created_at) as last_order_at')
+    ])
+    ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+    ->groupBy('name', 'phone');
 
-        if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
-            $order->returnStock();
-        }
-
-        $order->update($validated);
-
-        return back()->with('success', 'Order status updated successfully');
+    // ✅ Filters
+    if ($request->filled('phone')) {
+        $query->where('phone', 'like', '%' . $request->phone . '%');
     }
-    public function customerList()
-    {
-        $customers = Order::select([
-            'name',
-            'phone',
-            DB::raw('MIN(address) as primary_address'),
-            DB::raw('COUNT(DISTINCT orders.id) as order_count'),
-            DB::raw('SUM(order_items.quantity) as total_products'),
-            DB::raw('SUM(orders.total) as total_spent'),
-            DB::raw('MAX(orders.created_at) as last_order_at')
-        ])
-        ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-        ->groupBy('name', 'phone')
+
+    if ($request->filled('district')) {
+        $query->where('district', 'like', '%' . $request->district . '%');
+    }
+
+    if ($request->filled('thana')) {
+        $query->where('thana', 'like', '%' . $request->thana . '%');
+    }
+
+    $customers = $query
         ->orderBy('total_spent', 'desc')
         ->paginate(20);
 
-    // Format dates and numbers
+    // Format output
     $customers->getCollection()->transform(function ($customer) {
         return [
             'name' => $customer->name,
             'phone' => $customer->phone,
+            'district' => $customer->district,
+            'thana' => $customer->thana,
             'primary_address' => $customer->primary_address,
             'order_count' => $customer->order_count,
             'total_products' => $customer->total_products,
             'total_spent' => number_format($customer->total_spent, 2),
             'last_order_at' => Carbon::parse($customer->last_order_at)->format('M d, Y'),
-            'last_order_raw' => $customer->last_order_at
         ];
     });
 
-    return view('admin.pages.customers.index', compact('customers'));
-    }
+    return view('admin.pages.customers.index', [
+        'customers' => $customers,
+        'phone' => $request->phone,
+        'district' => $request->district,
+        'thana' => $request->thana,
+    ]);
+}
+
 
 
     public function download(Order $order)
