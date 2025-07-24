@@ -6,7 +6,7 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">All Orders</h3>
-
+                <button class="btn btn-sm btn-secondary text-white"><a href="{{ route('admin.orders.create') }}" class=" text-white flex-grow-1">Create New Order</a></button>
             </div>
         </div>
         <div class="card-body">
@@ -21,7 +21,7 @@
                             <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Statuses</option>
                             <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Processing</option>
-                            <option value="completed" {{ $status == 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="delivered" {{ $status == 'delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="cancelled" {{ $status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select>
                     </div>
@@ -77,7 +77,7 @@
                             <td>{{ $order->created_at->format('M d, Y') }}</td>
                             <td>${{ number_format($order->total, 2) }}</td>
                             <td>
-                                <span class="badge badge-{{ $order->status == 'completed' ? 'success' : ($order->status == 'cancelled' ? 'danger' : 'warning') }}">
+                                <span class="badge badge-{{ $order->status == 'delivered' ? 'success' : ($order->status == 'cancelled' ? 'danger' : 'warning') }}">
                                     {{ ucfirst($order->status) }}
                                 </span>
                             </td>

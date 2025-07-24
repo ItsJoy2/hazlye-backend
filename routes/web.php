@@ -76,12 +76,21 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     // Orders
     Route::resource('orders', AdminOrderController::class)->names([
        'index' => 'admin.orders.index',
+       'create' => 'admin.orders.create',
+        'store' => 'admin.orders.store',
         'show' => 'admin.orders.show',
         'edit' => 'admin.orders.edit',
         'update' => 'admin.orders.update',
     ]);
+    Route::put('orders/{order}/update-items', [AdminOrderController::class, 'updateItems'])->name('admin.orders.update.items');
+    Route::put('orders/{order}/update-delivery', [AdminOrderController::class, 'updateDeliveryCharge'])->name('admin.orders.update.delivery');
     Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update-status');
     Route::get('admin/orders/download/{order}', [AdminOrderController::class, 'download'])->name('admin.orders.download');
+    Route::get('/orders/sku-search', [AdminOrderController::class, 'skuSearch'])->name('admin.orders.sku-search');
+    Route::get('/product/search', [AdminOrderController::class, 'search'])->name('admin.product.search');
+    Route::get('/product/{product}/variants', [AdminOrderController::class, 'getVariants']);
+
+
 
     Route::get('/customers', [AdminOrderController::class, 'customerList'])->name('admin.customers.index');
 

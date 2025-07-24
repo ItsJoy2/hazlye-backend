@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use App\Models\DeliveryOption;
 use Illuminate\Support\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\ProductVariantOption;
 
 class AdminOrderController extends Controller
 {
@@ -59,6 +63,7 @@ class AdminOrderController extends Controller
             'status' => 'required|string|max:255',
             'comment' => 'nullable|string'
         ]);
+
         if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
             $order->returnStock();
         }
@@ -119,6 +124,8 @@ public function update(Request $request, Order $order)
         'name' => 'required|string|max:255',
         'phone' => 'required|string|max:20',
         'address' => 'required|string|max:1000',
+        'district' => 'required|string',
+        'thana'    => 'required|string',
     ]);
 
     // Update order details
@@ -126,11 +133,305 @@ public function update(Request $request, Order $order)
         'name' => $request->name,
         'phone' => $request->phone,
         'address' => $request->address,
+        'district' => $request->district,
+        'thana'    => $request->thana,
     ]);
 
     return redirect()
         ->route('admin.orders.edit', $order)
         ->with('success', 'Customer information updated successfully.');
+}
+
+public function updateDeliveryCharge(Request $request, Order $order)
+{
+    $request->validate([
+        'delivery_charge' => 'required|numeric|min:0',
+    ]);
+
+    $order->delivery_charge = $request->delivery_charge;
+    $order->total = ($order->subtotal - $order->discount) + $order->delivery_charge;
+
+    $order->save();
+
+    return back()->with('success', 'Delivery charge updated successfully.');
+}
+public function updateItems(Request $request, Order $order)
+{
+    // Remove deleted items
+    if ($request->has('removed_ids')) {
+        OrderItem::whereIn('id', $request->removed_ids)
+                 ->where('order_id', $order->id)
+                 ->delete();
+    }
+
+
+    // Update existing items
+    if ($request->has('items')) {
+        foreach ($request->items as $itemData) {
+            if (!empty($itemData['id'])) {
+                $item = OrderItem::find($itemData['id']);
+                if ($item) {
+                    // Update quantity
+                    $item->quantity = $itemData['quantity'];
+
+                    // Update size if changed
+                    if (isset($itemData['size'])) {
+                        $item->size_name = $itemData['size'];
+                    }
+
+                    // Update color if changed
+                    if (isset($itemData['color'])) {
+                        $item->color_name = $itemData['color'];
+                    }
+
+                    $item->save();
+                }
+            }
+        }
+    }
+
+    // Add new product by SKU (either product SKU or variant option SKU)
+    if ($request->filled('new_sku')) {
+        $sku = $request->new_sku;
+        $quantity = $request->new_quantity ?? 1;
+
+        // First try to find by product SKU
+        $product = Product::where('sku', $sku)->first();
+
+        if ($product) {
+            // Product found by main SKU
+            $order->items()->create([
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'price' => $product->discount_price ?? $product->regular_price,
+                'quantity' => $quantity,
+                'size_name' => $product->size->name ?? null,
+                'color_name' => null,
+            ]);
+        } else {
+            // If not found as product, try as variant option SKU
+            $variantOption = ProductVariantOption::where('sku', $sku)->first();
+
+            if ($variantOption) {
+                $variant = $variantOption->variant;
+                $product = $variant->product;
+
+                $order->items()->create([
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'price' => $variantOption->price,
+                    'quantity' => $quantity,
+                    'size_name' => $variantOption->size->name ?? null,
+                    'color_name' => $variant->color->name ?? null,
+                    'variant_option_id' => $variantOption->id,
+                ]);
+            }
+        }
+
+        if (!$product && !$variantOption) {
+            return back()->with('error', 'No product or variant found with SKU: ' . $sku);
+        }
+    }
+
+    // Recalculate order totals
+    $this->recalculateOrderTotals($order);
+
+    return back()->with('success', 'Order items updated successfully.');
+}
+
+protected function recalculateOrderTotals(Order $order)
+{
+    $subtotal = $order->items()->sum(DB::raw('price * quantity'));
+    $order->subtotal = $subtotal;
+    $order->total = ($subtotal - $order->discount) + $order->delivery_charge;
+    $order->save();
+}
+
+public function skuSearch(Request $request)
+{
+    $query = $request->input('query');
+
+    // Non-variant products
+    $products = Product::where('sku', 'like', "%$query%")
+        ->select('id', 'sku', 'name', 'regular_price', 'discount_price')
+        ->limit(5)
+        ->get()
+        ->map(function ($product) {
+            return [
+                'type' => 'product',
+                'id' => $product->id,
+                'sku' => $product->sku,
+                'name' => $product->name,
+                'price' => $product->discount_price ?? $product->regular_price,
+                'has_variants' => $product->has_variants
+            ];
+        });
+
+    // Variant options
+    $variants = ProductVariantOption::where('sku', 'like', "%$query%")
+        ->with(['variant.product', 'variant.color', 'size'])
+        ->select('id', 'sku', 'variant_id', 'price', 'size_id')
+        ->limit(5)
+        ->get()
+        ->map(function ($variant) {
+            return [
+                'type' => 'variant',
+                'id' => $variant->id,
+                'sku' => $variant->sku,
+                'name' => $variant->variant->product->name,
+                'product_id' => $variant->variant->product->id,
+                'price' => $variant->price,
+                'color' => $variant->variant->color->name ?? null,
+                'color_code' => $variant->variant->color->code ?? null,
+                'size' => $variant->size->name ?? null,
+                'has_variants' => true
+            ];
+        });
+
+    return response()->json([...$products, ...$variants]);
+}
+
+
+public function create()
+{
+    $deliveryOptions = DeliveryOption::where('is_active', true)->get();
+    return view('admin.pages.orders.create', compact('deliveryOptions'));
+}
+
+public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string',
+        'phone' => 'required|string',
+        'district' => 'required|string',
+        'thana' => 'required|string',
+        'address' => 'nullable|string',
+        'delivery_option_id' => 'required|exists:delivery_options,id',
+        'products' => 'required|array',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $delivery = DeliveryOption::find($request->delivery_option_id);
+        $subtotal = 0;
+
+        $order = Order::create([
+            'order_number' => 'ORD-' . strtoupper(uniqid()),
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'district' => $request->district,
+            'thana' => $request->thana,
+            'address' => $request->address,
+            'delivery_charge' => $delivery->charge,
+            'subtotal' => 0,
+            'total' => 0,
+            'status' => 'pending',
+        ]);
+
+        foreach ($request->products as $item) {
+            $product = Product::find($item['product_id']);
+            $variant = isset($item['variant_option_id']) ? ProductVariantOption::find($item['variant_option_id']) : null;
+
+            $price = $variant ? $variant->price : $product->discount_price ?? $product->regular_price;
+            $subtotal += $price * $item['quantity'];
+
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'price' => $price,
+                'quantity' => $item['quantity'],
+                'size_name' => $variant?->size?->name,
+                'color_name' => $variant?->variant?->color?->name,
+                'variant_option_id' => $variant?->id,
+            ]);
+
+            // stock decrement
+            if ($variant) {
+                $variant->decrement('stock', $item['quantity']);
+                $product->updateStock();
+            } else {
+                $product->decrement('total_stock', $item['quantity']);
+            }
+        }
+
+        $order->subtotal = $subtotal;
+        $order->total = $subtotal + $delivery->charge;
+        $order->save();
+
+        DB::commit();
+        return redirect()->route('admin.orders.index')->with('success', 'Order created successfully.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Failed: ' . $e->getMessage());
+    }
+}
+
+
+public function search(Request $request)
+{
+    $keyword = $request->q;
+
+    if (!$keyword) {
+        return response()->json([]);
+    }
+
+    // First check if variant SKU matches
+    $variantMatch = ProductVariantOption::where('sku', $keyword)->with('variant.product')->first();
+
+    if ($variantMatch) {
+        $product = $variantMatch->variant->product;
+        return response()->json([
+            [
+                'type' => 'variant',
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $variantMatch->sku,
+                'price' => $variantMatch->price,
+                'has_variants' => true,
+            ]
+        ]);
+    }
+
+    // If no variant SKU found, search product by name or SKU
+    $products = Product::where('name', 'LIKE', "%$keyword%")
+        ->orWhere('sku', 'LIKE', "%$keyword%")
+        ->limit(10)
+        ->get()
+        ->map(function ($product) {
+            return [
+                'type' => 'product',
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'price' => $product->discount_price ?? $product->regular_price,
+                'has_variants' => $product->has_variants, // boolean
+            ];
+        });
+
+    return response()->json($products);
+}
+
+
+public function getVariants(Product $product)
+{
+    $variants = $product->variants()
+        ->with(['color', 'options.size'])
+        ->get()
+        ->flatMap(function ($variant) {
+            return $variant->options->map(function ($option) use ($variant) {
+                return [
+                    'id' => $option->id,
+                    'sku' => $option->sku,
+                    'price' => $option->price,
+                    'color' => $variant->color->name ?? null,
+                    'size' => $option->size->name ?? null,
+                ];
+            });
+        });
+
+    return response()->json($variants);
 }
 
 }

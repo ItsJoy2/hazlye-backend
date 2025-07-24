@@ -14,6 +14,8 @@ class Order extends Model
         'name',
         'phone',
         'address',
+        'district',
+        'thana',
         'subtotal',
         'delivery_charge',
         'discount',
