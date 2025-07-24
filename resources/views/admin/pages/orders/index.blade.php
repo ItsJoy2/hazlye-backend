@@ -60,6 +60,7 @@
                     <thead>
                         <tr>
                             <th>Order #</th>
+                            <th>Image</th>
                             <th>Customer</th>
                             <th>Phone</th>
                             <th>Date</th>
@@ -72,6 +73,16 @@
                         @forelse($orders as $index => $order)
                         <tr>
                             <td>{{ $index + 1 }}</td>
+                            <td>
+                                @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
+                                    <img src="{{ asset('public/storage/'.$order->items[0]->product->main_image) }}"
+                                         alt="{{ $order->items[0]->product->name }}"
+                                         width="50"
+                                         class="img-thumbnail">
+                                @else
+                                    <span class="text-muted">No image</span>
+                                @endif
+                            </td>
                             <td>{{ $order->name }}</td>
                             <td>{{ $order->phone }}</td>
                             <td>{{ $order->created_at->format('M d, Y') }}</td>

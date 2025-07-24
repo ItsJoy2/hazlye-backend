@@ -194,14 +194,17 @@ public function updateDeliveryCharge(Request $request, Order $order)
 {
     $request->validate([
         'delivery_charge' => 'required|numeric|min:0',
+        'admin_discount' => 'required|numeric|min:0',
     ]);
 
     $order->delivery_charge = $request->delivery_charge;
-    $order->total = ($order->subtotal - $order->discount) + $order->delivery_charge;
+    $order->admin_discount = $request->admin_discount;
+
+    $order->total = max(0, $order->subtotal - $order->discount - $order->admin_discount + $order->delivery_charge);
 
     $order->save();
 
-    return back()->with('success', 'Delivery charge updated successfully.');
+    return back()->with('success', 'Delivery charge & discount updated successfully.');
 }
 public function updateItems(Request $request, Order $order)
 {

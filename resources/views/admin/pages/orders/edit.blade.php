@@ -22,6 +22,7 @@
                         <table class="table" id="order-items-table">
                             <thead>
                                 <tr>
+                                    <th>Image</th>
                                     <th>Product</th>
                                     <th>Price</th>
                                     <th>Qty</th>
@@ -33,14 +34,24 @@
                                 @foreach($order->items as $index => $item)
                                     <tr>
                                         <td>
+                                            @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
+                                                <img src="{{ asset('public/storage/'.$order->items[0]->product->main_image) }}"
+                                                     alt="{{ $order->items[0]->product->name }}"
+                                                     width="50"
+                                                     class="img-thumbnail">
+                                            @else
+                                                <span class="text-muted">No image</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             {{ $item->product_name }}
                                             <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
 
                                             @if($item->product && $item->product->has_variants)
                                                 <!-- Variant product - show dropdowns for size and color -->
                                                 <div class="variant-options mt-2">
-                                                    <div class="row">
-                                                        <div class="col-6">
+                                                    <div class="">
+                                                        <div class="">
                                                             <label>Size:</label>
                                                             <select name="items[{{ $index }}][size]" class="form-control form-control-sm">
                                                                 <option value="">Select Size</option>
@@ -54,7 +65,7 @@
                                                                 @endforeach
                                                             </select>
                                                         </div>
-                                                        <div class="col-6">
+                                                        <div class="">
                                                             <label>Color:</label>
                                                             <select name="items[{{ $index }}][color]" class="form-control form-control-sm">
                                                                 <option value="">Select Color</option>
@@ -73,14 +84,14 @@
                                                 </div>
                                             @else
                                                 <!-- Non-variant product - simple text inputs -->
-                                                <div class="row mt-2">
-                                                    <div class="col-6">
+                                                <div class="">
+                                                    <div class="">
                                                         <label>Size:</label>
                                                         <input type="text" name="items[{{ $index }}][size]"
                                                                value="{{ $item->size_name }}"
                                                                class="form-control form-control-sm">
                                                     </div>
-                                                    <div class="col-6">
+                                                    <div class="">
                                                         <label>Color:</label>
                                                         <input type="text" name="items[{{ $index }}][color]"
                                                                value="{{ $item->color_name }}"
@@ -139,12 +150,22 @@
                     </div>
                     @endif
 
-                    <form style="background: none; border: none; margin:0; " action="{{ route('admin.orders.update.delivery', $order->id) }}" method="POST">
+                    <form style="background: none; border: none; margin:0;" action="{{ route('admin.orders.update.delivery', $order->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
-                        <label for="delivery_charge"><strong>Delivery Charge:</strong></label>
-                        <input type="number" name="delivery_charge" id="delivery_charge" value="{{ $order->delivery_charge }}" step="0.01" class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
+                        {{-- Delivery Charge --}}
+                        <div class="delivery">
+                            <label for="delivery_charge"><strong>Delivery Charge:</strong></label>
+                            <input type="number" name="delivery_charge" id="delivery_charge" value="{{ $order->delivery_charge }}" step="0.01" class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
+                        </div>
+
+                        {{-- New Discount Field --}}
+                      <div class="admin-discount mt-3">
+                        <label for="admin_discount" class="ms-3"><strong>Discount:</strong></label>
+                        <input type="number" name="admin_discount" id="admin_discount" value="{{ $order->admin_discount ?? 0 }}" step="0.01" class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
+                      </div>
+
                         <button type="submit" class="btn btn-sm btn-primary">Update</button>
                     </form>
 
