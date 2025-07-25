@@ -16,14 +16,15 @@
                 @csrf
                 @method('PUT')
 
-                <div class="card mb-4">
+                <div class="card mb-12">
                     <div class="card-header"><h5>Order Items</h5></div>
                     <div class="card-body">
-                        <table class="table" id="order-items-table">
+                        <table style="" class="table table-responsive" id="order-items-table">
                             <thead>
                                 <tr>
                                     <th>Image</th>
                                     <th>Product</th>
+                                    <th>SKU</th>
                                     <th>Price</th>
                                     <th>Qty</th>
                                     <th>Total</th>
@@ -100,6 +101,13 @@
                                                 </div>
                                             @endif
                                         </td>
+                                        <td>
+                                            @if($item->product && $item->product->has_variants)
+                                                {{ $item->variant->sku ?? 'N/A' }}
+                                            @else
+                                                {{ $item->product->sku ?? 'N/A' }}
+                                            @endif
+                                        </td>
                                         <td>${{ number_format($item->price, 2) }}</td>
                                         <td>
                                             <input type="number" name="items[{{ $index }}][quantity]"
@@ -149,6 +157,12 @@
                         @endif
                     </div>
                     @endif
+
+                    <div class="mb-3">
+                        <strong>Delivery Method:</strong>
+                        {{ optional($order->deliveryOption)->name ?? 'Not Set' }}
+                    </div>
+
 
                     <form style="background: none; border: none; margin:0;" action="{{ route('admin.orders.update.delivery', $order->id) }}" method="POST">
                         @csrf
@@ -235,12 +249,16 @@
 
                         <div class="form-group">
                             <label for="status">Status</label>
-                            <select name="status" id="status" class="form-control">
-                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
-                                <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>Shipped</option>
-                                <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
-                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            <select name="status" class="form-control">
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="hold" {{ old('status', $order->status ?? '') == 'hold' ? 'selected' : '' }}>Hold</option>
+                                <option value="processing" {{ old('status', $order->status ?? '') == 'processing' ? 'selected' : '' }}>Order confirmed</option>
+                                <option value="shipped" {{ old('status', $order->status ?? '') == 'shipped' ? 'selected' : '' }}>Ready to Shipped</option>
+                                <option value="courier_delivered" {{ old('status', $order->status ?? '') == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
+                                <option value="delivered" {{ old('status', $order->status ?? '') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                                <option value="cancelled" {{ old('status', $order->status ?? '') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                {{-- <option value="incomplete" {{ old('status', $order->status ?? '') == 'incomplete' ? 'selected' : '' }}>Incomplete</option> --}}
+
                             </select>
                         </div>
 

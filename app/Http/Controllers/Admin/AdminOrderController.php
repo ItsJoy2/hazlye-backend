@@ -17,6 +17,9 @@ class AdminOrderController extends Controller
 {
     public function index(Request $request)
     {
+
+        // $status = $request->get('status', 'all');
+
         $query = Order::with(['items', 'coupon'])
             ->latest();
 
@@ -69,9 +72,26 @@ class AdminOrderController extends Controller
         ));
     }
 
+    public function updateStatus(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|max:255',
+            'comment' => 'nullable|string'
+        ]);
+        if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+            $order->returnStock();
+        }
+
+        $order->update($validated);
+
+        return back()->with('success', 'Order status updated successfully');
+    }
+
+
     public function edit(Order $order)
     {
-        $order->load(['items.product', 'coupon']);
+        $order->load(['items.product', 'coupon', 'deliveryOption']);
+
 
         return view('admin.pages.orders.edit', compact('order'));
     }

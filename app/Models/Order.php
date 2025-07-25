@@ -23,6 +23,7 @@ class Order extends Model
         'coupon_code',
         'status',
         'comment',
+        'delivery_option_id', 
     ];
 
 
@@ -57,6 +58,11 @@ class Order extends Model
             $product->increment('total_stock', $item->quantity);
         }
     }
+}
+
+public function deliveryOption()
+{
+    return $this->belongsTo(DeliveryOption::class, 'delivery_option_id');
 }
 
 }

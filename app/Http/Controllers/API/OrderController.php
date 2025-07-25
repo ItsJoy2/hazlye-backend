@@ -217,6 +217,7 @@ class OrderController extends Controller
                 'coupon_code' => $couponCode,
                 'status' => 'pending',
                 'comment' => $request->comment,
+                'delivery_option_id' => $request->delivery_option_id,
             ]);
 
             foreach ($items as $item) {
@@ -308,4 +309,39 @@ class OrderController extends Controller
             ], 400);
         }
     }
+
+    public function incomplete(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'nullable|string|max:255',
+        'phone' => 'nullable|string|max:20',
+        'address' => 'nullable|string',
+        'district' => 'nullable|string',
+        'thana' => 'nullable|string',
+        'delivery_option_id' => 'nullable|exists:delivery_options,id',
+        'items' => 'nullable|array',
+        'comment' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+    }
+
+    $order = Order::create([
+        'order_number' => 'INC-' . now()->format('YmdHis') . '-' . Str::random(5),
+        'name' => $request->name,
+        'phone' => $request->phone,
+        'address' => $request->address,
+        'district' => $request->district,
+        'thana' => $request->thana,
+        'delivery_charge' => 0,
+        'subtotal' => 0,
+        'total' => 0,
+        'status' => 'incomplete',
+        'comment' => $request->comment,
+    ]);
+
+    return response()->json(['success' => true, 'message' => 'Incomplete order saved.', 'data' => $order], 201);
+}
+
 }

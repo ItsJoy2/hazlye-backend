@@ -40,10 +40,15 @@
                         <select name="status" class="form-control">
                             <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                             <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
                             <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Processing</option>
-                            <option value="shipped" {{ $status == 'shipped' ? 'selected' : '' }}>Shipped</option>
+                            <option value="shipped" {{ $status == 'shipped' ? 'selected' : '' }}>Ready to Shipped</option>
+                            <option value="courier_delivered" {{ $status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
                             <option value="delivered" {{ $status == 'delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="cancelled" {{ $status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            {{-- <option value="incomplete" {{ $status == 'incomplete' ? 'selected' : '' }}>Incomplete</option> --}}
+
+
                         </select>
                     </div>
 
@@ -88,8 +93,15 @@
                             <td>{{ $order->created_at->format('M d, Y') }}</td>
                             <td>${{ number_format($order->total, 2) }}</td>
                             <td>
-                                <span class="badge badge-{{ $order->status == 'delivered' ? 'success' : ($order->status == 'cancelled' ? 'danger' : 'warning') }}">
-                                    {{ ucfirst($order->status) }}
+                                <span class="badge
+                                    @if($order->status == 'delivered') badge-success
+                                    @elseif($order->status == 'cancelled') badge-danger
+                                    @elseif($order->status == 'hold') badge-info
+                                    @elseif($order->status == 'incomplete') badge-secondary
+                                    @elseif($order->status == 'courier_delivered') badge-primary
+                                    @else badge-warning
+                                    @endif">
+                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                 </span>
                             </td>
                             <td>
