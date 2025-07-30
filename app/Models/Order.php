@@ -23,7 +23,11 @@ class Order extends Model
         'coupon_code',
         'status',
         'comment',
-        'delivery_option_id', 
+        'delivery_option_id',
+        'courier_response',
+        'tracking_code',
+        'consignment_id',
+        'courier_service_id'
     ];
 
 
@@ -65,4 +69,17 @@ public function deliveryOption()
     return $this->belongsTo(DeliveryOption::class, 'delivery_option_id');
 }
 
+public function courier()
+{
+    return $this->belongsTo(CourierService::class, 'courier_service_id');
+}
+
+public function getCourierStatusAttribute()
+{
+    if (!$this->courier_response) return null;
+
+    $response = json_decode($this->courier_response, true);
+
+    return $response['status'] ?? null;
+}
 }

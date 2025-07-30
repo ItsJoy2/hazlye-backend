@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminCouponController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\CourierServiceController;
 use App\Http\Controllers\Admin\GeneralSettingsController;
 use App\Http\Controllers\Admin\HomepageSectionController;
 use App\Http\Controllers\Admin\AdminDeliveryOptionController;
@@ -74,6 +75,8 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
 
     // Orders
+
+    Route::get('/orders/couriers', [AdminOrderController::class, 'shippedOrders'])->name('admin.orders.shipped');
     Route::resource('orders', AdminOrderController::class)->names([
        'index' => 'admin.orders.index',
        'create' => 'admin.orders.create',
@@ -86,7 +89,7 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::put('orders/{order}/update-items', [AdminOrderController::class, 'updateItems'])->name('admin.orders.update.items');
     Route::put('orders/{order}/update-delivery', [AdminOrderController::class, 'updateDeliveryCharge'])->name('admin.orders.update.delivery');
     Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update-status');
-    Route::get('admin/orders/download/{order}', [AdminOrderController::class, 'download'])->name('admin.orders.download');
+    Route::get('/orders/download/{order}', [AdminOrderController::class, 'download'])->name('admin.orders.download');
     Route::get('/orders/sku-search', [AdminOrderController::class, 'skuSearch'])->name('admin.orders.sku-search');
     Route::get('/product/search', [AdminOrderController::class, 'search'])->name('admin.product.search');
     Route::get('/product/{product}/variants', [AdminOrderController::class, 'getVariants']);
@@ -152,4 +155,19 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
     // CKE Editor
     Route::post('ckeditor/upload', [CKEditorController::class, 'upload'])->name('ckeditor.upload');
+
+
+    // couriers
+
+    Route::resource('couriers', CourierServiceController::class)->names([
+        'index' => 'admin.couriers.index',
+        'create' => 'admin.couriers.create',
+        'store' => 'admin.couriers.store',
+        'show' => 'admin.couriers.show',
+        'edit' => 'admin.couriers.edit',
+        'update' => 'admin.couriers.update',
+        'destroy' => 'admin.couriers.destroy'
+    ]);;
+
+
 });

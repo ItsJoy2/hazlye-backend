@@ -6,22 +6,23 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use App\Models\CourierService;
 use App\Models\DeliveryOption;
 use Illuminate\Support\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\ProductVariantOption;
+use Illuminate\Support\Facades\Http;
 
 class AdminOrderController extends Controller
 {
     public function index(Request $request)
     {
-
-        // $status = $request->get('status', 'all');
-
-        $query = Order::with(['items', 'coupon'])
+        $query = Order::with(['items', 'coupon', 'items.variantOption',  'deliveryOption' ])
             ->latest();
+
 
         // Status filter
         if ($request->has('status') && $request->status != 'all') {
@@ -67,33 +68,101 @@ class AdminOrderController extends Controller
         $thana = $request->thana ?? '';
         $productSearch = $request->product_search ?? '';
 
+
+        $couriers = CourierService::all();
         return view('admin.pages.orders.index', compact(
-            'orders', 'status', 'dateFrom', 'dateTo', 'district', 'thana', 'productSearch'
+            'orders', 'status', 'dateFrom', 'dateTo', 'district', 'thana', 'productSearch', 'couriers'
         ));
     }
 
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'status' => 'required|string|max:255',
-            'comment' => 'nullable|string'
+            'status' => 'required|string|in:pending,processing,shipped,delivered,cancelled,hold,courier_delivered',
+            'courier_service_id' => 'nullable|required_if:status,shipped|exists:courier_services,id',
+            'delivery_note' => 'nullable|string|max:255',
+            'comment' => 'nullable|string',
         ]);
-        if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
-            $order->returnStock();
+
+        DB::beginTransaction();
+
+        try {
+            // Prevent double shipping
+            if ($validated['status'] === 'shipped' && $order->status === 'shipped') {
+                throw new \Exception('This order is already marked as shipped.');
+            }
+
+            // Return stock if cancelled
+            if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+                $order->returnStock();
+            }
+
+            // Update status and comment
+            $order->status = $validated['status'];
+            if (isset($validated['comment'])) {
+                $order->comment = $validated['comment'];
+            }
+
+            // If shipped, call courier API
+            if ($validated['status'] === 'shipped') {
+                $courier = CourierService::findOrFail($validated['courier_service_id']);
+
+                $payload = [
+                    'invoice' => $order->order_number,
+                    'recipient_name' => $order->name,
+                    'recipient_phone' => $order->phone,
+                    'recipient_address' => $order->address . ', ' . $order->thana . ', ' . $order->district,
+                    'cod_amount' => $order->total,
+                    'note' => $validated['delivery_note'] ?? 'Handle with care',
+                    'item_description' => 'N/A',
+                    'delivery_type' => 0,
+                ];
+
+                $response = Http::withHeaders([
+                    'Api-Key' => $courier->api_key,
+                    'Secret-Key' => $courier->secret_key,
+                    'Content-Type' => 'application/json',
+                ])->post($courier->base_url . '/' . $courier->create_order_endpoint, $payload);
+
+                $data = $response->json();
+
+                if (!$response->successful() || !isset($data['consignment']['tracking_code'])) {
+                    throw new \Exception('Courier API Error: ' . ($data['message'] ?? 'Unknown error'));
+                }
+
+                // Save courier tracking info
+                $order->courier_service_id = $courier->id;
+                $order->tracking_code = $data['consignment']['tracking_code'];
+                $order->consignment_id = $data['consignment']['consignment_id'];
+                $order->courier_response = $data;
+            }
+
+            $order->save();
+            DB::commit();
+
+            return back()->with('success', 'Order updated successfully.' .
+                ($order->tracking_code ? ' Tracking: ' . $order->tracking_code : ''));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order status update failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+            return back()->with('error', 'Failed to update order: ' . $e->getMessage());
         }
-
-        $order->update($validated);
-
-        return back()->with('success', 'Order status updated successfully');
     }
+
+
 
 
     public function edit(Order $order)
     {
-        $order->load(['items.product', 'coupon', 'deliveryOption']);
+        $order->load(['items.product', 'coupon', 'deliveryOption', 'items.variantOption']);
+        $couriers = CourierService::all();
 
 
-        return view('admin.pages.orders.edit', compact('order'));
+        return view('admin.pages.orders.edit', compact('order', 'couriers'));
     }
 
     public function destroy($id)
@@ -113,8 +182,9 @@ class AdminOrderController extends Controller
     public function show(Order $order)
     {
         $order->load(['items.product', 'coupon']);
+        $couriers = CourierService::where('is_active', true)->get();
 
-        return view('admin.pages.orders.show', compact('order'));
+        return view('admin.pages.orders.show', compact('order', 'couriers'));
     }
     public function customerList(Request $request)
 {
@@ -503,6 +573,51 @@ public function getVariants(Product $product)
         });
 
     return response()->json($variants);
+}
+
+public function shippedOrders(Request $request)
+{
+    $query = Order::with(['items', 'coupon', 'items.variantOption', 'deliveryOption', 'courier'])
+        ->where('status', 'shipped')
+        ->latest();
+
+    // Date range filter
+    if ($request->filled('date_from')) {
+        $query->whereDate('created_at', '>=', $request->date_from);
+    }
+
+    if ($request->filled('date_to')) {
+        $query->whereDate('created_at', '<=', $request->date_to);
+    }
+
+    // Filter by courier
+    if ($request->filled('courier_service_id')) {
+        $query->where('courier_service_id', $request->courier_service_id);
+    }
+
+    // Filter by tracking code
+    if ($request->filled('tracking_code')) {
+        $query->where('tracking_code', 'like', '%' . $request->tracking_code . '%');
+    }
+
+    $orders = $query->paginate(10);
+
+    // Preserve filter values
+    $dateFrom = $request->date_from ?? '';
+    $dateTo = $request->date_to ?? '';
+    $courierServiceId = $request->courier_service_id ?? '';
+    $trackingCode = $request->tracking_code ?? '';
+
+    $couriers = CourierService::all();
+
+    return view('admin.pages.orders.courier_order', compact(
+        'orders',
+        'dateFrom',
+        'dateTo',
+        'courierServiceId',
+        'trackingCode',
+        'couriers'
+    ));
 }
 
 }

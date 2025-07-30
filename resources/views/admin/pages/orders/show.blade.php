@@ -19,6 +19,7 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>Image</th>
                                 <th>Product</th>
                                 <th>Price</th>
                                 <th>Qty</th>
@@ -28,6 +29,16 @@
                         <tbody>
                             @foreach($order->items as $item)
                             <tr>
+                                <td>
+                                    @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
+                                        <img src="{{ asset('public/storage/'.$order->items[0]->product->main_image) }}"
+                                             alt="{{ $order->items[0]->product->name }}"
+                                             width="50"
+                                             class="img-thumbnail">
+                                    @else
+                                        <span class="text-muted">No image</span>
+                                    @endif
+                                </td>
                                 <td>
                                     {{ $item->product_name }}
                                     @if($item->size_name)
@@ -57,7 +68,10 @@
                     <div class="mb-3">
                         <strong>Subtotal:</strong> ${{ number_format($order->subtotal, 2) }}
                     </div>
-
+                    <div class="mb-3">
+                        <strong>Delivery Method:</strong>
+                        {{ optional($order->deliveryOption)->name ?? 'Not Set' }}
+                    </div>
                     @if($order->discount > 0)
                     <div class="mb-3">
                         <strong>Discount:</strong> -${{ number_format($order->discount, 2) }}
@@ -85,6 +99,8 @@
                     <p><strong>Name:</strong> {{ $order->name }}</p>
                     <p><strong>Phone:</strong> {{ $order->phone }}</p>
                     <p><strong>Address:</strong> {{ $order->address }}</p>
+                    <p><strong>District:</strong> {{ $order->district }}</p>
+                    <p><strong>Thana:</strong> {{ $order->thana }}</p>
                 </div>
             </div>
 
@@ -102,6 +118,8 @@
                                 <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
                                 <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>Shipped</option>
                                 <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="courier_delivered" {{ $order->status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
+                                <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
                                 <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                             </select>
                         </div>
@@ -110,6 +128,20 @@
                             <label for="comment">Comment (Optional)</label>
                             <textarea name="comment" id="comment" class="form-control" rows="3" readonly>{{ old('comment', $order->comment) }}</textarea>
                         </div>
+
+                        @if($order->status == 'shipped' && $order->tracking_code)
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6>Courier Information</h6>
+                        <p><strong>Courier:</strong> {{ $order->courier->name ?? 'N/A' }}</p>
+                        <p><strong>Tracking Code:</strong> {{ $order->tracking_code }}</p>
+                        <p><strong>Consignment ID:</strong> {{ $order->consignment_id ?? 'N/A' }}</p>
+                        <a href="https://steadfast.com.bd/track/?tracking_number={{ $order->tracking_code }}"
+                           target="_blank"
+                           class="btn btn-sm btn-info">
+                           Track Package
+                        </a>
+                    </div>
+                    @endif
 
                         {{-- <button type="submit" class="btn btn-primary">Update Status</button> --}}
                 </div>

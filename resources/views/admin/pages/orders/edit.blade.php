@@ -19,110 +19,112 @@
                 <div class="card mb-12">
                     <div class="card-header"><h5>Order Items</h5></div>
                     <div class="card-body">
-                        <table style="" class="table table-responsive" id="order-items-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Product</th>
-                                    <th>SKU</th>
-                                    <th>Price</th>
-                                    <th>Qty</th>
-                                    <th>Total</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($order->items as $index => $item)
+                        <div class="table-responsive">
+                            <table style="" class="table table-striped table-hover table-head-bg-primary mt-4" id="order-items-table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
-                                                <img src="{{ asset('public/storage/'.$order->items[0]->product->main_image) }}"
-                                                     alt="{{ $order->items[0]->product->name }}"
-                                                     width="50"
-                                                     class="img-thumbnail">
-                                            @else
-                                                <span class="text-muted">No image</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            {{ $item->product_name }}
-                                            <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+                                        <th>Image</th>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Price</th>
+                                        <th>Qty</th>
+                                        <th>Total</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($order->items as $index => $item)
+                                        <tr>
+                                            <td>
+                                                @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
+                                                    <img src="{{ asset('public/storage/'.$order->items[0]->product->main_image) }}"
+                                                         alt="{{ $order->items[0]->product->name }}"
+                                                         width="50"
+                                                         class="img-thumbnail">
+                                                @else
+                                                    <span class="text-muted">No image</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $item->product_name }}
+                                                <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
 
-                                            @if($item->product && $item->product->has_variants)
-                                                <!-- Variant product - show dropdowns for size and color -->
-                                                <div class="variant-options mt-2">
+                                                @if($item->product && $item->product->has_variants)
+                                                    <!-- Variant product - show dropdowns for size and color -->
+                                                    <div class="variant-options mt-2">
+                                                        <div class="">
+                                                            <div class="">
+                                                                <label>Size:</label>
+                                                                <select name="items[{{ $index }}][size]" class="form-control form-control-sm">
+                                                                    <option value="">Select Size</option>
+                                                                    @foreach($item->product->variants->flatMap->options as $option)
+                                                                        @if($option->size)
+                                                                            <option value="{{ $option->size->name }}"
+                                                                                {{ $item->size_name == $option->size->name ? 'selected' : '' }}>
+                                                                                {{ $option->size->name }}
+                                                                            </option>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="">
+                                                                <label>Color:</label>
+                                                                <select name="items[{{ $index }}][color]" class="form-control form-control-sm">
+                                                                    <option value="">Select Color</option>
+                                                                    @foreach($item->product->variants as $variant)
+                                                                        @if($variant->color)
+                                                                            <option value="{{ $variant->color->name }}"
+                                                                                {{ $item->color_name == $variant->color->name ? 'selected' : '' }}
+                                                                                data-color-code="{{ $variant->color->code }}">
+                                                                                {{ $variant->color->name }}
+                                                                            </option>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <!-- Non-variant product - simple text inputs -->
                                                     <div class="">
                                                         <div class="">
                                                             <label>Size:</label>
-                                                            <select name="items[{{ $index }}][size]" class="form-control form-control-sm">
-                                                                <option value="">Select Size</option>
-                                                                @foreach($item->product->variants->flatMap->options as $option)
-                                                                    @if($option->size)
-                                                                        <option value="{{ $option->size->name }}"
-                                                                            {{ $item->size_name == $option->size->name ? 'selected' : '' }}>
-                                                                            {{ $option->size->name }}
-                                                                        </option>
-                                                                    @endif
-                                                                @endforeach
-                                                            </select>
+                                                            <input type="text" name="items[{{ $index }}][size]"
+                                                                   value="{{ $item->size_name }}"
+                                                                   class="form-control form-control-sm">
                                                         </div>
                                                         <div class="">
                                                             <label>Color:</label>
-                                                            <select name="items[{{ $index }}][color]" class="form-control form-control-sm">
-                                                                <option value="">Select Color</option>
-                                                                @foreach($item->product->variants as $variant)
-                                                                    @if($variant->color)
-                                                                        <option value="{{ $variant->color->name }}"
-                                                                            {{ $item->color_name == $variant->color->name ? 'selected' : '' }}
-                                                                            data-color-code="{{ $variant->color->code }}">
-                                                                            {{ $variant->color->name }}
-                                                                        </option>
-                                                                    @endif
-                                                                @endforeach
-                                                            </select>
+                                                            <input type="text" name="items[{{ $index }}][color]"
+                                                                   value="{{ $item->color_name }}"
+                                                                   class="form-control form-control-sm">
                                                         </div>
                                                     </div>
-                                                </div>
-                                            @else
-                                                <!-- Non-variant product - simple text inputs -->
-                                                <div class="">
-                                                    <div class="">
-                                                        <label>Size:</label>
-                                                        <input type="text" name="items[{{ $index }}][size]"
-                                                               value="{{ $item->size_name }}"
-                                                               class="form-control form-control-sm">
-                                                    </div>
-                                                    <div class="">
-                                                        <label>Color:</label>
-                                                        <input type="text" name="items[{{ $index }}][color]"
-                                                               value="{{ $item->color_name }}"
-                                                               class="form-control form-control-sm">
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($item->product && $item->product->has_variants)
-                                                {{ $item->variant->sku ?? 'N/A' }}
-                                            @else
-                                                {{ $item->product->sku ?? 'N/A' }}
-                                            @endif
-                                        </td>
-                                        <td>${{ number_format($item->price, 2) }}</td>
-                                        <td>
-                                            <input type="number" name="items[{{ $index }}][quantity]"
-                                                   value="{{ $item->quantity }}"
-                                                   class="form-control form-control-sm"
-                                                   style="width:60px;">
-                                        </td>
-                                        <td>${{ number_format($item->price * $item->quantity, 2) }}</td>
-                                        <td>
-                                            <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($item->product && $item->product->has_variants)
+                                                    {{ $item->variantOption->sku ?? 'N/A' }}
+                                                @else
+                                                    {{ $item->product->sku ?? 'N/A' }}
+                                                @endif
+                                            </td>
+                                            <td>${{ number_format($item->price, 2) }}</td>
+                                            <td>
+                                                <input type="number" name="items[{{ $index }}][quantity]"
+                                                       value="{{ $item->quantity }}"
+                                                       class="form-control form-control-sm"
+                                                       style="width:60px;">
+                                            </td>
+                                            <td>${{ number_format($item->price * $item->quantity, 2) }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
                         <hr>
                         <h6>Add Product by SKU:</h6>
@@ -238,28 +240,48 @@
                 </form>
             </div>
 
-            <div class="card">
+            <div class="card mt-4">
                 <div class="card-header">
                     <h5>Update Order Status</h5>
                 </div>
                 <div class="card-body">
-                    <form style="width: 100% !important; background: none; border: none; margin:0;" action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                    <form id="order-status-form" action="{{ route('admin.orders.update-status', $order) }}" method="POST">
                         @csrf
                         @method('PUT')
 
                         <div class="form-group">
-                            <label for="status">Status</label>
-                            <select name="status" class="form-control">
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="hold" {{ old('status', $order->status ?? '') == 'hold' ? 'selected' : '' }}>Hold</option>
-                                <option value="processing" {{ old('status', $order->status ?? '') == 'processing' ? 'selected' : '' }}>Order confirmed</option>
-                                <option value="shipped" {{ old('status', $order->status ?? '') == 'shipped' ? 'selected' : '' }}>Ready to Shipped</option>
-                                <option value="courier_delivered" {{ old('status', $order->status ?? '') == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
-                                <option value="delivered" {{ old('status', $order->status ?? '') == 'delivered' ? 'selected' : '' }}>Delivered</option>
-                                <option value="cancelled" {{ old('status', $order->status ?? '') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                {{-- <option value="incomplete" {{ old('status', $order->status ?? '') == 'incomplete' ? 'selected' : '' }}>Incomplete</option> --}}
-
+                            <label for="status">Order Status</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
+                                <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}
+                                    {{ $order->status == 'shipped' ? 'disabled' : '' }}>Shipped</option>
+                                <option value="courier_delivered" {{ $order->status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
+                                <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                             </select>
+                        </div>
+
+                        <!-- Courier Fields -->
+                        <div class="courier-field" style="display: {{ $order->status == 'shipped' ? 'block' : 'none' }};">
+                            <div class="form-group">
+                                <label for="courier_service_id">Select Courier</label>
+                                <select name="courier_service_id" id="courier_service_id" class="form-control"
+                                    {{ $order->status == 'shipped' ? 'disabled' : 'required' }}>
+                                    <option value="">Select Courier</option>
+                                    @foreach($couriers as $courier)
+                                        <option value="{{ $courier->id }}" {{ $order->courier_service_id == $courier->id ? 'selected' : '' }}>
+                                            {{ $courier->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="delivery_note">Delivery Note</label>
+                                <textarea name="delivery_note" id="delivery_note" class="form-control" rows="2"
+                                    {{ $order->status == 'shipped' ? 'readonly' : '' }}>{{ $order->courier_note ?? 'Handle with care' }}</textarea>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -269,8 +291,24 @@
 
                         <button type="submit" class="btn btn-primary">Update Status</button>
                     </form>
+
+                    @if($order->status == 'shipped' && $order->tracking_code)
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6>Courier Information</h6>
+                        <p><strong>Courier:</strong> {{ $order->courier->name ?? 'N/A' }}</p>
+                        <p><strong>Tracking Code:</strong> {{ $order->tracking_code }}</p>
+                        <p><strong>Consignment ID:</strong> {{ $order->consignment_id ?? 'N/A' }}</p>
+                        <a href="https://steadfast.com.bd/track/?tracking_number={{ $order->tracking_code }}"
+                           target="_blank"
+                           class="btn btn-sm btn-info">
+                           Track Package
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
+
+
         </div>
     </div>
 </div>
@@ -426,3 +464,46 @@
     cursor: pointer;
 }
 </style>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusSelect = document.getElementById('status');
+        const courierField = document.querySelector('.courier-field');
+        const courierSelect = document.getElementById('courier_service_id');
+        const form = document.getElementById('order-status-form');
+        const isAlreadyShipped = {{ $order->status === 'shipped' ? 'true' : 'false' }};
+
+        function toggleCourierField() {
+            if (statusSelect.value === 'shipped' && !isAlreadyShipped) {
+                courierField.style.display = 'block';
+                courierSelect.required = true;
+            } else {
+                courierField.style.display = 'none';
+                courierSelect.required = false;
+                courierSelect.value = "";
+            }
+        }
+
+        // Initialize view
+        toggleCourierField();
+
+        // On status change
+        statusSelect.addEventListener('change', function() {
+            // Disable shipped option if already shipped
+            if (isAlreadyShipped && statusSelect.value === 'shipped') {
+                alert('This order has already been shipped and cannot be shipped again.');
+                statusSelect.value = '{{ $order->status }}';
+            }
+            toggleCourierField();
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (statusSelect.value === 'shipped' && !courierSelect.value && !isAlreadyShipped) {
+                e.preventDefault();
+                alert("Please select a courier service before marking as 'Shipped'.");
+                courierSelect.focus();
+            }
+        });
+    });
+</script>

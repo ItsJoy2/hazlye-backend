@@ -218,6 +218,7 @@ class OrderController extends Controller
                 'status' => 'pending',
                 'comment' => $request->comment,
                 'delivery_option_id' => $request->delivery_option_id,
+                'variant_option_id' => $request->variant_option_id,
             ]);
 
             foreach ($items as $item) {

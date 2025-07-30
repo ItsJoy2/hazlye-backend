@@ -50,15 +50,23 @@
 									</li>
 									<li class="nav-item">
                                         <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="nav-link">
-                                            <span class="sub-item">Pending Orders</span>
+                                            <span class="sub-item">Pending </span>
                                             <span class="badge badge-warning float-right">
                                                 {{ App\Models\Order::where('status', 'pending')->count() }}
                                             </span>
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'hold']) }}" class="nav-link">
+                                            <span class="sub-item">Hold</span>
+                                            <span class="badge badge-warning float-right">
+                                                {{ App\Models\Order::where('status', 'hold')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a href="{{ route('admin.orders.index', ['status' => 'processing']) }}" class="nav-link">
-                                            <span class="sub-item">Processing Orders</span>
+                                            <span class="sub-item">Processing</span>
                                             <span class="badge badge-info float-right">
                                                 {{ App\Models\Order::where('status', 'processing')->count() }}
                                             </span>
@@ -66,9 +74,17 @@
                                     </li>
                                     <li class="nav-item">
                                         <a href="{{ route('admin.orders.index', ['status' => 'shipped']) }}" class="nav-link">
-                                            <span class="sub-item">Shipped Orders</span>
+                                            <span class="sub-item">Ready To Shipped</span>
                                             <span class="badge badge-primary float-right">
                                                 {{ App\Models\Order::where('status', 'shipped')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('admin.orders.index', ['status' => 'courier_delivered']) }}" class="nav-link">
+                                            <span class="sub-item">Courier Delivered</span>
+                                            <span class="badge badge-warning float-right">
+                                                {{ App\Models\Order::where('status', 'courier_delivered')->count() }}
                                             </span>
                                         </a>
                                     </li>
@@ -91,6 +107,27 @@
 
 								</ul>
 							</div>
+						</li>
+                        <li class="nav-item">
+							<a href="{{route('admin.orders.shipped')}}">
+								<i class="far fa-money-bill-alt"></i>
+								<p>Courier Orders</p>
+								{{-- <span class="caret"></span> --}}
+							</a>
+							{{-- <div class="collapse" id="categories">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a href="{{route('admin.categories.index')}}">
+											<span class="sub-item">All Categories</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{route('admin.categories.create')}}">
+											<span class="sub-item">Create Category</span>
+										</a>
+									</li>
+								</ul>
+							</div> --}}
 						</li>
                         <li class="nav-item">
 							<a href="{{route('admin.customers.index')}}">
@@ -260,6 +297,27 @@
 									</li>
 								</ul>
 							</div> --}}
+						</li>
+                        <li class="nav-item">
+							<a data-bs-toggle="collapse" href="#couriers">
+								<i class="far fa-money-bill-alt"></i>
+								<p>Couriers Management</p>
+								<span class="caret"></span>
+							</a>
+							<div class="collapse" id="couriers">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a href="{{route('admin.couriers.index')}}">
+											<span class="sub-item">Couriers List</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{route('admin.couriers.create')}}">
+											<span class="sub-item">Add Courier</span>
+										</a>
+									</li>
+								</ul>
+							</div>
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#settings">
