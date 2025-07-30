@@ -280,7 +280,7 @@
                             <div class="form-group">
                                 <label for="delivery_note">Delivery Note</label>
                                 <textarea name="delivery_note" id="delivery_note" class="form-control" rows="2"
-                                    {{ $order->status == 'shipped' ? 'readonly' : '' }}>{{ $order->courier_note ?? 'Handle with care' }}</textarea>
+                                    {{ $order->status == 'shipped' ? 'readonly' : '' }}>{{ $order->courier_note }}</textarea>
                             </div>
                         </div>
 

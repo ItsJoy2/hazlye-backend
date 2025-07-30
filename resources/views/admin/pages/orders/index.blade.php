@@ -71,6 +71,9 @@
                             <th>Date</th>
                             <th>Total</th>
                             <th>Status</th>
+                            @if($status === 'delivered')
+                                <th>Track Order</th>
+                            @endif
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -104,6 +107,19 @@
                                     {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                 </span>
                             </td>
+                            @if($status === 'delivered')
+                                <td>
+                                    @if($order->tracking_code)
+                                        <a href="https://steadfast.com.bd/t/{{ $order->tracking_code }}"
+                                        target="_blank"
+                                        class="btn btn-sm btn-info">
+                                        Track
+                                        </a>
+                                    @else
+                                        <span class="text-muted">No tracking</span>
+                                    @endif
+                                </td>
+                            @endif
                             <td>
                                 @include('admin.pages.orders.partials.__actions')
                             </td>

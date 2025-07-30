@@ -135,10 +135,8 @@
                         <p><strong>Courier:</strong> {{ $order->courier->name ?? 'N/A' }}</p>
                         <p><strong>Tracking Code:</strong> {{ $order->tracking_code }}</p>
                         <p><strong>Consignment ID:</strong> {{ $order->consignment_id ?? 'N/A' }}</p>
-                        <a href="https://steadfast.com.bd/track/?tracking_number={{ $order->tracking_code }}"
-                           target="_blank"
-                           class="btn btn-sm btn-info">
-                           Track Package
+                        <a href="https://steadfast.com.bd/t/{{ $order->tracking_code }}"target="_blank"class="btn btn-sm btn-info">
+                           Track Order
                         </a>
                     </div>
                     @endif
