@@ -21,6 +21,8 @@ class GeneralSetting extends Model
         'tiktok_url',
         'messenger_url',
         'whatsapp_url',
+        'contact_number_1',
+        'contact_number_2',
         'google_tag_manager',
         'domain_verification',
         'header_scripts',

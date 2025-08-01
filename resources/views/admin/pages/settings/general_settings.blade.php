@@ -60,6 +60,20 @@
                                        placeholder="https://www.{{ $platform }}.com/">
                             </div>
                         @endforeach
+                        <div class="mt-4">
+                            <div class="form-group mb-3">
+                                <label for="contact_number_1">Primary Contact Number</label>
+                                <input type="text" class="form-control" id="contact_number_1" name="contact_number_1"
+                                       value="{{ old('contact_number_1', $generalSettings->contact_number_1 ?? '') }}"
+                                       placeholder="+1 (123) 456-7890">
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="contact_number_2">Secondary Contact Number</label>
+                                <input type="text" class="form-control" id="contact_number_2" name="contact_number_2"
+                                       value="{{ old('contact_number_2', $generalSettings->contact_number_2 ?? '') }}"
+                                       placeholder="+1 (987) 654-3210">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Google Tag Manager -->

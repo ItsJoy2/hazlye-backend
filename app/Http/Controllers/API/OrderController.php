@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\DeliveryOption;
 use App\Models\Coupon;
 use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\ProductVariantOption;
+use App\Models\OrderItem;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use App\Models\DeliveryOption;
+use App\Models\ProductVariant;
+use App\Models\BlockedCustomer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Models\ProductVariantOption;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -37,6 +38,21 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        $ipAddress = $request->header('X-Forwarded-For') ?? $request->ip();
+
+        $blocked = BlockedCustomer::where(function($query) use ($request) {
+            $query->where('phone', $request->phone)
+                ->orWhere('ip_address', $request->ip());
+        })
+        ->exists();
+
+    if ($blocked) {
+        return response()->json([
+            'success' => false,
+            'message' => 'You are blocked from placing orders. please contact with Admin.'
+        ], 403);
+    }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
@@ -49,6 +65,7 @@ class OrderController extends Controller
             'items.*.color_name' => 'nullable|string',
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'comment' => 'nullable|string',
+
         ]);
 
         if ($validator->fails()) {
@@ -87,7 +104,6 @@ class OrderController extends Controller
                 $itemPrice = 0;
 
                 if ($hasVariants) {
-                    // Handle products with variants
                     if (empty($itemData['color_name'])) {
                         throw new \Exception("Color is required for product with variants: {$product->name}");
                     }
@@ -126,22 +142,20 @@ class OrderController extends Controller
                     $sizeId = $option->size->id;
                     $colorCode = $variant->color->code;
 
-                    // Use variant price if available, otherwise use product's discounted price or regular price
+
                     $itemPrice = $option->price ??
                                 ($product->discount_price ?? $product->regular_price);
                 } else {
-                    // Handle products without variants
                     if ($product->total_stock < $itemData['quantity']) {
                         throw new \Exception("Insufficient stock for product: {$product->name}. Available: {$product->total_stock}, Requested: {$itemData['quantity']}");
                     }
 
-                    // Only set size if the product has a size (but no variants)
                     if ($product->size_id && !empty($itemData['size_name'])) {
                         $sizeName = $itemData['size_name'];
                         $sizeId = $product->size_id;
                     }
 
-                    // Use product's discounted price if available, otherwise regular price
+
                     $itemPrice = $product->discount_price ?? $product->regular_price;
                 }
 
@@ -219,6 +233,7 @@ class OrderController extends Controller
                 'comment' => $request->comment,
                 'delivery_option_id' => $request->delivery_option_id,
                 'variant_option_id' => $request->variant_option_id,
+                'ip_address' => $ipAddress,
             ]);
 
             foreach ($items as $item) {
@@ -236,11 +251,11 @@ class OrderController extends Controller
                 ]);
 
                 if ($item['option_id']) {
-                    // Update variant option stock
+
                     $rowsAffected = ProductVariantOption::where('id', $item['option_id'])
                         ->decrement('stock', $item['quantity']);
                 } else {
-                    // Update product stock directly
+
                     $rowsAffected = Product::where('id', $item['product_id'])
                         ->decrement('total_stock', $item['quantity']);
                 }
@@ -302,6 +317,13 @@ class OrderController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Order creation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all(),
+                'ip' => $ipAddress,
+            ]);
+
 
             return response()->json([
                 'success' => false,

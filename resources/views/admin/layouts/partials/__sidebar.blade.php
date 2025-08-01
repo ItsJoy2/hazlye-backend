@@ -130,25 +130,25 @@
 							</div> --}}
 						</li>
                         <li class="nav-item">
-							<a href="{{route('admin.customers.index')}}">
+							<a data-bs-toggle="collapse" href="#customers">
 								<i class="far fa-money-bill-alt"></i>
 								<p>Customers</p>
-								{{-- <span class="caret"></span> --}}
+								<span class="caret"></span>
 							</a>
-							{{-- <div class="collapse" id="categories">
+							<div class="collapse" id="customers">
 								<ul class="nav nav-collapse">
                                     <li>
-										<a href="{{route('admin.categories.index')}}">
-											<span class="sub-item">All Categories</span>
+										<a  href="{{route('admin.customers.index')}}">
+											<span class="sub-item">Customers List</span>
 										</a>
 									</li>
 									<li>
-										<a href="{{route('admin.categories.create')}}">
-											<span class="sub-item">Create Category</span>
+										<a href="{{route('admin.customers.blocked')}}">
+											<span class="sub-item">Block Customers</span>
 										</a>
 									</li>
 								</ul>
-							</div> --}}
+							</div>
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#categories">

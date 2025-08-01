@@ -23,6 +23,7 @@ class Order extends Model
         'coupon_code',
         'status',
         'comment',
+        'ip_address',
         'delivery_option_id',
         'courier_response',
         'tracking_code',

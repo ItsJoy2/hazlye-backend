@@ -35,6 +35,10 @@ class GeneralSettingsController extends Controller
                     'messenger' => $settings->messenger_url,
                     'whatsapp' => $settings->whatsapp_url,
                 ],
+                'contact_numbers' => [
+                    'primary' => $settings->contact_number_1,
+                    'secondary' => $settings->contact_number_2,
+                ],
                 'google_tag_manager' => $settings->google_tag_manager,
                 'domain_verification' => $settings->domain_verification,
                 'header_scripts' => $settings->header_scripts,

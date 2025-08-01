@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use id;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\CourierService;
 use App\Models\DeliveryOption;
 use Illuminate\Support\Carbon;
+use App\Models\BlockedCustomer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -199,10 +201,9 @@ class AdminOrderController extends Controller
         DB::raw('SUM(orders.total) as total_spent'),
         DB::raw('MAX(orders.created_at) as last_order_at')
     ])
-    ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-    ->groupBy('name', 'phone');
+    ->join('order_items', 'orders.id', '=', 'order_items.order_id')->where('orders.status', 'delivered')->groupBy('name', 'phone');
 
-    // ✅ Filters
+
     if ($request->filled('phone')) {
         $query->where('phone', 'like', '%' . $request->phone . '%');
     }
@@ -547,7 +548,7 @@ public function search(Request $request)
                 'name' => $product->name,
                 'sku' => $product->sku,
                 'price' => $product->discount_price ?? $product->regular_price,
-                'has_variants' => $product->has_variants, // boolean
+                'has_variants' => $product->has_variants,
             ];
         });
 
@@ -578,7 +579,7 @@ public function getVariants(Product $product)
 public function shippedOrders(Request $request)
 {
     $query = Order::with(['items', 'coupon', 'items.variantOption', 'deliveryOption', 'courier'])
-        ->where('status', 'shipped')
+        ->whereIn('status', ['shipped', 'courier_delivered', 'delivered'])
         ->latest();
 
     // Date range filter
@@ -619,5 +620,55 @@ public function shippedOrders(Request $request)
         'couriers'
     ));
 }
+
+
+public function blockedCustomers(Request $request)
+{
+    $query = BlockedCustomer::query()->latest();
+
+    if ($request->filled('search')) {
+        $searchTerm = $request->search;
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('phone', 'like', '%' . $searchTerm . '%')
+              ->orWhere('ip_address', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    $blockedCustomers = $query->paginate(10)
+        ->appends(['search' => $request->search]);
+
+    return view('admin.pages.customers.customer_block', [
+        'blockedCustomers' => $blockedCustomers,
+        'search' => $request->search
+    ]);
+}
+public function blockCustomer(Request $request)
+{
+    $request->validate([
+        'phone' => 'required_without:ip_address',
+        'ip_address' => 'required_without:phone',
+        'reason' => 'nullable|string'
+    ]);
+
+    BlockedCustomer::create([
+        'phone' => $request->phone,
+        'ip_address' => $request->ip_address,
+        'reason' => $request->reason,
+    ]);
+
+    return back()->with('success', 'Customer blocked successfully');
+}
+
+public function unblockCustomer(Request $request)
+{
+    $request->validate([
+        'id' => 'required|exists:blocked_customers'
+    ]);
+
+    BlockedCustomer::find($request->id)->delete();
+
+    return back()->with('success', 'Customer unblocked successfully');
+}
+
 
 }

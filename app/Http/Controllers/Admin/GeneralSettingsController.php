@@ -34,6 +34,8 @@ class GeneralSettingsController extends Controller
             'tiktok_url' => 'nullable|url|max:255',
             'messenger_url' => 'nullable|url|max:255',
             'Whatsapp_url' => 'nullable|url|max:255',
+            'contact_number_1' => 'nullable|string|max:20',
+            'contact_number_2' => 'nullable|string|max:20',
             'google_tag_manager' => 'nullable|string',
             'domain_verification' => 'nullable|string',
             'header_scripts' => 'nullable|string',
@@ -53,6 +55,9 @@ class GeneralSettingsController extends Controller
             'tiktok_url',
             'messenger_url',
             'whatsapp_url',
+            'contact_number_1',
+            'contact_number_2',
+
             'google_tag_manager',
             'domain_verification',
             'header_scripts',

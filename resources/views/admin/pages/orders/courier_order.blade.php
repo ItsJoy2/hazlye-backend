@@ -80,6 +80,7 @@
                                     <th>Tracking Code</th>
                                     <th>Shipping Date</th>
                                     <th>Status</th>
+                                    <th>Track Order</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -97,6 +98,17 @@
                                     <td>{{ $order->updated_at->format('M d, Y h:i A') }}</td>
                                     <td>
                                         {{-- <span class="badge badge-info">Shipped</span> --}}
+                                    </td>
+                                    <td>
+                                        @if($order->tracking_code)
+                                            <a href="https://steadfast.com.bd/t/{{ $order->tracking_code }}"
+                                            target="_blank"
+                                            class="btn btn-sm btn-info">
+                                            Track
+                                            </a>
+                                        @else
+                                            <span class="text-muted">No tracking</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-primary">
