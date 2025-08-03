@@ -38,7 +38,7 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $ipAddress = $request->header('X-Forwarded-For') ?? $request->ip();
+        $ipAddress = $request->ip();
 
         $blocked = BlockedCustomer::where(function($query) use ($request) {
             $query->where('phone', $request->phone)
