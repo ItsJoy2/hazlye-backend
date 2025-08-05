@@ -66,7 +66,7 @@
                                     </li>
                                     <li class="nav-item">
                                         <a href="{{ route('admin.orders.index', ['status' => 'processing']) }}" class="nav-link">
-                                            <span class="sub-item">Processing</span>
+                                            <span class="sub-item">Order Confirmed</span>
                                             <span class="badge badge-info float-right">
                                                 {{ App\Models\Order::where('status', 'processing')->count() }}
                                             </span>

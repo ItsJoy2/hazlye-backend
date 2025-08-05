@@ -41,7 +41,7 @@
                             <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                             <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
-                            <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Processing</option>
+                            <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
                             <option value="shipped" {{ $status == 'shipped' ? 'selected' : '' }}>Ready to Shipped</option>
                             <option value="courier_delivered" {{ $status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
                             <option value="delivered" {{ $status == 'delivered' ? 'selected' : '' }}>Delivered</option>
@@ -71,6 +71,7 @@
                             <th>Date</th>
                             <th>Total</th>
                             <th>Status</th>
+                            <th>IP Address</th>
                             @if($status === 'delivered')
                                 <th>Track Order</th>
                             @endif
@@ -107,6 +108,8 @@
                                     {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                 </span>
                             </td>
+
+                            <td>{{ $order->ip_address }}</td>
                             @if($status === 'delivered')
                                 <td>
                                     @if($order->tracking_code)

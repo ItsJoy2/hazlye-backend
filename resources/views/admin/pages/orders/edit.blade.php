@@ -163,13 +163,27 @@
                     <div class="mb-3">
                         <strong>Delivery Method:</strong>
                         {{ optional($order->deliveryOption)->name ?? 'Not Set' }}
+
+                        <select name="status" id="status" class="form-control">
+                            <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="hold" {{ $order->status == 'hold' ? 'selected' : '' }}>Hold</option>
+                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
+                            <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}
+                                {{ $order->status == 'shipped' ? 'disabled' : '' }}>Shipped</option>
+                            <option value="courier_delivered" {{ $order->status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
+                            <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        </select>
                     </div>
 
 
                     <form style="background: none; border: none; margin:0;" action="{{ route('admin.orders.update.delivery', $order->id) }}" method="POST">
                         @csrf
                         @method('PUT')
+                        <div class="delivery">
+                            <label for="delivery_charge"><strong>Delivery Method:</strong></label>
 
+                        </div>
                         {{-- Delivery Charge --}}
                         <div class="delivery">
                             <label for="delivery_charge"><strong>Delivery Charge:</strong></label>
@@ -253,6 +267,7 @@
                             <label for="status">Order Status</label>
                             <select name="status" id="status" class="form-control">
                                 <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="hold" {{ $order->status == 'hold' ? 'selected' : '' }}>Hold</option>
                                 <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
                                 <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}
                                     {{ $order->status == 'shipped' ? 'disabled' : '' }}>Shipped</option>
