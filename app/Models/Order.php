@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
 {
@@ -82,5 +83,13 @@ public function getCourierStatusAttribute()
     $response = json_decode($this->courier_response, true);
 
     return $response['status'] ?? null;
+}
+
+
+protected $appends = ['pdf_url'];
+
+public function getPdfUrlAttribute()
+{
+    return $this->pdf_path ? Storage::url($this->pdf_path) : null;
 }
 }

@@ -163,38 +163,42 @@
                     <div class="mb-3">
                         <strong>Delivery Method:</strong>
                         {{ optional($order->deliveryOption)->name ?? 'Not Set' }}
-
-                        <select name="status" id="status" class="form-control">
-                            <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="hold" {{ $order->status == 'hold' ? 'selected' : '' }}>Hold</option>
-                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
-                            <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}
-                                {{ $order->status == 'shipped' ? 'disabled' : '' }}>Shipped</option>
-                            <option value="courier_delivered" {{ $order->status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
-                            <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
-                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
                     </div>
 
 
                     <form style="background: none; border: none; margin:0;" action="{{ route('admin.orders.update.delivery', $order->id) }}" method="POST">
                         @csrf
                         @method('PUT')
-                        <div class="delivery">
-                            <label for="delivery_charge"><strong>Delivery Method:</strong></label>
 
+                        {{-- Delivery Method --}}
+                        <div class="delivery mb-3">
+                            <label for="delivery_option_id"><strong>Delivery Method:</strong></label>
+                            <select name="delivery_option_id" id="delivery_option_id" class="form-control w-50 d-inline-block mx-1" required>
+                                @foreach($deliveryOptions as $option)
+                                    <option value="{{ $option->id }}"
+                                        data-charge="{{ $option->charge }}"
+                                        {{ $order->delivery_option_id == $option->id ? 'selected' : '' }}>
+                                        {{ $option->name }} - {{ number_format($option->charge, 2) }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
+
                         {{-- Delivery Charge --}}
-                        <div class="delivery">
+                        <div class="delivery mb-3">
                             <label for="delivery_charge"><strong>Delivery Charge:</strong></label>
-                            <input type="number" name="delivery_charge" id="delivery_charge" value="{{ $order->delivery_charge }}" step="0.01" class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
+                            <input type="number" name="delivery_charge" id="delivery_charge"
+                                   value="{{ $order->delivery_charge }}" step="0.01"
+                                   class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
                         </div>
 
-                        {{-- New Discount Field --}}
-                      <div class="admin-discount mt-3">
-                        <label for="admin_discount" class="ms-3"><strong>Discount:</strong></label>
-                        <input type="number" name="admin_discount" id="admin_discount" value="{{ $order->admin_discount ?? 0 }}" step="0.01" class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
-                      </div>
+                        {{-- Discount Field --}}
+                        <div class="admin-discount mb-3">
+                            <label for="admin_discount" class="ms-3"><strong>Discount:</strong></label>
+                            <input type="number" name="admin_discount" id="admin_discount"
+                                   value="{{ $order->admin_discount ?? 0 }}" step="0.01"
+                                   class="form-control w-50 d-inline-block mx-1" style="max-width: 100px;" required>
+                        </div>
 
                         <button type="submit" class="btn btn-sm btn-primary">Update</button>
                     </form>
@@ -522,3 +526,17 @@
         });
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deliveryOptionSelect = document.getElementById('delivery_option_id');
+        const deliveryChargeInput = document.getElementById('delivery_charge');
+
+        // Update delivery charge when option changes
+        deliveryOptionSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const charge = selectedOption.getAttribute('data-charge');
+            deliveryChargeInput.value = charge;
+        });
+    });
+    </script>

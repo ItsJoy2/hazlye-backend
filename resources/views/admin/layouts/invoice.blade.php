@@ -1,238 +1,173 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Invoice - {{ $order->order_number }}</title>
+    <meta charset="utf-8">
+    <title>Order #{{ $order->order_number }}</title>
+
     <style>
-        body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #333;
+        @font-face {
+            font-family: 'Noto Sans Bengali';
+            font-style: normal;
+            font-weight: 400;
+            src: url(data:font/truetype;charset=utf-8;base64,{{ base64_encode(file_get_contents(public_path('assets/admin/fonts/NotoSansBengali/TiroBangla-Regular.ttf'))) }}) format('truetype');
         }
-        .container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+
+        @page {
+            size: 2in auto;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            width: 2in;
+            margin: 0;
+            padding: 2px;
+            font-size: 8px;
+            line-height: 1.2;
+        }
+        * {
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
+            margin-bottom: 3px;
+            padding-bottom: 3px;
+            border-bottom: 1px dashed #ccc;
         }
-        .header h1 {
-            margin: 0;
-            color: #2d3748;
-        }
-        .header p {
-            margin: 5px 0;
-            color: #718096;
+        .header h3 {
+            margin: 2px 0;
+            font-size: 9px;
+            font-weight: 700;
         }
         .info-section {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
+            margin-bottom: 3px;
+            padding-bottom: 3px;
+            border-bottom: 1px dashed #ccc;
         }
-        .info-box {
-            flex: 1;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            margin: 0 10px;
+        .info-section p {
+            margin: 2px 0;
+            word-break: break-word;
         }
-        .info-box h3 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            color: #2d3748;
-        }
-        .items-table {
+        .products {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 3px;
         }
-        .items-table th {
-            background-color: #f8f9fa;
+        .products th {
+            font-size: 7px;
+            padding: 1px;
+            border-bottom: 1px solid #000;
             text-align: left;
-            padding: 10px;
-            border: 1px solid #ddd;
         }
-        .items-table td {
-            padding: 10px;
-            border: 1px solid #ddd;
+        .products td {
+            padding: 1px;
             vertical-align: top;
+            font-size: 8px;
         }
-        .items-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .variant-details {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #666;
-        }
-        .color-preview {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 5px;
-            border: 1px solid #ddd;
-            vertical-align: middle;
-        }
-        .totals-section {
-            float: right;
-            width: 300px;
-            margin-top: 20px;
-        }
-        .totals-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .totals-table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        .totals-table tr:last-child {
-            font-weight: bold;
-            background-color: #f8f9fa;
+        .product-name {
+            word-break: break-word;
+            max-width: 0.8in;
         }
         .footer {
-            margin-top: 50px;
             text-align: center;
-            font-size: 12px;
-            color: #718096;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+            font-size: 7px;
+            margin-top: 3px;
+            padding-top: 3px;
+            border-top: 1px dashed #ccc;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 12px;
+        .text-right {
+            text-align: right;
         }
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
+        .tfoot-row {
+            border-top: 1px dashed #000;
         }
-        .status-processing {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-        .status-completed {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .status-cancelled {
-            background-color: #f8d7da;
-            color: #721c24;
+        .logo img {
+            max-height: 30px;
+            width: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Order Invoice</h1>
-            <p>Order #{{ $order->order_number }}</p>
-            <p>Date: {{ $order->created_at->format('F j, Y') }}</p>
-            <span class="status-badge status-{{ $order->status }}">
-                {{ strtoupper($order->status) }}
-            </span>
+    <div class="header">
+        <div class="logo">
+            @if(isset($generalSettings->logo))
+                <img src="{{ Storage::url($generalSettings->logo) }}" alt="Hazlye" height="50px">
+            @endif
         </div>
+        <h3>Order #{{ $order->order_number }}</h3>
+    </div>
 
-        <div class="info-section">
-            <div class="info-box">
-                <h3>Customer Information</h3>
-                <p><strong>Name:</strong> {{ $order->name }}</p>
-                <p><strong>Phone:</strong> {{ $order->phone }}</p>
-                <p><strong>Address:</strong> {{ $order->address }}</p>
-            </div>
+    <div class="info-section customer-info">
+        <p><strong>CUSTOMER:</strong> {{ $order->name }}</p>
+        <p><strong>PHONE:</strong> {{ $order->phone }}</p>
+        <p><strong>ADDRESS:</strong> {{ $order->address }}, {{ $order->thana }}, {{ $order->district }}</p>
+    </div>
 
-            <div class="info-box">
-                <h3>Order Details</h3>
-                <p><strong>Order Number:</strong> {{ $order->order_number }}</p>
-                <p><strong>Order Date:</strong> {{ $order->created_at->format('F j, Y') }}</p>
-                <p><strong>Status:</strong>
-                    <span class="status-badge status-{{ $order->status }}">
-                        {{ strtoupper($order->status) }}
-                    </span>
-                </p>
-                @if($order->coupon)
-                    <p><strong>Coupon:</strong> {{ $order->coupon_code }} ({{ $order->coupon->discount }}% off)</p>
-                @endif
-            </div>
-        </div>
 
-        <h3>Order Items</h3>
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Product Details</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($order->items as $item)
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>
-                        {{ $item->product_name }}
-                        @if($item->size_name)
-                            <br><small>Size: {{ $item->size_name }}</small>
+    <table class="products">
+        <thead>
+            <tr>
+                <th>ITEM</th>
+                <th>SIZE</th>
+                <th>QTY</th>
+                <th>PRICE</th>
+                {{-- <th class="product-img-cell">IMG</th> --}}
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($order->items as $item)
+            <tr>
+                <td class="product-name">{{ $item->product_name }}</td>
+                <td>{{ $item->size_name ?? '-' }}</td>
+                <td>{{ $item->quantity }}</td>
+                <td>{{ number_format($item->price, 2) }}৳</td>
+                {{-- <td class="product-img-cell">
+                    @if($item->product && $item->product->image)
+                        @php
+                            $imagePath = storage_path('public/storage/' . $item->product->image);
+                        @endphp
+                        @if(file_exists($imagePath))
+                            <img class="product-img" src="{{ $imagePath }}" alt="{{ $item->product_name }}">
+                        @else
+                            <span>-</span>
                         @endif
-                        @if($item->color_name)
-                            <br><small>Color: {{ $item->color_name }}</small>
-                        @endif
-                    </td>
-                    <td>{{ number_format($item->price, 2) }}</td>
-                    <td>{{ $item->quantity }}</td>
-                    <td>{{ number_format($item->price * $item->quantity, 2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    @else
+                        -
+                    @endif
+                </td> --}}
+            </tr>
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr class="tfoot-row">
+                <td colspan="2"><strong>TOTAL ITEMS</strong></td>
+                <td><strong>{{ $order->items->sum('quantity') }}</strong></td>
+                <td colspan="2"></td>
+            </tr>
+            {{-- <tr>
+                <td colspan="2"><strong>SUBTOTAL</strong></td>
+                <td colspan="2" class="text-right">{{ number_format($order->subtotal, 2) }}৳</td>
+            </tr>
+            @if($order->discount > 0)
+            <tr>
+                <td colspan="2"><strong>DISCOUNT</strong></td>
+                <td colspan="2" class="text-right">-{{ number_format($order->discount, 2) }}৳</td>
+            </tr>
+            @endif
+            <tr>
+                <td colspan="2"><strong>DELIVERY CHARGE</strong></td>
+                <td colspan="2" class="text-right">{{ number_format($order->delivery_charge, 2) }}৳</td>
+            </tr> --}}
+            <tr>
+                <td colspan="2"><strong>TOTAL PAYABLE</strong></td>
+                <td colspan="2" class="text-right" style="padding-right:10px;">{{ number_format($order->total, 2) }}৳</td>
+            </tr>
+        </tfoot>
+    </table>
 
-        <div class="totals-section">
-            <table class="totals-table">
-                <tr>
-                    <td>Subtotal:</td>
-                    <td>{{ number_format($order->subtotal, 2) }}</td>
-                </tr>
-                @if($order->discount > 0)
-                <tr>
-                    <td>Discount:</td>
-                    <td>-{{ number_format($order->discount, 2) }}</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Delivery Charge:</td>
-                    <td>{{ number_format($order->delivery_charge, 2) }}</td>
-                </tr>
-                <tr>
-                    <td>Total:</td>
-                    <td>{{ number_format($order->total, 2) }}</td>
-                </tr>
-            </table>
-        </div>
-
-        @if($order->comment)
-        <div style="margin-top: 20px; clear: both;">
-            <h3>Order Notes</h3>
-            <p>{{ $order->comment }}</p>
-        </div>
-        @endif
-
-        <div class="footer">
-            <p>Thank you for your order!</p>
-            <p>{{ config('app.name') }} - {{ now()->format('Y') }}</p>
-        </div>
+    <div class="footer">
+        Printed: {{ now()->format('d M Y H:i') }}
     </div>
 </body>
 </html>

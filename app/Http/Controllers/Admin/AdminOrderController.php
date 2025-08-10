@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\ProductVariantOption;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class AdminOrderController extends Controller
 {
@@ -162,9 +163,10 @@ class AdminOrderController extends Controller
     {
         $order->load(['items.product', 'coupon', 'deliveryOption', 'items.variantOption']);
         $couriers = CourierService::all();
+        $deliveryOptions = DeliveryOption::where('is_active', true)->get();
 
 
-        return view('admin.pages.orders.edit', compact('order', 'couriers'));
+        return view('admin.pages.orders.edit', compact('order', 'couriers', 'deliveryOptions'));
     }
 
     public function destroy($id)
@@ -245,17 +247,29 @@ class AdminOrderController extends Controller
 
 
 
-    public function download(Order $order)
+public function download(Order $order)
 {
-     $order->load([
+    $order->load([
         'items.product',
-        'coupon'
+        'coupon',
+        'courier'
     ]);
 
-    $pdf = Pdf::loadView('admin.layouts.invoice', compact('order'));
+    // Prepare image paths
+    foreach ($order->items as $item) {
+        if ($item->product && $item->product->thumbnail) {
+            $item->product->thumbnail_path = storage_path('app/public/' . $item->product->thumbnail);
+        }
+    }
 
-    return $pdf->download('invoice-'.$order->order_number.'.pdf');
+    $pdf = Pdf::loadView('admin.layouts.invoice', compact('order'))
+        ->setPaper([0, 0, 144, 9999], 'portrait')
+        ->setOption('enable-local-file-access', true)
+        ->setOption('defaultFont', 'Noto Sans Bengali');
+
+    return $pdf->download('order-'.$order->order_number.'.pdf');
 }
+
 public function update(Request $request, Order $order)
 {
     // Validate input
@@ -284,19 +298,21 @@ public function update(Request $request, Order $order)
 public function updateDeliveryCharge(Request $request, Order $order)
 {
     $request->validate([
+        'delivery_option_id' => 'required|exists:delivery_options,id',
         'delivery_charge' => 'required|numeric|min:0',
         'admin_discount' => 'required|numeric|min:0',
     ]);
 
-    $order->delivery_charge = $request->delivery_charge;
-    $order->admin_discount = $request->admin_discount;
+    $order->update([
+        'delivery_option_id' => $request->delivery_option_id,
+        'delivery_charge' => $request->delivery_charge,
+        'admin_discount' => $request->admin_discount,
+        'total' => max(0, $order->subtotal - $order->discount - $request->admin_discount + $request->delivery_charge)
+    ]);
 
-    $order->total = max(0, $order->subtotal - $order->discount - $order->admin_discount + $order->delivery_charge);
-
-    $order->save();
-
-    return back()->with('success', 'Delivery charge & discount updated successfully.');
+    return back()->with('success', 'Delivery information updated successfully.');
 }
+
 public function updateItems(Request $request, Order $order)
 {
     // Remove deleted items

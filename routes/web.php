@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CKEditorController;
 use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -174,5 +175,15 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'destroy' => 'admin.couriers.destroy'
     ]);;
 
+    // banners 
+    Route::resource('banners', BannerController::class)->names([
+        'index' => 'admin.banners.index',
+        'create' => 'admin.banners.create',
+         'store' => 'admin.banners.store',
+         'show' => 'admin.banners.show',
+         'edit' => 'admin.banners.edit',
+         'update' => 'admin.banners.update',
+         'destroy' => 'admin.banners.destroy',
+     ]);
 
 });

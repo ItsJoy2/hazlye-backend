@@ -130,12 +130,12 @@
 							</div> --}}
 						</li>
                         <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#customers">
+							<a href={{route('admin.customers.index')}}>
 								<i class="far fa-money-bill-alt"></i>
 								<p>Customers</p>
-								<span class="caret"></span>
+								{{-- <span class="caret"></span> --}}
 							</a>
-							<div class="collapse" id="customers">
+							{{-- <div class="collapse" id="customers">
 								<ul class="nav nav-collapse">
                                     <li>
 										<a  href="{{route('admin.customers.index')}}">
@@ -148,7 +148,28 @@
 										</a>
 									</li>
 								</ul>
-							</div>
+							</div> --}}
+						</li>
+                        <li class="nav-item">
+							<a href={{route('admin.customers.blocked')}}>
+								<i class="far fa-money-bill-alt"></i>
+								<p>Block Customers</p>
+								{{-- <span class="caret"></span> --}}
+							</a>
+							{{-- <div class="collapse" id="customers">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a  href="{{route('admin.customers.index')}}">
+											<span class="sub-item">Customers List</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{route('admin.customers.blocked')}}">
+											<span class="sub-item">Block Customers</span>
+										</a>
+									</li>
+								</ul>
+							</div> --}}
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#categories">
@@ -297,6 +318,27 @@
 									</li>
 								</ul>
 							</div> --}}
+						</li>
+                        <li class="nav-item">
+							<a data-bs-toggle="collapse" href="#banners">
+								<i class="far fa-money-bill-alt"></i>
+								<p>Banners</p>
+								<span class="caret"></span>
+							</a>
+							<div class="collapse" id="banners">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a  href="{{route('admin.banners.index')}}">
+											<span class="sub-item">Banners All</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{route('admin.banners.create')}}">
+											<span class="sub-item">Create Banners</span>
+										</a>
+									</li>
+								</ul>
+							</div>
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#couriers">

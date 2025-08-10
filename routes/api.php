@@ -8,6 +8,7 @@ use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\BannerController;
 use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\SearchController;
@@ -81,5 +82,10 @@ Route::get('/colors', [ColorController::class, 'index']);
 
 // Sizes
 Route::get('/sizes', [SizeController::class, 'index']);
+
+// banner
+Route::get('banners/home', [BannerController::class, 'homeBanners']);
+Route::get('banners/offer', [BannerController::class, 'offerBanners']);
+Route::get('banners/campaign', [BannerController::class, 'campaignBanners']);
 
 });

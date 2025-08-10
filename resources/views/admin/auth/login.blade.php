@@ -120,8 +120,8 @@
 
 <div class="wrapper">
     <div class="logo">
-        @if(isset($generalSettings->favicon))
-            <img src="https://hazley-frontend.vercel.app/_next/static/media/logo.c83a1b27.svg" alt="Favicon">
+        @if(isset($generalSettings->logo))
+            <img src="h{{ Storage::url($generalSettings->logo) }}" alt="Logo" height="50px">
         @endif
     </div>
 
