@@ -13,10 +13,17 @@ class DeliveryOption extends Model
         'name',
         'charge',
         'is_active',
+        'is_free_for_products',
     ];
 
     protected $casts = [
         'charge' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_free_for_products' => 'boolean',
     ];
+    public function freeDeliveryProducts()
+    {
+        return $this->belongsToMany(Product::class, 'free_delivery_products')
+                    ->withTimestamps();
+    }
 }

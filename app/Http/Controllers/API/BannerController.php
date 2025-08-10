@@ -15,7 +15,10 @@ class BannerController extends Controller
             ->orderBy('order')
             ->get();
 
-        return response()->json($banners);
+        return response()->json([
+            'success' => true,
+            'data' => $banners
+        ]);
     }
 
     public function offerBanners()
@@ -27,8 +30,11 @@ class BannerController extends Controller
             ->groupBy('position');
 
         return response()->json([
-            'left' => $banners['left'] ?? [],
-            'right' => $banners['right'] ?? [],
+            'success' => true,
+            'data' => [
+                'left' => $banners['left'] ?? [],
+                'right' => $banners['right'] ?? [],
+            ]
         ]);
     }
 
@@ -41,8 +47,11 @@ class BannerController extends Controller
             ->groupBy('position');
 
         return response()->json([
-            'left' => $banners['left'] ?? [],
-            'right' => $banners['right'] ?? [],
+            'success' => true,
+            'data' => [
+                'left' => $banners['left'] ?? [],
+                'right' => $banners['right'] ?? [],
+            ]
         ]);
     }
 }

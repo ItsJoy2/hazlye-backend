@@ -127,6 +127,14 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'destroy' => 'admin.delivery-options.destroy'
     ]);
 
+    Route::prefix('delivery-options')->group(function () {
+        Route::get('/{deliveryOption}/manage-products', [AdminDeliveryOptionController::class, 'manageProducts'])
+            ->name('admin.delivery-options.manage-products');
+
+        Route::put('/{deliveryOption}/update-products', [AdminDeliveryOptionController::class, 'updateProducts'])
+            ->name('admin.delivery-options.update-products');
+    });
+
     // Colors
     Route::resource('colors', AdminColorController::class)->names([
         'index' => 'admin.colors.index',
@@ -175,7 +183,7 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'destroy' => 'admin.couriers.destroy'
     ]);;
 
-    // banners 
+    // banners
     Route::resource('banners', BannerController::class)->names([
         'index' => 'admin.banners.index',
         'create' => 'admin.banners.create',
