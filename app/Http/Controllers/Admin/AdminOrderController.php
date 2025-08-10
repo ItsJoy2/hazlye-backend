@@ -81,11 +81,30 @@ class AdminOrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,processing,shipped,delivered,cancelled,hold,courier_delivered',
+            'status' => 'required|string|in:pending,hold,processing,shipped,courier_delivered,delivered,cancelled',
             'courier_service_id' => 'nullable|required_if:status,shipped|exists:courier_services,id',
             'delivery_note' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
         ]);
+
+        // Define allowed status transitions
+        $allowedTransitions = [
+            'pending' => ['hold', 'processing', 'cancelled'],
+            'hold' => ['processing', 'cancelled'],
+            'processing' => ['shipped', 'cancelled'],
+            'shipped' => ['courier_delivered', 'cancelled'],
+            'courier_delivered' => ['delivered'],
+            'delivered' => [], // No transition after delivered
+            'cancelled' => [], // No transition after cancelled
+        ];
+
+        // Check if transition is allowed
+        $currentStatus = $order->status;
+        $newStatus = $validated['status'];
+
+        if (!in_array($newStatus, $allowedTransitions[$currentStatus])) {
+            return back()->with('error', 'Invalid status transition from '.$currentStatus.' to '.$newStatus);
+        }
 
         DB::beginTransaction();
 

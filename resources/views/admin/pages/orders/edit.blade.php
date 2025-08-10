@@ -493,6 +493,31 @@
         const form = document.getElementById('order-status-form');
         const isAlreadyShipped = {{ $order->status === 'shipped' ? 'true' : 'false' }};
 
+        // Define allowed status transitions based on current status
+        const allowedTransitions = {
+            'pending': ['hold', 'processing', 'cancelled'],
+            'hold': ['processing', 'cancelled'],
+            'processing': ['shipped', 'cancelled'],
+            'shipped': ['courier_delivered', 'cancelled'],
+            'courier_delivered': ['delivered'],
+            'delivered': [],
+            'cancelled': []
+        };
+
+        // Current order status
+        const currentStatus = '{{ $order->status }}';
+
+        // Disable invalid options
+        function updateStatusOptions() {
+            Array.from(statusSelect.options).forEach(option => {
+                // Enable only allowed transitions
+                option.disabled = !allowedTransitions[currentStatus].includes(option.value);
+            });
+
+            // Keep current status selected
+            statusSelect.value = currentStatus;
+        }
+
         function toggleCourierField() {
             if (statusSelect.value === 'shipped' && !isAlreadyShipped) {
                 courierField.style.display = 'block';
@@ -505,6 +530,7 @@
         }
 
         // Initialize view
+        updateStatusOptions();
         toggleCourierField();
 
         // On status change
@@ -512,7 +538,7 @@
             // Disable shipped option if already shipped
             if (isAlreadyShipped && statusSelect.value === 'shipped') {
                 alert('This order has already been shipped and cannot be shipped again.');
-                statusSelect.value = '{{ $order->status }}';
+                statusSelect.value = currentStatus;
             }
             toggleCourierField();
         });
