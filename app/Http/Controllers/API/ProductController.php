@@ -91,7 +91,7 @@ class ProductController extends Controller
 
     protected function getFullImageUrl($path)
     {
-        return $path ? url('public/storage/' . $path) : null;
+        return $path ? url('storage/' . $path) : null;
     }
 
     protected function addFullImageUrls($products)
