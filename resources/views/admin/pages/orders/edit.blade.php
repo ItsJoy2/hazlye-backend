@@ -109,14 +109,14 @@
                                                     {{ $item->product->sku ?? 'N/A' }}
                                                 @endif
                                             </td>
-                                            <td>${{ number_format($item->price, 2) }}</td>
+                                            <td>&#2547;{{ number_format($item->price, 2) }}</td>
                                             <td>
                                                 <input type="number" name="items[{{ $index }}][quantity]"
                                                        value="{{ $item->quantity }}"
                                                        class="form-control form-control-sm"
                                                        style="width:60px;">
                                             </td>
-                                            <td>${{ number_format($item->price * $item->quantity, 2) }}</td>
+                                            <td>&#2547;{{ number_format($item->price * $item->quantity, 2) }}</td>
                                             <td>
                                                 <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
                                             </td>
@@ -148,12 +148,12 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Subtotal:</strong> ${{ number_format($order->subtotal, 2) }}
+                        <strong>Subtotal:</strong> &#2547;{{ number_format($order->subtotal, 2) }}
                     </div>
 
                     @if($order->discount > 0)
                     <div class="mb-3">
-                        <strong>Discount:</strong> -${{ number_format($order->discount, 2) }}
+                        <strong>Discount:</strong> -&#2547;{{ number_format($order->discount, 2) }}
                         @if($order->coupon)
                             <br><small>Coupon: {{ $order->coupon->code }}</small>
                         @endif
@@ -204,7 +204,7 @@
                     </form>
 
                     <div class="mb-3">
-                        <strong>Total:</strong> ${{ number_format($order->total, 2) }}
+                        <strong>Total:</strong> &#2547;{{ number_format($order->total, 2) }}
                     </div>
                 </div>
             </div>

@@ -48,9 +48,9 @@
                                         <br><small>Color: {{ $item->color_name }}</small>
                                     @endif
                                 </td>
-                                <td>${{ number_format($item->price, 2) }}</td>
+                                <td>&#2547;{{ number_format($item->price, 2) }}</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td>${{ number_format($item->price * $item->quantity, 2) }}</td>
+                                <td>&#2547;{{ number_format($item->price * $item->quantity, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -66,7 +66,7 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Subtotal:</strong> ${{ number_format($order->subtotal, 2) }}
+                        <strong>Subtotal:</strong> &#2547;{{ number_format($order->subtotal, 2) }}
                     </div>
                     <div class="mb-3">
                         <strong>Delivery Method:</strong>
@@ -74,7 +74,7 @@
                     </div>
                     @if($order->discount > 0)
                     <div class="mb-3">
-                        <strong>Discount:</strong> -${{ number_format($order->discount, 2) }}
+                        <strong>Discount:</strong> -&#2547;{{ number_format($order->discount, 2) }}
                         @if($order->coupon)
                             <br><small>Coupon: {{ $order->coupon->code }}</small>
                         @endif
@@ -82,11 +82,11 @@
                     @endif
 
                     <div class="mb-3">
-                        <strong>Delivery Charge:</strong> ${{ number_format($order->delivery_charge, 2) }}
+                        <strong>Delivery Charge:</strong> &#2547;{{ number_format($order->delivery_charge, 2) }}
                     </div>
 
                     <div class="mb-3">
-                        <strong>Total:</strong> ${{ number_format($order->total, 2) }}
+                        <strong>Total:</strong> &#2547;{{ number_format($order->total, 2) }}
                     </div>
                 </div>
             </div>
