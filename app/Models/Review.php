@@ -28,9 +28,18 @@ class Review extends Model
     {
         return $this->belongsTo(User::class);
     }
-    public function images()
-{
-    return $this->hasMany(ReviewImage::class);
-}
 
+    public function images()
+    {
+        return $this->hasMany(ReviewImage::class);
+    }
+
+    // Helper method to add images
+    public function addImages(array $images)
+    {
+        foreach ($images as $image) {
+            $image_path = $image->store('reviews', 'public');
+            $this->images()->create(['image_path' => $image_path]);
+        }
+    }
 }

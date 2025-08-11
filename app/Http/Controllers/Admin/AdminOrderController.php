@@ -18,6 +18,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductVariantOption;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\OrdersExport;
 
 class AdminOrderController extends Controller
 {
@@ -703,6 +705,26 @@ public function unblockCustomer(Request $request)
     BlockedCustomer::find($request->id)->delete();
 
     return back()->with('success', 'Customer unblocked successfully');
+}
+public function export(Request $request)
+{
+    $request->validate([
+        'order_ids' => 'required|array',
+        'order_ids.*' => 'exists:orders,id',
+    ]);
+
+    $orders = Order::whereIn('id', $request->order_ids)
+        ->with(['items.product', 'items.variantOption', 'courier'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    if ($orders->isEmpty()) {
+        return back()->with('error', 'No orders selected for export.');
+    }
+
+    $fileName = 'orders-export-' . now()->format('Y-m-d-H-i-s') . '.xlsx';
+
+    return Excel::download(new OrdersExport($orders), $fileName);
 }
 
 

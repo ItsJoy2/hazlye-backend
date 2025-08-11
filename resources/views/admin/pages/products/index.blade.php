@@ -36,7 +36,7 @@
                             <td>{{ $product->name }}</td>
                             <td>
                                 @if($product->main_image)
-                                    <img src="{{ asset('storage/'.$product->main_image) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
+                                    <img src="{{ asset('public/storage/'.$product->main_image) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
                                 @else
                                     <span class="text-muted">No main image</span>
                                 @endif

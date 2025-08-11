@@ -110,7 +110,7 @@
                                 <div class="col-12 mb-4">
                                     <h6>Main Image</h6>
                                     @if($product->main_image)
-                                        <img src="{{ asset('storage/' . $product->main_image) }}"
+                                        <img src="{{ asset('public/storage/' . $product->main_image) }}"
                                              class="img-fluid rounded border"
                                              style="max-height: 250px; width: auto;">
                                     @else
@@ -128,7 +128,7 @@
                                             @foreach($product->images as $image)
                                             <div class="col-md-3 mb-4">
                                                 <div class="card h-100">
-                                                    <img src="{{ asset('storage/'.$image->image_path) }}"
+                                                    <img src="{{ asset('public/storage/'.$image->image_path) }}"
                                                         class="card-img-top img-fluid"
                                                         style="height: 200px; object-fit: cover;"
                                                         alt="Gallery Image">

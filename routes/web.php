@@ -94,7 +94,7 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::get('/orders/sku-search', [AdminOrderController::class, 'skuSearch'])->name('admin.orders.sku-search');
     Route::get('/product/search', [AdminOrderController::class, 'search'])->name('admin.product.search');
     Route::get('/product/{product}/variants', [AdminOrderController::class, 'getVariants']);
-
+    Route::post('/orders/export', [AdminOrderController::class, 'export'])->name('admin.orders.export');
 
 
     Route::get('/customers', [AdminOrderController::class, 'customerList'])->name('admin.customers.index');
@@ -155,11 +155,19 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'edit' => 'admin.sizes.edit',
         'update' => 'admin.sizes.update',
         'destroy' => 'admin.sizes.destroy'
-    ]);;
+    ]);
 
     // Reviews
-    Route::resource('reviews', AdminReviewController::class)->except(['store', 'create', 'edit']);
-    Route::put('reviews/{review}/approve', [AdminReviewController::class, 'approve']);
+    Route::resource('reviews', AdminReviewController::class)->names([
+        'index' => 'admin.reviews.index',
+        'create' => 'admin.reviews.create',
+        'store' => 'admin.reviews.store',
+        'show' => 'admin.reviews.show',
+        'edit' => 'admin.reviews.edit',
+        'update' => 'admin.reviews.update',
+        'destroy' => 'admin.reviews.destroy'
+    ]);
+    Route::put('reviews/{review}/approve', [AdminReviewController::class, 'approve'])->name('admin.reviews.approve');
 
     // General Settings
     Route::get('general-settings', [GeneralSettingsController::class, 'index'])->name('admin.general.settings');
