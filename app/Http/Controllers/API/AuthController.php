@@ -35,7 +35,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'mobile' => 'required|string|unique:users',
-            'password' => 'required|string|min:8', // Removed password_confirmation
+            'password' => 'required|string|min:8',
         ]);
 
         $user = User::create([
