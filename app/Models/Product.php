@@ -94,7 +94,7 @@ public function getImageUrlAttribute()
         return $this->main_image;
     }
 
-    return asset('storage/' . $this->main_image);
+    return asset('public/storage/' . $this->main_image);
 }
 
 }
