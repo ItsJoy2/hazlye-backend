@@ -26,7 +26,7 @@ use App\Http\Controllers\API\HomepageSectionController;
 */
 
 // Public routes
-// Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register']);
 // Route::post('/login', [AuthController::class, 'login']);
 Route::middleware(['throttle:60,1'])->group(function () {
 // Categories
@@ -71,8 +71,12 @@ Route::get('/orders/{order}', [OrderController::class, 'show']);
 Route::post('/coupons/validate', [CouponController::class, 'validate']);
 
 // Reviews
-Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
-Route::post('/products/reviews/{product:slug}', [ReviewController::class, 'store']);
+
+Route::get('/products/reviews/{product:slug}', [ReviewController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/products/reviews/{product}', [ReviewController::class, 'store']);
+    Route::post('/products/reviews/{product:slug}', [ReviewController::class, 'store']);
+});
 
 // Delivery Options
 Route::get('/delivery-options', [DeliveryOptionController::class, 'index']);

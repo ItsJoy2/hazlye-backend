@@ -10,36 +10,21 @@ class Review extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id',
-        'user_id',
-        'guest_name',
-        'guest_email',
-        'rating',
-        'comment',
-        'is_approved'
+        'user_id', 'product_id', 'rating', 'description', 'is_approved'
     ];
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     public function images()
     {
         return $this->hasMany(ReviewImage::class);
-    }
-
-    // Helper method to add images
-    public function addImages(array $images)
-    {
-        foreach ($images as $image) {
-            $image_path = $image->store('reviews', 'public');
-            $this->images()->create(['image_path' => $image_path]);
-        }
     }
 }

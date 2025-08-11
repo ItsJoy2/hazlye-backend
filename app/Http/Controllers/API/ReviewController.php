@@ -2,60 +2,66 @@
 
 namespace App\Http\Controllers\API;
 
-use id;
-use App\Models\Review;
-use App\Models\Product;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\ReviewImage;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ReviewController extends Controller
 {
-    public function store(Request $request, Product $product)
-{
-    $validator = Validator::make($request->all(), [
-        'rating' => 'required|integer|between:1,5',
-        'comment' => 'nullable|string|max:500',
-        'guest_name' => 'required_without:user_id|string|max:100',
-        'guest_email' => 'required_without:user_id|email|max:100',
-        'images' => 'nullable|array',
-        'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
+    // public function __construct()
+    // {
+    //     $this->middleware('auth:api')->except(['index', 'show']);
+    // }
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'errors' => $validator->errors()
-        ], 422);
-    }
+    // public function index(Product $product)
+    // {
+    //     $reviews = $product->reviews()->with('user', 'images')->get();
+    //     return response()->json($reviews);
+    // }
 
-    $review = Review::create([
-        'product_id' => $product->id,
-        'user_id' => auth()->id(),
-        'guest_name' => $request->guest_name,
-        'guest_email' => $request->guest_email,
-        'rating' => $request->rating,
-        'comment' => $request->comment
-    ]);
+    public function store(Request $request, $product)
+    {
+        $product = Product::where('id', $product)
+                   ->orWhere('slug', $product)
+                   ->firstOrFail();
 
-    if ($request->hasFile('images')) {
-        foreach ($request->file('images') as $index => $image) {
-            if ($image->isValid()) {
-                logger("Uploading image #$index: " . $image->getClientOriginalName());
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'description' => 'required|string|max:1000',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'max:5'
+        ]);
+
+        $review = Review::create([
+            'user_id' => Auth::id(),
+            'product_id' => $product->id,
+            'rating' => $request->rating,
+            'description' => $request->description,
+            'is_approved' => false
+        ]);
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
                 $path = $image->store('review_images', 'public');
-                $review->images()->create(['image_path' => $path]);
-            } else {
-                logger("Invalid image at index $index.");
+                ReviewImage::create([
+                    'review_id' => $review->id,
+                    'image_path' => $path,
+                ]);
             }
         }
-    } else {
-        logger('No image files found in request.');
+
+        return response()->json([
+            'message' => 'Review submitted successfully',
+            'review' => $review->load('images')
+        ], 201);
     }
 
-
-    return response()->json([
-        'success' => true,
-        'data' => $review->load('images')
-    ], 201);
-}
+    public function show(Review $review)
+    {
+        return response()->json($review->load('user', 'images'));
+    }
 }

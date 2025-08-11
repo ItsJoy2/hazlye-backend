@@ -77,6 +77,11 @@ class Product extends Model
 }
 public function reviews()
 {
+    return $this->hasMany(Review::class)->where('is_approved', true);
+}
+
+public function allReviews()
+{
     return $this->hasMany(Review::class);
 }
 public function scopeActive($query)
