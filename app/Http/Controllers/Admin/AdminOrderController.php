@@ -75,7 +75,7 @@ class AdminOrderController extends Controller
 
 
         $couriers = CourierService::all();
-        return view('admin.pages.orders.index2', compact(
+        return view('admin.pages.orders.index', compact(
             'orders', 'status', 'dateFrom', 'dateTo', 'district', 'thana', 'productSearch', 'couriers'
         ));
     }
