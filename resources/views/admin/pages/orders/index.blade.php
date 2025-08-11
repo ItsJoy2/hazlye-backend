@@ -101,7 +101,7 @@
                                     @if(in_array($order->status, ['processing', 'shipped', 'courier_delivered', 'delivered']))
                                     <input type="checkbox" name="order_ids[]" value="{{ $order->id }}" class="order-checkbox">
                                     @else
-                                    <span class="text-muted text-danger">X</span>
+                                    <span class="text-muted text-danger"> </span>
                                     @endif
                                 </td>
                                 <td>{{ $order->order_number }}</td>

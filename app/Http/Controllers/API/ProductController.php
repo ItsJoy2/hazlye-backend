@@ -188,7 +188,6 @@ class ProductController extends Controller
             'start_date' => $coupon->start_date,
             'end_date' => $coupon->end_date,
             'is_active' => $coupon->is_active,
-            // You can add this if you want to show current validity (without subtotal check)
             'is_currently_valid' => $coupon->is_active &&
                                  now()->between($coupon->start_date, $coupon->end_date)
         ]

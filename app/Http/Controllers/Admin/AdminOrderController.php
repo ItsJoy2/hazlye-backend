@@ -96,8 +96,8 @@ class AdminOrderController extends Controller
             'processing' => ['shipped', 'cancelled'],
             'shipped' => ['courier_delivered', 'cancelled'],
             'courier_delivered' => ['delivered'],
-            'delivered' => [], // No transition after delivered
-            'cancelled' => [], // No transition after cancelled
+            'delivered' => [],
+            'cancelled' => [],
         ];
 
         // Check if transition is allowed
