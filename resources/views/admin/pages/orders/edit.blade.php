@@ -281,6 +281,7 @@
                             </select>
                         </div>
 
+                        
                         <!-- Courier Fields -->
                         <div class="courier-field" style="display: {{ $order->status == 'shipped' ? 'block' : 'none' }};">
                             <div class="form-group">
