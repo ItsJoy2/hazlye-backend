@@ -272,9 +272,9 @@
                             <select name="status" id="status" class="form-control">
                                 <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="hold" {{ $order->status == 'hold' ? 'selected' : '' }}>Hold</option>
-                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
+                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
                                 <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}
-                                    {{ $order->status == 'shipped' ? 'disabled' : '' }}>Shipped</option>
+                                    {{ $order->status == 'shipped' ? 'disabled' : '' }}>Shipped to Courier</option>
                                 <option value="courier_delivered" {{ $order->status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
                                 <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
                                 <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
