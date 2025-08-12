@@ -37,7 +37,7 @@
                                         <tr>
                                             <td>
                                                 @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
-                                                    <img src="{{ asset('public/storage/'.$order->items[0]->product->main_image) }}"
+                                                    <img src="{{ asset('storage/'.$order->items[0]->product->main_image) }}"
                                                          alt="{{ $order->items[0]->product->name }}"
                                                          width="50"
                                                          class="img-thumbnail">
