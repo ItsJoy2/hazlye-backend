@@ -1,95 +1,101 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers\API;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\ReviewImage;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Order extends Model
+class ReviewController extends Controller
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'order_number',
-        'name',
-        'phone',
-        'address',
-        'district',
-        'thana',
-        'subtotal',
-        'delivery_charge',
-        'discount',
-        'total',
-        'coupon_code',
-        'status',
-        'comment',
-        'ip_address',
-        'delivery_option_id',
-        'courier_response',
-        'tracking_code',
-        'consignment_id',
-        'courier_service_id'
-    ];
-
-
-    protected $casts = [
-        'subtotal' => 'decimal:2',
-        'delivery_charge' => 'decimal:2',
-        'discount' => 'decimal:2',
-        'total' => 'decimal:2',
-    ];
-
-    public function items()
+    public function index(Product $product)
     {
-        return $this->hasMany(OrderItem::class);
+        $reviews = $product->reviews()
+            ->with('user', 'images')
+            ->where('is_approved', true)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $reviews
+        ]);
     }
 
-    public function coupon()
+    public function store(Request $request, $product)
     {
-        return $this->belongsTo(Coupon::class, 'coupon_code', 'code');
-    }
-    public function returnStock()
-{
-    foreach ($this->items as $item) {
-        $product = $item->product;
 
-        if ($product->has_variants && $item->variant_option_id) {
-            $variantOption = ProductVariantOption::find($item->variant_option_id);
-            if ($variantOption) {
-                $variantOption->increment('stock', $item->quantity);
-                $product->updateStock();
+        $product = Product::where('id', $product)
+                   ->orWhere('slug', $product)
+                   ->firstOrFail();
+
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'description' => 'required|string|max:1000',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'images' => 'max:5'
+        ]);
+
+        $existingReview = Review::where('user_id', Auth::id())
+            ->where('product_id', $product->id)
+            ->first();
+
+        if ($existingReview) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already reviewed this product'
+            ], 409);
+        }
+
+        try {
+            $review = Review::create([
+                'user_id' => Auth::id(),
+                'product_id' => $product->id,
+                'rating' => $request->rating,
+                'description' => $request->description,
+                'is_approved' => false
+            ]);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('review_images', 'public');
+                    ReviewImage::create([
+                        'review_id' => $review->id,
+                        'image_path' => $path,
+                    ]);
+                }
             }
-        } else {
-            $product->increment('total_stock', $item->quantity);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Review submitted successfully. It will be visible after approval.',
+                'data' => $review->load('images')
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit review',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
-}
 
-public function deliveryOption()
-{
-    return $this->belongsTo(DeliveryOption::class, 'delivery_option_id');
-}
+    public function show(Review $review)
+    {
+        if (!$review->is_approved) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Review not found or not approved yet'
+            ], 404);
+        }
 
-public function courier()
-{
-    return $this->belongsTo(CourierService::class, 'courier_service_id');
-}
-
-public function getCourierStatusAttribute()
-{
-    if (!$this->courier_response) return null;
-
-    $response = json_decode($this->courier_response, true);
-
-    return $response['status'] ?? null;
-}
-
-
-protected $appends = ['pdf_url'];
-
-public function getPdfUrlAttribute()
-{
-    return $this->pdf_path ? Storage::url($this->pdf_path) : null;
-}
+        return response()->json([
+            'success' => true,
+            'data' => $review->load('user', 'images')
+        ]);
+    }
 }
