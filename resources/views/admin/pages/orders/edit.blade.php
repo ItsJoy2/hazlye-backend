@@ -8,6 +8,7 @@
         <h1>Order #{{ $order->order_number }}</h1>
         <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Back to Orders</a>
     </div>
+    @include('admin.layouts.partials.__alerts')
 
     <div class="row">
         <div class="col-md-8">
@@ -498,7 +499,7 @@
         const allowedTransitions = {
             'pending': ['hold', 'processing', 'cancelled'],
             'hold': ['processing', 'cancelled'],
-            'processing': ['shipped', 'cancelled'],
+            'processing': ['shipped', 'courier_delivered', 'cancelled'],
             'shipped': ['courier_delivered', 'cancelled'],
             'courier_delivered': ['delivered'],
             'delivered': [],
@@ -511,11 +512,9 @@
         // Disable invalid options
         function updateStatusOptions() {
             Array.from(statusSelect.options).forEach(option => {
-                // Enable only allowed transitions
                 option.disabled = !allowedTransitions[currentStatus].includes(option.value);
             });
 
-            // Keep current status selected
             statusSelect.value = currentStatus;
         }
 
@@ -530,13 +529,10 @@
             }
         }
 
-        // Initialize view
         updateStatusOptions();
         toggleCourierField();
 
-        // On status change
         statusSelect.addEventListener('change', function() {
-            // Disable shipped option if already shipped
             if (isAlreadyShipped && statusSelect.value === 'shipped') {
                 alert('This order has already been shipped and cannot be shipped again.');
                 statusSelect.value = currentStatus;
@@ -559,7 +555,6 @@
         const deliveryOptionSelect = document.getElementById('delivery_option_id');
         const deliveryChargeInput = document.getElementById('delivery_charge');
 
-        // Update delivery charge when option changes
         deliveryOptionSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const charge = selectedOption.getAttribute('data-charge');

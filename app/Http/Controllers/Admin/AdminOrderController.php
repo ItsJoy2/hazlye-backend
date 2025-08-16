@@ -93,7 +93,7 @@ class AdminOrderController extends Controller
         $allowedTransitions = [
             'pending' => ['hold', 'processing', 'cancelled'],
             'hold' => ['processing', 'cancelled'],
-            'processing' => ['shipped', 'cancelled'],
+            'processing' => ['shipped','courier_delivered', 'cancelled'],
             'shipped' => ['courier_delivered', 'cancelled'],
             'courier_delivered' => ['delivered'],
             'delivered' => [],
@@ -714,18 +714,60 @@ public function export(Request $request)
     ]);
 
     $orders = Order::whereIn('id', $request->order_ids)
-        ->with(['items.product', 'items.variantOption', 'courier'])
+        ->whereIn('status', ['processing', 'shipped', 'courier_delivered', 'delivered'])
+        ->when($request->status !== 'all', function($query) use ($request) {
+            $query->where('status', $request->status);
+        })
+        ->when($request->date_from, function($query) use ($request) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        })
+        ->when($request->date_to, function($query) use ($request) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        })
+        ->with(['items.product', 'courier'])
         ->orderBy('created_at', 'desc')
         ->get();
 
     if ($orders->isEmpty()) {
-        return back()->with('error', 'No orders selected for export.');
+        return back()->with('error', 'No valid orders selected for export.');
     }
 
     $fileName = 'orders-export-' . now()->format('Y-m-d-H-i-s') . '.xlsx';
 
-    return Excel::download(new OrdersExport($orders), $fileName);
+    return Excel::download(
+        new OrdersExport($orders, $request->status, $request->date_from, $request->date_to),
+        $fileName
+    );
 }
+
+public function bulkDelete(Request $request)
+{
+    $request->validate([
+        'order_ids' => 'required|array|min:1',
+        'order_ids.*' => 'exists:orders,id',
+    ]);
+
+    $orders = Order::whereIn('id', $request->order_ids)
+        ->where('status', 'cancelled')
+        ->get();
+
+    if ($orders->isEmpty()) {
+        return back()->with('error', 'Only cancelled orders can be deleted.');
+    }
+
+    $deletedCount = 0;
+    foreach ($orders as $order) {
+        try {
+            $order->delete();
+            $deletedCount++;
+        } catch (\Exception $e) {
+            continue;
+        }
+    }
+
+    return back()->with('success', "Successfully deleted $deletedCount orders.");
+}
+
 
 
 }

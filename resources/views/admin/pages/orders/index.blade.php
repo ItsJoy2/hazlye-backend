@@ -10,34 +10,37 @@
             </div>
         </div>
         <div class="card-body">
-            @include('admin.layouts.partials.__alerts')
+            <div id="alert-container">
+                @include('admin.layouts.partials.__alerts')
+            </div>
 
             <div class="mb-0">
-                <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 mb-4">
-                    {{-- Date Filters (Always Visible) --}}
+                @include('admin.modal.confirmationmodal')
+                <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 mb-4" id="autoSubmitForm">
+                    {{-- Date Filters --}}
                     <div class="col-md-2">
-                        <input type="date" name="date_from" class="form-control" value="{{ $dateFrom }}">
+                        <input type="date" name="date_from" class="form-control auto-submit" value="{{ $dateFrom }}">
                     </div>
                     <div class="col-md-2">
-                        <input type="date" name="date_to" class="form-control" value="{{ $dateTo }}">
+                        <input type="date" name="date_to" class="form-control auto-submit" value="{{ $dateTo }}">
                     </div>
 
-                    {{-- Extra Filters: Only visible when status == delivered --}}
+                    {{-- Extra Filters for delivered status --}}
                     @if($status === 'delivered')
                         <div class="col-md-2">
-                            <input type="text" name="district" class="form-control" placeholder="District" value="{{ $district }}">
+                            <input type="text" name="district" class="form-control auto-submit" placeholder="District" value="{{ $district }}">
                         </div>
                         <div class="col-md-2">
-                            <input type="text" name="thana" class="form-control" placeholder="Thana" value="{{ $thana }}">
+                            <input type="text" name="thana" class="form-control auto-submit" placeholder="Thana" value="{{ $thana }}">
                         </div>
                         <div class="col-md-2">
-                            <input type="text" name="product_search" class="form-control" placeholder="Product Name / SKU" value="{{ $productSearch }}">
+                            <input type="text" name="product_search" class="form-control auto-submit" placeholder="Product Name / SKU" value="{{ $productSearch }}">
                         </div>
                     @endif
 
                     {{-- Status Dropdown --}}
                     <div class="col-md-2">
-                        <select name="status" class="form-control">
+                        <select name="status" class="form-control auto-submit">
                             <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                             <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
@@ -50,14 +53,14 @@
                     </div>
 
                     <div class="col-md-12">
-                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <button type="submit" class="btn btn-primary d-none">Filter</button>
                         <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Reset</a>
                     </div>
                 </form>
             </div>
 
-            <!-- Export Form -->
-            <form id="exportForm" action="{{ route('admin.orders.export') }}" method="POST">
+            <!-- Bulk Actions Form -->
+            <form id="bulkActionForm" method="POST">
                 @csrf
                 <div class="d-flex justify-content-between mb-3">
                     <div>
@@ -67,10 +70,17 @@
                         <button type="button" class="btn btn-sm btn-danger" id="deselectAllBtn">
                             <i class="fas fa-times-circle"></i> Deselect All
                         </button> --}}
+                        @if($status === 'cancelled')
+                        <button type="button" class="btn btn-sm btn-danger" id="bulkDeleteBtn">
+                            <i class="fas fa-trash"></i> Delete Selected
+                        </button>
+                        @endif
                     </div>
-                    <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="fas fa-file-excel"></i> Export Selected to Excel
+                    @if(in_array($status, ['processing', 'shipped', 'courier_delivered', 'delivered']))
+                    <button type="button" class="btn btn-sm btn-primary" id="exportBtn">
+                        <i class="fas fa-file-excel"></i> Export Selected
                     </button>
+                    @endif
                 </div>
 
                 <div class="table-responsive">
@@ -78,7 +88,7 @@
                         <thead>
                             <tr>
                                 <th width="30">
-                                    {{-- <input type="checkbox" id="selectAllCheckbox "> --}}
+                                    <input type="checkbox" id="selectAllCheckbox">
                                 </th>
                                 <th>Order #</th>
                                 <th>Image</th>
@@ -98,10 +108,13 @@
                             @forelse($orders as $index => $order)
                             <tr>
                                 <td>
-                                    @if(in_array($order->status, ['processing', 'shipped', 'courier_delivered', 'delivered']))
-                                    <input type="checkbox" name="order_ids[]" value="{{ $order->id }}" class="order-checkbox">
+                                    @if(in_array($order->status, ['processing', 'shipped', 'courier_delivered', 'delivered']) || $order->status === 'cancelled')
+                                        <input type="checkbox" name="order_ids[]" value="{{ $order->id }}"
+                                               class="order-checkbox"
+                                               data-status="{{ $order->status }}"
+                                               data-date="{{ $order->created_at->format('Y-m-d') }}">
                                     @else
-                                    <span class="text-muted text-danger"> </span>
+                                        <input type="checkbox" disabled class="order-checkbox">
                                     @endif
                                 </td>
                                 <td>{{ $order->order_number }}</td>
@@ -173,47 +186,149 @@
 </div>
 @endsection
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
     $(document).ready(function() {
-        // Handle export form submission
-        $('#exportForm').on('submit', function(e) {
-            e.preventDefault();
+        $('#selectAllCheckbox').on('change', function() {
+            $('.order-checkbox:not(:disabled)').prop('checked', $(this).prop('checked'));
+        });
 
-            const orderIds = $('.order-checkbox:checked').map(function() {
+        $('#selectAllBtn').click(function() {
+            $('.order-checkbox:not(:disabled)').prop('checked', true);
+            $('#selectAllCheckbox').prop('checked', true);
+        });
+
+        $('#deselectAllBtn').click(function() {
+            $('.order-checkbox:not(:disabled)').prop('checked', false);
+            $('#selectAllCheckbox').prop('checked', false);
+        });
+
+        $('.order-checkbox').on('change', function() {
+            const allChecked = $('.order-checkbox:not(:disabled)').length === $('.order-checkbox:checked:not(:disabled)').length;
+            $('#selectAllCheckbox').prop('checked', allChecked);
+        });
+
+        $('#exportBtn').click(function() {
+            const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
+
+            if(selectedOrders.length === 0) {
+                alert('Please select at least one order to export');
+                return;
+            }
+
+            const orderIds = selectedOrders.map(function() {
                 return $(this).val();
             }).get();
 
-            if (orderIds.length === 0) {
-                alert('Please select at least one order to export');
-                return false;
-            }
-
-            // Create a hidden form and submit it
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = $(this).attr('action');
-
-            // Add CSRF token
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = $('meta[name="csrf-token"]').attr('content');
-            form.appendChild(csrfToken);
-
-            // Add order IDs
-            orderIds.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'order_ids[]';
-                input.value = id;
-                form.appendChild(input);
+            const form = $('<form>', {
+                'method': 'POST',
+                'action': "{{ route('admin.orders.export') }}"
             });
 
-            document.body.appendChild(form);
+            form.append($('<input>', {
+                'type': 'hidden',
+                'name': '_token',
+                'value': "{{ csrf_token() }}"
+            }));
+
+            orderIds.forEach(function(id) {
+                form.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'order_ids[]',
+                    'value': id
+                }));
+            });
+
+            form.append($('<input>', {
+                'type': 'hidden',
+                'name': 'status',
+                'value': "{{ request('status', 'all') }}"
+            }));
+
+            form.append($('<input>', {
+                'type': 'hidden',
+                'name': 'date_from',
+                'value': "{{ request('date_from') }}"
+            }));
+
+            form.append($('<input>', {
+                'type': 'hidden',
+                'name': 'date_to',
+                'value': "{{ request('date_to') }}"
+            }));
+
+            // Submit the form
+            $('body').append(form);
             form.submit();
+        });
+
+        $('#bulkDeleteBtn').click(function() {
+            const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
+
+            if(selectedOrders.length === 0) {
+                alert('Please select at least one order to delete');
+                return;
+            }
+
+            $('#confirmModal').modal('show');
+
+            // Set up modal content
+            $('#confirmModal .modal-title').text('Are You Sure?');
+            $('#confirmModal .modal-body p').html(`Do you really want to delete <strong>${selectedOrders.length}</strong> orders. This process cannot be undone.`);
+
+            $('#confirmButton').off('click');
+
+            $('#confirmButton').on('click', function() {
+                const orderIds = selectedOrders.map(function() {
+                    return $(this).val();
+                }).get();
+
+                $.ajax({
+                    url: "{{ route('admin.orders.bulk-delete') }}",
+                    method: 'POST',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        order_ids: orderIds
+                    },
+                    beforeSend: function() {
+                        $('#confirmButton').html('<i class="fas fa-spinner fa-spin"></i> Deleting...');
+                    },
+                    success: function(response) {
+                        $('#confirmModal').modal('hide');
+
+                        let message = response.message || 'Orders deleted successfully';
+
+                        $('#alert-container').html(`
+                            <div class="text-success fw-bold">${message}</div>
+                        `);
+                    },
+                    error: function(xhr) {
+                        const errorHtml = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${xhr.responseJSON?.message || 'Something went wrong'}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        `;
+                        $('.alerts-container').html(errorHtml);
+
+                        $('#confirmButton').html('Delete');
+                    }
+                });
+            });
+        });
+
+
+        $('.auto-submit').on('change', function() {
+            setTimeout(function() {
+                $('#filterForm').submit();
+            }, 300);
         });
     });
 </script>
+
 
 
 <style>
@@ -243,7 +358,6 @@
         align-items: flex-end;
     }
 
-    /* Style for checkboxes */
     .order-checkbox {
         cursor: pointer;
     }
@@ -251,4 +365,48 @@
     #selectAllCheckbox {
         cursor: pointer;
     }
+
+    #selectAllCheckbox {
+        margin: 0;
+        vertical-align: middle;
+    }
+
+    .order-checkbox {
+        margin: 0;
+        vertical-align: middle;
+    }
+
+    td:first-child {
+        text-align: center;
+    }
 </style>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        function autoSubmit() {
+            clearTimeout(window.autoSubmitTimeout);
+            window.autoSubmitTimeout = setTimeout(function() {
+                document.getElementById('autoSubmitForm').submit();
+            }, 500);
+        }
+
+        document.querySelectorAll('.auto-submit').forEach(function(element) {
+
+            if (element.tagName === 'SELECT') {
+                element.addEventListener('change', autoSubmit);
+            } else {
+                element.addEventListener('change', autoSubmit);
+                element.addEventListener('keyup', function(e) {
+                    if (e.key === 'Enter') {
+                        autoSubmit();
+                    }
+                });
+            }
+        });
+    });
+    </script>
+
+
+
