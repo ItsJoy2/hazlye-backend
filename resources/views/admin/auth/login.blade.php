@@ -121,7 +121,7 @@
 <div class="wrapper">
     <div class="logo">
         @if(isset($generalSettings->logo))
-            <img src="{{ asset('public/storage/'.$generalSettings->logo) }}" alt="Logo" height="50px">
+            <img src="{{ asset('storage/'.$generalSettings->logo) }}" alt="Logo" height="50px">
         @endif
     </div>
 

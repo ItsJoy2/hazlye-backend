@@ -103,6 +103,7 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::post('/customers/block', [AdminOrderController::class, 'blockCustomer'])->name('admin.customers.block');
     Route::post('/customers/unblock', [AdminOrderController::class, 'unblockCustomer'])->name('admin.customers.unblock');
     Route::get('/customers/blocked', [AdminOrderController::class, 'blockedCustomers'])->name('admin.customers.blocked');
+    Route::post('/customers/export', [AdminOrderController::class, 'exportCustomers'])->name('admin.customers.export');
 
 
     // Coupons

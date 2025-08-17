@@ -7,19 +7,21 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use App\Exports\OrdersExport;
 use App\Models\CourierService;
 use App\Models\DeliveryOption;
 use Illuminate\Support\Carbon;
 use App\Models\BlockedCustomer;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\CustomersExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\ProductVariantOption;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\OrdersExport;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdminOrderController extends Controller
 {
@@ -211,60 +213,106 @@ class AdminOrderController extends Controller
 
         return view('admin.pages.orders.show', compact('order', 'couriers'));
     }
+    
     public function customerList(Request $request)
-{
-    $query = Order::select([
-        'name',
-        'phone',
-        DB::raw('MIN(address) as primary_address'),
-        DB::raw('MIN(district) as district'),
-        DB::raw('MIN(thana) as thana'),
-        DB::raw('COUNT(DISTINCT orders.id) as order_count'),
-        DB::raw('SUM(order_items.quantity) as total_products'),
-        DB::raw('SUM(orders.total) as total_spent'),
-        DB::raw('MAX(orders.created_at) as last_order_at')
-    ])
-    ->join('order_items', 'orders.id', '=', 'order_items.order_id')->where('orders.status', 'delivered')->groupBy('name', 'phone');
+    {
+        $customerBase = Order::select([
+                'phone',
+                DB::raw('MIN(name) as name'),
+                DB::raw('MIN(created_at) as first_order_at')
+            ])
+            ->where('status', 'delivered')
+            ->groupBy('phone')
+            ->orderBy('first_order_at')
+            ->get();
+
+        $customerIdMap = [];
+        $startingId = 101;
+
+        foreach ($customerBase as $customer) {
+            $customerIdMap[$customer->phone] = $startingId++;
+        }
+
+        $query = Order::select([
+                'name',
+                'phone',
+                DB::raw('MIN(address) as primary_address'),
+                DB::raw('MIN(district) as district'),
+                DB::raw('MIN(thana) as thana'),
+                DB::raw('COUNT(DISTINCT orders.id) as order_count'),
+                DB::raw('SUM(order_items.quantity) as total_products'),
+                DB::raw('SUM(orders.total) as total_spent'),
+                DB::raw('MAX(orders.created_at) as last_order_at')
+            ])
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', 'delivered')
+            ->groupBy('name', 'phone');
+
+        if ($request->filled('phone')) {
+            $query->where('phone', 'like', '%' . $request->phone . '%');
+        }
+
+        if ($request->filled('district')) {
+            $query->where('district', 'like', '%' . $request->district . '%');
+        }
+
+        if ($request->filled('thana')) {
+            $query->where('thana', 'like', '%' . $request->thana . '%');
+        }
+
+        $allCustomers = $query->orderBy('total_spent', 'desc')->get();
+
+        $customersWithIds = $allCustomers->map(function ($customer) use ($customerIdMap) {
+            return [
+                'customer_id' => $customerIdMap[$customer->phone] ?? null,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'district' => $customer->district,
+                'thana' => $customer->thana,
+                'primary_address' => $customer->primary_address,
+                'order_count' => $customer->order_count,
+                'total_products' => $customer->total_products,
+                'total_spent' => number_format($customer->total_spent, 2),
+                'last_order_at' => Carbon::parse($customer->last_order_at)->format('M d, Y'),
+            ];
+        })->filter(function ($customer) {
+            return !is_null($customer['customer_id']);
+        });
 
 
-    if ($request->filled('phone')) {
-        $query->where('phone', 'like', '%' . $request->phone . '%');
+        if ($request->filled('search')) {
+            $searchTerm = strtolower($request->search);
+            $customersWithIds = $customersWithIds->filter(function ($customer) use ($searchTerm) {
+                return str_contains(strtolower($customer['name']), $searchTerm) ||
+                       str_contains(strtolower($customer['phone']), $searchTerm) ||
+                       $customer['customer_id'] == $searchTerm;
+            });
+        }
+
+
+        $customersWithIds = $customersWithIds->sortBy('customer_id')->values();
+
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 20;
+        $currentPageItems = $customersWithIds->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $customers = new LengthAwarePaginator(
+            $currentPageItems,
+            $customersWithIds->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
+
+        return view('admin.pages.customers.index', [
+            'customers' => $customers,
+            'phone' => $request->phone,
+            'district' => $request->district,
+            'thana' => $request->thana,
+            'search' => $request->search,
+        ]);
     }
-
-    if ($request->filled('district')) {
-        $query->where('district', 'like', '%' . $request->district . '%');
-    }
-
-    if ($request->filled('thana')) {
-        $query->where('thana', 'like', '%' . $request->thana . '%');
-    }
-
-    $customers = $query
-        ->orderBy('total_spent', 'desc')
-        ->paginate(20);
-
-    // Format output
-    $customers->getCollection()->transform(function ($customer) {
-        return [
-            'name' => $customer->name,
-            'phone' => $customer->phone,
-            'district' => $customer->district,
-            'thana' => $customer->thana,
-            'primary_address' => $customer->primary_address,
-            'order_count' => $customer->order_count,
-            'total_products' => $customer->total_products,
-            'total_spent' => number_format($customer->total_spent, 2),
-            'last_order_at' => Carbon::parse($customer->last_order_at)->format('M d, Y'),
-        ];
-    });
-
-    return view('admin.pages.customers.index', [
-        'customers' => $customers,
-        'phone' => $request->phone,
-        'district' => $request->district,
-        'thana' => $request->thana,
-    ]);
-}
 
 
 
@@ -768,6 +816,22 @@ public function bulkDelete(Request $request)
     return back()->with('success', "Successfully deleted $deletedCount orders.");
 }
 
+public function exportCustomers(Request $request)
+{
+    $exportType = $request->export_type;
+    $filters = [
+        'phone' => $request->phone_filter,
+        'district' => $request->district_filter,
+        'thana' => $request->thana_filter,
+        'search' => $request->search_filter,
+    ];
 
+    if ($exportType === 'selected') {
+        $selectedPhones = $request->selected_customers ?? [];
+        return Excel::download(new CustomersExport($selectedPhones, $filters), 'selected_customers.xlsx');
+    }
+
+    return Excel::download(new CustomersExport(null, $filters), 'all_customers.xlsx');
+}
 
 }
