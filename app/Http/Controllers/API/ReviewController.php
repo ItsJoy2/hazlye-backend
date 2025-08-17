@@ -74,7 +74,7 @@ class ReviewController extends Controller
                 'success' => true,
                 'message' => 'Review submitted successfully. It will be visible after approval.',
                 'data' => $review->load('images')
-            ], 201);
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
