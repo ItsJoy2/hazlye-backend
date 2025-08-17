@@ -6,14 +6,14 @@ namespace App\Http\Controllers\API;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'mobile' => 'required',
             'password' => 'required'
         ], [
@@ -21,14 +21,15 @@ class AuthController extends Controller
             'password.required' => 'Password is required',
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        $user = User::where('mobile', $request->mobile)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Invalid mobile number or password'
             ], 401);
         }
 
-        $user = User::where('mobile', $request->mobile)->first();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -40,9 +41,10 @@ class AuthController extends Controller
         ], 200);
     }
 
+
     public function register(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'mobile' => 'required|string|unique:users,mobile',
             'password' => 'required|string|min:8',
@@ -54,6 +56,14 @@ class AuthController extends Controller
             'password.min' => 'Password must be at least 8 characters long',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         $user = User::create([
             'name' => $request->name,
             'mobile' => $request->mobile,
@@ -63,6 +73,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'status' => true,
             'message' => 'User registered successfully',
             'user' => $user,
             'access_token' => $token,
