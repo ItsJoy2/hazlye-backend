@@ -13,13 +13,21 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'mobile' => 'required',
             'password' => 'required'
         ], [
             'mobile.required' => 'Mobile number is required',
             'password.required' => 'Password is required',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
         $user = User::where('mobile', $request->mobile)->first();
 
@@ -40,6 +48,7 @@ class AuthController extends Controller
             'token_type' => 'Bearer'
         ], 200);
     }
+
 
 
     public function register(Request $request)
