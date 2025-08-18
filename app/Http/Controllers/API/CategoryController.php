@@ -10,10 +10,14 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $categories = Category::with(['children' => function($query) {
+            $query->withCount('products');
+        }])
+        ->withCount('products')
+        ->whereNull('parent_id')
+        ->get();
 
         $categories->transform(function ($category) {
-            $category->product_count = $category->products->count();
             if ($category->image) {
                 $category->image = $this->getFullImageUrl($category->image);
             }
