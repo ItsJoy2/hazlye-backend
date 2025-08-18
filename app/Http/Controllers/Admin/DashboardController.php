@@ -45,8 +45,8 @@ class DashboardController extends Controller
 
         // Product statistics
         $totalProducts = Product::count();
-        $lowStockProducts = Product::where('total_stock', '<', 10)->count();
-        $lowStockProductsList = Product::where('total_stock', '<', 15)->orderBy('total_stock', 'asc')->get();
+        $lowStockProducts = Product::where('total_stock', '<', 5)->count();
+        $lowStockProductsList = Product::where('total_stock', '<', 5)->orderBy('total_stock', 'asc')->get();
 
         // Total products sold calculation
         $totalProductsSold = OrderItem::sum('quantity');

@@ -102,7 +102,7 @@ public function getImageUrlAttribute()
     return asset('storage/' . $this->main_image);
 }
 
-public function scopeLowStock($query, $threshold = 15)
+public function scopeLowStock($query, $threshold = 5)
 {
     return $query->where('total_stock', '<', $threshold)
                 ->where('total_stock', '>', 0)

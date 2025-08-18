@@ -12,8 +12,8 @@ class CategoryController extends Controller
     {
         $categories = Category::with('children')->whereNull('parent_id')->get();
 
-        // Add full URL to images
         $categories->transform(function ($category) {
+            $category->product_count = $category->products->count();
             if ($category->image) {
                 $category->image = $this->getFullImageUrl($category->image);
             }
