@@ -188,7 +188,38 @@
             // Toast implementation (same as before)
         }
     });
-    </script>
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('name');
+        const slugInput = document.getElementById('slug');
+        let manuallyEdited = false;
+
+        // Auto-generate slug when name changes, but only if slug wasn't manually edited
+        nameInput.addEventListener('input', function() {
+            if (!manuallyEdited) {
+                slugInput.value = slugify(nameInput.value) + '-' + Math.random().toString(36).substring(2, 7);
+            }
+        });
+
+        // Track if user manually edits the slug
+        slugInput.addEventListener('input', function() {
+            manuallyEdited = true;
+        });
+
+        // Slugify function that works with Bangla characters
+        function slugify(text) {
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                .replace(/^-+/, '')             // Trim - from start of text
+                .replace(/-+$/, '');             // Trim - from end of text
+        }
+    });
+</script>
+
 <style>
     @media (min-width: 768px) {
     .col-md-3 {

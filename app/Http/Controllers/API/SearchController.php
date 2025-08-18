@@ -36,7 +36,7 @@ class SearchController extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
-                'main_image' => asset('public/storage/' . $product->main_image),
+                'main_image' => asset('storage/' . $product->main_image),
                 'regular_price' => $product->regular_price,
                 'discount_price' => $product->discount_price
             ];

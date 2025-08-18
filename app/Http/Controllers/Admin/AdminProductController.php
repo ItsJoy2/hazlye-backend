@@ -38,6 +38,7 @@ class AdminProductController extends Controller
         $validated = $request->validate([
             'sku' => 'required|unique:products,sku',
             'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|unique:products,slug|max:255',
             'short_description' => 'nullable|string',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
@@ -46,9 +47,9 @@ class AdminProductController extends Controller
             'Purchase_price' => 'required|numeric|min:0',
             'regular_price' => 'required|numeric|min:0|gt:Purchase_price',
             'discount_price' => 'nullable|numeric|min:0|lt:regular_price',
-            'main_image' => 'required|image|max:6144', // 6MB limit
+            'main_image' => 'required|image|max:6144',
             'gallery_images' => 'required|array|min:1',
-            'gallery_images.*' => 'image|mimes:jpeg,png,jpg|max:6144', // 6MB limit
+            'gallery_images.*' => 'image|mimes:jpeg,png,jpg|max:6144',
             'featured' => 'boolean',
             'Offer' => 'boolean',
             'campaign' => 'boolean',
@@ -57,7 +58,7 @@ class AdminProductController extends Controller
             'keyword_tags.*' => 'string|max:255',
             'variants' => 'sometimes|array',
             'variants.*.color_id' => 'required_with:variants|exists:colors,id',
-            'variants.*.image' => 'required_with:variants|image|max:6144', // 6MB limit
+            'variants.*.image' => 'required_with:variants|image|max:6144',
             'variants.*.options' => 'required_with:variants|array',
             'variants.*.options.*.size_id' => 'required_with:variants.*.options|exists:sizes,id',
             'variants.*.options.*.price' => 'required_with:variants.*.options|numeric|min:0',
@@ -68,18 +69,17 @@ class AdminProductController extends Controller
         try {
             DB::beginTransaction();
 
-            // Handle main image upload
             $mainImagePath = $request->file('main_image')->store('products', 'public');
 
             $keywordTags = $request->keyword_tags
                 ? explode(',', $request->keyword_tags)
                 : null;
 
-            // Create product
+            $slug = $request->slug ?: Str::slug($validated['name']);
             $product = Product::create([
                 'sku' => $validated['sku'],
                 'name' => $validated['name'],
-                'slug' => Str::slug($validated['name']) . '-' . Str::random(5),
+                'slug' => $slug,
                 'short_description' => $validated['short_description'],
                 'description' => $validated['description'],
                 'category_id' => $validated['category_id'],
@@ -96,7 +96,6 @@ class AdminProductController extends Controller
                 'keyword_tags' => $keywordTags,
             ]);
 
-            // Handle gallery images
             if ($request->hasFile('gallery_images')) {
                 foreach ($request->file('gallery_images') as $index => $file) {
                     $path = $file->store('products/gallery', 'public');
@@ -109,7 +108,6 @@ class AdminProductController extends Controller
                 }
             }
 
-            // Handle variants if exists
             if ($request->has('variants')) {
                 foreach ($request->variants as $variantData) {
                     $variantImagePath = $variantData['image']->store('products/variants', 'public');
@@ -131,7 +129,6 @@ class AdminProductController extends Controller
                     }
                 }
 
-                // Update total stock based on variants
                 $product->update(['total_stock' => $product->variants->sum(function($v) {
                     return $v->options->sum('stock');
                 })]);
@@ -151,7 +148,7 @@ class AdminProductController extends Controller
 
 public function show(Product $product)
 {
-    // Eager load all necessary relationships
+
     $product->load([
         'category',
         'images',
@@ -162,7 +159,7 @@ public function show(Product $product)
         }
     ]);
 
-    // Calculate inventory summary
+
     $inventorySummary = [
         'total_variants' => $product->variants->count(),
         'total_options' => $product->variants->sum(fn($v) => $v->options->count()),
@@ -188,6 +185,7 @@ public function show(Product $product)
         $validated = $request->validate([
             'sku' => 'required|unique:products,sku,' . $product->id,
             'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|unique:products,slug,'.$product->id.'|max:255',
             'short_description' => 'nullable|string',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
@@ -231,12 +229,12 @@ public function show(Product $product)
 
 
                 $keywordTags = $request->filled('keyword_tags') ? array_map('trim', explode(',', $request->keyword_tags)): [];
-
+                $slug = $request->slug ?: Str::slug($validated['name']);
             // Update product
             $product->update([
                 'sku' => $validated['sku'],
                 'name' => $validated['name'],
-                'slug' => $product->slug, // Keep same slug unless you want to regenerate
+                'slug' => $slug,
                 'short_description' => $validated['short_description'],
                 'description' => $validated['description'],
                 'category_id' => $validated['category_id'],

@@ -31,6 +31,15 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="slug">Slug (URL)</label>
+                            <input type="text" name="slug" id="slug" class="form-control @error('slug') is-invalid @enderror"
+                                   value="{{ old('slug', $product->slug ?? '') }}">
+                            <small class="text-muted">Leave empty to auto-generate from product name</small>
+                            @error('slug')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="short_description">Short Description</label>
                             <textarea name="short_description" id="short_description" class="form-control" rows="3">{{ old('short_description', isset($product) ? $product->short_description : '') }}</textarea>
                             @error('short_description')

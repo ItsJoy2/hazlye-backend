@@ -53,7 +53,8 @@ Route::get('/homepage-sections/{position}', [HomepageSectionController::class, '
 // GeneralSetting
 Route::get('/general-settings', [GeneralSettingsController::class, 'index']);
 
-
+// Search
+Route::get('/search', [SearchController::class, 'search']);
 
 
 // Cart
