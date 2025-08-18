@@ -31,12 +31,11 @@ class AdminOrderController extends Controller
             ->latest();
 
 
-        // Status filter
         if ($request->has('status') && $request->status != 'all') {
             $query->where('status', $request->status);
         }
 
-        // Date range filter
+
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -45,29 +44,25 @@ class AdminOrderController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        // Filter by district
         if ($request->filled('district')) {
             $query->where('district', 'like', '%' . $request->district . '%');
         }
 
-        // Filter by thana
         if ($request->filled('thana')) {
             $query->where('thana', 'like', '%' . $request->thana . '%');
         }
 
-        // Filter by product name or SKU from order items
         if ($request->filled('product_search')) {
             $searchTerm = $request->product_search;
 
             $query->whereHas('items.product', function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%' . $searchTerm . '%')  // Assuming product name is in `products.name`
-                  ->orWhere('sku', 'like', '%' . $searchTerm . '%'); // `products.sku`
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('sku', 'like', '%' . $searchTerm . '%');
             });
         }
 
         $orders = $query->paginate(10);
 
-        // Preserve filter values
         $status = $request->status ?? 'all';
         $dateFrom = $request->date_from ?? '';
         $dateTo = $request->date_to ?? '';
@@ -91,7 +86,6 @@ class AdminOrderController extends Controller
             'comment' => 'nullable|string',
         ]);
 
-        // Define allowed status transitions
         $allowedTransitions = [
             'pending' => ['hold', 'processing', 'cancelled'],
             'hold' => ['processing', 'cancelled'],
@@ -102,7 +96,7 @@ class AdminOrderController extends Controller
             'cancelled' => [],
         ];
 
-        // Check if transition is allowed
+
         $currentStatus = $order->status;
         $newStatus = $validated['status'];
 
@@ -113,23 +107,19 @@ class AdminOrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // Prevent double shipping
             if ($validated['status'] === 'shipped' && $order->status === 'shipped') {
                 throw new \Exception('This order is already marked as shipped.');
             }
 
-            // Return stock if cancelled
             if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
                 $order->returnStock();
             }
 
-            // Update status and comment
             $order->status = $validated['status'];
             if (isset($validated['comment'])) {
                 $order->comment = $validated['comment'];
             }
 
-            // If shipped, call courier API
             if ($validated['status'] === 'shipped') {
                 $courier = CourierService::findOrFail($validated['courier_service_id']);
 
@@ -156,7 +146,6 @@ class AdminOrderController extends Controller
                     throw new \Exception('Courier API Error: ' . ($data['message'] ?? 'Unknown error'));
                 }
 
-                // Save courier tracking info
                 $order->courier_service_id = $courier->id;
                 $order->tracking_code = $data['consignment']['tracking_code'];
                 $order->consignment_id = $data['consignment']['consignment_id'];
@@ -196,7 +185,6 @@ class AdminOrderController extends Controller
 {
     $order = Order::findOrFail($id);
 
-    // Allow only if status is cancelled
     if ($order->status !== 'cancelled') {
         return redirect()->back()->with('error', 'Only cancelled orders can be deleted.');
     }
@@ -213,7 +201,7 @@ class AdminOrderController extends Controller
 
         return view('admin.pages.orders.show', compact('order', 'couriers'));
     }
-    
+
     public function customerList(Request $request)
     {
         $customerBase = Order::select([
@@ -324,7 +312,6 @@ public function download(Order $order)
         'courier'
     ]);
 
-    // Prepare image paths
     foreach ($order->items as $item) {
         if ($item->product && $item->product->thumbnail) {
             $item->product->thumbnail_path = storage_path('app/public/' . $item->product->thumbnail);
@@ -341,7 +328,6 @@ public function download(Order $order)
 
 public function update(Request $request, Order $order)
 {
-    // Validate input
     $request->validate([
         'name' => 'required|string|max:255',
         'phone' => 'required|string|max:20',
@@ -350,7 +336,6 @@ public function update(Request $request, Order $order)
         'thana'    => 'required|string',
     ]);
 
-    // Update order details
     $order->update([
         'name' => $request->name,
         'phone' => $request->phone,
@@ -384,29 +369,23 @@ public function updateDeliveryCharge(Request $request, Order $order)
 
 public function updateItems(Request $request, Order $order)
 {
-    // Remove deleted items
     if ($request->has('removed_ids')) {
         OrderItem::whereIn('id', $request->removed_ids)
                  ->where('order_id', $order->id)
                  ->delete();
     }
 
-
-    // Update existing items
     if ($request->has('items')) {
         foreach ($request->items as $itemData) {
             if (!empty($itemData['id'])) {
                 $item = OrderItem::find($itemData['id']);
                 if ($item) {
-                    // Update quantity
                     $item->quantity = $itemData['quantity'];
 
-                    // Update size if changed
                     if (isset($itemData['size'])) {
                         $item->size_name = $itemData['size'];
                     }
 
-                    // Update color if changed
                     if (isset($itemData['color'])) {
                         $item->color_name = $itemData['color'];
                     }
@@ -417,16 +396,13 @@ public function updateItems(Request $request, Order $order)
         }
     }
 
-    // Add new product by SKU (either product SKU or variant option SKU)
     if ($request->filled('new_sku')) {
         $sku = $request->new_sku;
         $quantity = $request->new_quantity ?? 1;
 
-        // First try to find by product SKU
         $product = Product::where('sku', $sku)->first();
 
         if ($product) {
-            // Product found by main SKU
             $order->items()->create([
                 'product_id' => $product->id,
                 'product_name' => $product->name,
@@ -436,7 +412,6 @@ public function updateItems(Request $request, Order $order)
                 'color_name' => null,
             ]);
         } else {
-            // If not found as product, try as variant option SKU
             $variantOption = ProductVariantOption::where('sku', $sku)->first();
 
             if ($variantOption) {
@@ -460,7 +435,6 @@ public function updateItems(Request $request, Order $order)
         }
     }
 
-    // Recalculate order totals
     $this->recalculateOrderTotals($order);
 
     return back()->with('success', 'Order items updated successfully.');
@@ -478,7 +452,6 @@ public function skuSearch(Request $request)
 {
     $query = $request->input('query');
 
-    // Non-variant products
     $products = Product::where('sku', 'like', "%$query%")
         ->select('id', 'sku', 'name', 'regular_price', 'discount_price')
         ->limit(5)
@@ -494,7 +467,6 @@ public function skuSearch(Request $request)
             ];
         });
 
-    // Variant options
     $variants = ProductVariantOption::where('sku', 'like', "%$query%")
         ->with(['variant.product', 'variant.color', 'size'])
         ->select('id', 'sku', 'variant_id', 'price', 'size_id')
@@ -574,7 +546,6 @@ public function store(Request $request)
                 'variant_option_id' => $variant?->id,
             ]);
 
-            // stock decrement
             if ($variant) {
                 $variant->decrement('stock', $item['quantity']);
                 $product->updateStock();
@@ -604,7 +575,6 @@ public function search(Request $request)
         return response()->json([]);
     }
 
-    // First check if variant SKU matches
     $variantMatch = ProductVariantOption::where('sku', $keyword)->with('variant.product')->first();
 
     if ($variantMatch) {
@@ -621,7 +591,6 @@ public function search(Request $request)
         ]);
     }
 
-    // If no variant SKU found, search product by name or SKU
     $products = Product::where('name', 'LIKE', "%$keyword%")
         ->orWhere('sku', 'LIKE', "%$keyword%")
         ->limit(10)
@@ -667,7 +636,6 @@ public function shippedOrders(Request $request)
         ->whereIn('status', ['shipped', 'courier_delivered', 'delivered'])
         ->latest();
 
-    // Date range filter
     if ($request->filled('date_from')) {
         $query->whereDate('created_at', '>=', $request->date_from);
     }
@@ -688,7 +656,6 @@ public function shippedOrders(Request $request)
 
     $orders = $query->paginate(10);
 
-    // Preserve filter values
     $dateFrom = $request->date_from ?? '';
     $dateTo = $request->date_to ?? '';
     $courierServiceId = $request->courier_service_id ?? '';
@@ -795,12 +762,16 @@ public function bulkDelete(Request $request)
         'order_ids.*' => 'exists:orders,id',
     ]);
 
+    // cancelled এবং incomplete অর্ডার ডিলিট করার জন্য
     $orders = Order::whereIn('id', $request->order_ids)
-        ->where('status', 'cancelled')
+        ->whereIn('status', ['cancelled', 'incomplete'])
         ->get();
 
     if ($orders->isEmpty()) {
-        return back()->with('error', 'Only cancelled orders can be deleted.');
+        return response()->json([
+            'status' => false,
+            'message' => 'Only cancelled or incomplete orders can be deleted.'
+        ], 400);
     }
 
     $deletedCount = 0;
@@ -813,8 +784,12 @@ public function bulkDelete(Request $request)
         }
     }
 
-    return back()->with('success', "Successfully deleted $deletedCount orders.");
+    return response()->json([
+        'status' => true,
+        'message' => "Successfully deleted $deletedCount order(s)."
+    ]);
 }
+
 
 public function exportCustomers(Request $request)
 {
@@ -833,5 +808,16 @@ public function exportCustomers(Request $request)
 
     return Excel::download(new CustomersExport(null, $filters), 'all_customers.xlsx');
 }
+
+public function incompleteOrders(Request $request)
+    {
+        $orders = Order::where('status', 'incomplete')
+            ->with('items', 'deliveryOption')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.pages.orders.incomplete_order', compact('orders'));
+    }
+
 
 }

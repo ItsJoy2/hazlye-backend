@@ -8,10 +8,12 @@
        class="btn btn-primary p-1 mx-1" title="Edit">
         <i class="fas fa-edit bg-none"></i>
     </a>
-    <a href="{{ route('admin.orders.download', $order) }}"
-        class="btn btn-secondary p-1 mx-1" title="Edit">
-         <i class="fas fa-file-pdf bg-none"></i>
-     </a>
+    @if($order->status !== 'incomplete')
+        <a href="{{ route('admin.orders.download', $order) }}"
+            class="btn btn-secondary p-1 mx-1" title="Download PDF">
+            <i class="fas fa-file-pdf bg-none"></i>
+        </a>
+    @endif
      @if($order->status === 'cancelled')
         <form width="0px"  action="{{ route('admin.orders.destroy', $order->id) }}"
             method="POST" class="d-inline  m-0 p-0 border-none bg-none" style="width: 0px; height:0px;">

@@ -270,7 +270,13 @@
 
                         <div class="form-group">
                             <label for="status">Order Status</label>
+                            @php
+                                $hasIncomplete = \App\Models\Order::where('status', 'incomplete')->exists();
+                            @endphp
                             <select name="status" id="status" class="form-control">
+                                @if($hasIncomplete)
+                                <option id="incompleteOption" value="incomplete" {{ $order->status == 'incomplete' ? 'selected' : '' }}>Incomplete</option>
+                                @endif
                                 <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="hold" {{ $order->status == 'hold' ? 'selected' : '' }}>Hold</option>
                                 <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
@@ -560,5 +566,26 @@
             const charge = selectedOption.getAttribute('data-charge');
             deliveryChargeInput.value = charge;
         });
+    });
+    </script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusDropdown = document.getElementById('status');
+        const incompleteOption = document.getElementById('incompleteOption');
+
+        if(incompleteOption) {
+            if(statusDropdown.value !== 'incomplete') {
+                incompleteOption.style.display = 'none';
+            }
+
+            statusDropdown.addEventListener('change', function() {
+                if(statusDropdown.value !== 'incomplete') {
+                    incompleteOption.style.display = 'none';
+                }
+            });
+        }
     });
     </script>

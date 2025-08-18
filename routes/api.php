@@ -63,10 +63,14 @@ Route::post('/cart/{session_id}/items', [CartController::class, 'addItem']);
 Route::put('/cart/{session_id}/items/{item_id}', [CartController::class, 'updateItem']);
 Route::delete('/cart/{session_id}/items/{item_id}', [CartController::class, 'removeItem']);
 
-// Checkout
+// Order
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/{order}', [OrderController::class, 'show']);
+
+Route::post('/orders/incomplete', [OrderController::class, 'incomplete']);
+Route::get('/orders/incomplete', [OrderController::class, 'incompleteOrders']);
+// Route::get('/orders/incomplete/{order}', [OrderController::class, 'showIncomplete']);
 
 // Coupons
 Route::post('/coupons/validate', [CouponController::class, 'validate']);

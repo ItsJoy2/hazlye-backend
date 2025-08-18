@@ -112,8 +112,8 @@
 
 
                         <div class="form-group">
-                            <label for="status">Status</label>
-                            <select name="status" id="status" class="form-control" @readonly(true)>
+                            <label for="status" hidden>Status</label>
+                            <select name="status" id="status" class="form-control" hidden @readonly(true)>
                                 <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
                                 <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>Shipped</option>

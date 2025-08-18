@@ -77,6 +77,7 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
     // Orders
 
+    Route::get('orders/incomplete', [AdminOrderController::class, 'incompleteOrders'])->name('admin.orders.incomplete');
     Route::get('/orders/couriers', [AdminOrderController::class, 'shippedOrders'])->name('admin.orders.shipped');
     Route::resource('orders', AdminOrderController::class)->names([
        'index' => 'admin.orders.index',
@@ -96,6 +97,8 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::get('/product/{product}/variants', [AdminOrderController::class, 'getVariants']);
     Route::post('/orders/export', [AdminOrderController::class, 'export'])->name('admin.orders.export');
     Route::post('orders/bulk-delete', [AdminOrderController::class, 'bulkDelete'])->name('admin.orders.bulk-delete');
+
+
 
 
     Route::get('/customers', [AdminOrderController::class, 'customerList'])->name('admin.customers.index');

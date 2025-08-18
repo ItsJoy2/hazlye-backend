@@ -10,12 +10,15 @@
             </div>
         </div>
         <div class="card-body">
+            @include('admin.modal.confirmationmodal')
+            @include('admin.modal.successmodal')
+            
             <div id="alert-container">
                 @include('admin.layouts.partials.__alerts')
             </div>
 
             <div class="mb-0">
-                @include('admin.modal.confirmationmodal')
+
                 <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 mb-4" id="autoSubmitForm">
                     {{-- Date Filters --}}
                     <div class="col-md-2">
@@ -106,6 +109,9 @@
                         </thead>
                         <tbody>
                             @forelse($orders as $index => $order)
+                                @if($order->status === 'incomplete')
+                                    @continue
+                                @endif
                             <tr>
                                 <td>
                                     @if(in_array($order->status, ['processing', 'shipped', 'courier_delivered', 'delivered']) || $order->status === 'cancelled')
@@ -275,7 +281,7 @@
 
             // Set up modal content
             $('#confirmModal .modal-title').text('Are You Sure?');
-            $('#confirmModal .modal-body p').html(`Do you really want to delete <strong>${selectedOrders.length}</strong> orders. This process cannot be undone.`);
+            $('#confirmModal .modal-body p').html(`Do you really want to delete <strong>${selectedOrders.length}</strong> orders? This process cannot be undone.`);
 
             $('#confirmButton').off('click');
 
@@ -297,29 +303,35 @@
                     success: function(response) {
                         $('#confirmModal').modal('hide');
 
-                        let message = response.message || 'Orders deleted successfully';
-
-                        $('#alert-container').html(`
-                            <div class="text-success fw-bold">${message}</div>
+                        // Show success modal
+                        $('#successModal').modal('show');
+                        $('#successModal .modal-title').text('Success');
+                        $('#successModal .modal-body p').html(`
+                            <strong>${selectedOrders.length}</strong> orders have been deleted successfully.
                         `);
+
+                        // Optional: Reload the page after a delay
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     },
                     error: function(xhr) {
-                        const errorHtml = `
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                ${xhr.responseJSON?.message || 'Something went wrong'}
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                        $('#confirmModal').modal('hide');
+
+                        // Show error in success modal (reusing the same modal)
+                        $('#successModal').modal('show');
+                        $('#successModal .modal-title').text('Error');
+                        $('#successModal .modal-body p').html(`
+                            <div class="alert alert-danger">
+                                ${xhr.responseJSON?.message || 'Something went wrong while deleting orders.'}
                             </div>
-                        `;
-                        $('.alerts-container').html(errorHtml);
+                        `);
 
                         $('#confirmButton').html('Delete');
                     }
                 });
             });
         });
-
 
         $('.auto-submit').on('change', function() {
             setTimeout(function() {

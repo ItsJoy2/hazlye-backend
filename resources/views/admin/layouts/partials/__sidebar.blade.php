@@ -97,6 +97,14 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a href="{{ route('admin.orders.incomplete') }}" class="nav-link">
+                                            <span class="sub-item">Incomplete Orders</span>
+                                            <span class="badge badge-secondary float-right">
+                                                {{ App\Models\Order::where('status', 'incomplete')->count() }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" class="nav-link">
                                             <span class="sub-item">Cancelled Orders</span>
                                             <span class="badge badge-danger float-right">
