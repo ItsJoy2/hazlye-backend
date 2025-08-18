@@ -46,6 +46,7 @@ class DashboardController extends Controller
         // Product statistics
         $totalProducts = Product::count();
         $lowStockProducts = Product::where('total_stock', '<', 10)->count();
+        $lowStockProductsList = Product::where('total_stock', '<', 15)->orderBy('total_stock', 'asc')->get();
 
         // Total products sold calculation
         $totalProductsSold = OrderItem::sum('quantity');
@@ -99,32 +100,46 @@ class DashboardController extends Controller
             ])->sum('total');
         }
 
-        return view('admin.dashboard', compact(
-            'todayOrders',
-            'yesterdayOrders',
-            'monthlyOrders',
-            'totalOrders',
-            'todayAmount',
-            'yesterdayAmount',
-            'monthlyAmount',
-            'totalAmount',
-            'todayProfit',
-            'yesterdayProfit',
-            'monthlyProfit',
-            'totalProfit',
-            'totalProducts',
-            'lowStockProducts',
-            'totalProductsSold',
-            'recentOrders',
-            'bestSellers',
-            'dateFilter',
-            'startDate',
-            'endDate',
-            'dateRangeOrders',
-            'dateRangeProductsSold',
-            'dateRangeProfit',
-            'dateRangeAmount'
-        ));
+        $data = [
+            // Orders
+            'todayOrders' => $todayOrders,
+            'yesterdayOrders' => $yesterdayOrders,
+            'monthlyOrders' => $monthlyOrders,
+            'totalOrders' => $totalOrders,
+
+            // Amounts
+            'todayAmount' => $todayAmount,
+            'yesterdayAmount' => $yesterdayAmount,
+            'monthlyAmount' => $monthlyAmount,
+            'totalAmount' => $totalAmount,
+
+            // Profits
+            'todayProfit' => $todayProfit,
+            'yesterdayProfit' => $yesterdayProfit,
+            'monthlyProfit' => $monthlyProfit,
+            'totalProfit' => $totalProfit,
+
+            // Products
+            'totalProducts' => $totalProducts,
+            'lowStockProducts' => $lowStockProducts,
+            'totalProductsSold' => $totalProductsSold,
+            'lowStockProductsList' => $lowStockProductsList, // slider এর জন্য
+
+            // Recent orders and best sellers
+            'recentOrders' => $recentOrders,
+            'bestSellers' => $bestSellers,
+
+            // Date range filter
+            'dateFilter' => $dateFilter,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'dateRangeOrders' => $dateRangeOrders,
+            'dateRangeProductsSold' => $dateRangeProductsSold,
+            'dateRangeProfit' => $dateRangeProfit,
+            'dateRangeAmount' => $dateRangeAmount,
+        ];
+
+        return view('admin.dashboard', $data);
     }
 
     /**

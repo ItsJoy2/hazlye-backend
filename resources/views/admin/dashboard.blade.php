@@ -6,6 +6,54 @@
         <h1 class="h3 mb-0 text-gray-800">Dashboard Overview</h1>
     </div>
 
+    <!-- Section 0: Low Stock Products Slider -->
+    @if($lowStockProductsList->count() > 0)
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow-sm border-left-warning">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">Low Stock Products</h6>
+                </div>
+                <div class="card-body">
+                    <div id="lowStockCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            @foreach($lowStockProductsList->chunk(3) as $chunkIndex => $productsChunk)
+                            <div class="carousel-item @if($chunkIndex == 0) active @endif">
+                                <div class="row">
+                                    @foreach($productsChunk as $product)
+                                    <div class="col-md-4 mb-2">
+                                        <div class="card border-warning h-100">
+                                            <div class="card-body d-flex flex-column ">
+                                                <h5 class="card-title">{{ $product->name }}</h5>
+                                                <div class="d-flex">
+                                                    <p class="card-text mb-1 mt-auto pt-2">Stock: <strong>{{ $product->total_stock }}</strong></p>
+                                                <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-warning m-0 mt-auto mb-1 mx-3">
+                                                    <i class="fas fa-edit me-1"></i>
+                                                </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Section 1: Summary Cards -->
     <div class="row mb-4">
         <!-- Today's Orders -->
@@ -260,7 +308,7 @@
 </div>
 @endsection
 
-
+@section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Clear form inputs when reset button is clicked
@@ -278,7 +326,7 @@
         }
     });
 </script>
-
+@endsection
 
 
 <style>
@@ -314,37 +362,14 @@
         transform: translateY(-5px);
         box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
     }
-    .border-left-primary {
-        border-left: 0.25rem solid #4e73df !important;
-    }
-    .border-left-success {
-        border-left: 0.25rem solid #1cc88a !important;
-    }
-    .border-left-info {
-        border-left: 0.25rem solid #36b9cc !important;
-    }
-    .border-left-warning {
-        border-left: 0.25rem solid #f6c23e !important;
-    }
-    .border-left-secondary {
-        border-left: 0.25rem solid #858796 !important;
-    }
-    .table-responsive {
-        overflow-x: auto;
-    }
-    .table {
-        font-size: 14px;
-    }
-    .table th {
-        white-space: nowrap;
-    }
-    .badge {
-        font-size: 12px;
-        padding: 5px 10px;
-        font-weight: 600;
-    }
-
-    @media only screen and (max-width: 600px) {
-
-}
+    .border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+    .border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+    .border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+    .border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+    .border-left-secondary { border-left: 0.25rem solid #858796 !important; }
+    .table-responsive { overflow-x: auto; }
+    .table { font-size: 14px; }
+    .table th { white-space: nowrap; }
+    .badge { font-size: 12px; padding: 5px 10px; font-weight: 600; }
 </style>
+
