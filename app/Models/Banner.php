@@ -22,7 +22,7 @@ class Banner extends Model
     protected function image(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value ? asset('public/storage/' . $value) : null,
+            get: fn ($value) => $value ? asset('storage/' . $value) : null,
         );
     }
 }
