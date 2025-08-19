@@ -19,9 +19,33 @@ class ReviewController extends Controller
             ->where('is_approved', true)
             ->get();
 
+        $totalReviews = $reviews->count();
+        $averageRating = $totalReviews > 0 ? round($reviews->avg('rating'), 1) : 0;
+
+        $ratingCounts = [
+            5 => $reviews->where('rating', 5)->count(),
+            4 => $reviews->where('rating', 4)->count(),
+            3 => $reviews->where('rating', 3)->count(),
+            2 => $reviews->where('rating', 2)->count(),
+            1 => $reviews->where('rating', 1)->count(),
+        ];
+
+        $ratingPercentages = [];
+        foreach ($ratingCounts as $star => $count) {
+            $ratingPercentages[$star] = $totalReviews > 0
+                ? round(($count / $totalReviews) * 100, 2)
+                : 0;
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $reviews
+            'summary' => [
+                'average_rating' => $averageRating,
+                'total_reviews' => $totalReviews,
+                'rating_counts' => $ratingCounts,
+                'rating_percentages' => $ratingPercentages,
+            ],
+            'data' => $reviews,
         ]);
     }
 
