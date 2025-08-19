@@ -447,21 +447,21 @@ class OrderController extends Controller
                 'ip_address' => $ipAddress,
             ]);
 
-            foreach ($items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'variant_id' => $item['variant_id'],
-                    'option_id' => $item['option_id'],
-                    'size_id' => $item['size_id'],
-                    'color_id' => $item['color_id'],
-                    'product_name' => $item['product_name'],
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'size_name' => $item['size_name'],
-                    'color_name' => $item['color_name'],
-                ]);
-            }
+            // foreach ($items as $item) {
+            //     OrderItem::create([
+            //         'order_id' => $order->id,
+            //         'product_id' => $item['product_id'],
+            //         'variant_id' => $item['variant_id'],
+            //         'option_id' => $item['option_id'],
+            //         'size_id' => $item['size_id'],
+            //         'color_id' => $item['color_id'],
+            //         'product_name' => $item['product_name'],
+            //         'price' => $item['price'],
+            //         'quantity' => $item['quantity'],
+            //         'size_name' => $item['size_name'],
+            //         'color_name' => $item['color_name'],
+            //     ]);
+            // }
 
             DB::commit();
 
@@ -483,12 +483,12 @@ class OrderController extends Controller
                 'ip' => $ipAddress,
             ]);
 
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Failed to save incomplete order',
-        //         'error' => $e->getMessage()
-        //     ], 500);
-        // }
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save incomplete order',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
 
