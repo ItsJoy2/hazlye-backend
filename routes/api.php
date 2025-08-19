@@ -81,7 +81,7 @@ Route::post('/coupons/validate', [CouponController::class, 'validate']);
 Route::get('/products/reviews/{product:slug}', [ReviewController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/reviews/{product:slug}', [ReviewController::class, 'store']);
-    Route::post('/products/reviews/{product:slug}', [ReviewController::class, 'store']);
+    // Route::post('/products/reviews/{product:slug}', [ReviewController::class, 'store']);
 });
 
 // Delivery Options

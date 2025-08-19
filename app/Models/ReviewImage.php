@@ -15,4 +15,9 @@ class ReviewImage extends Model
     {
         return $this->belongsTo(Review::class);
     }
+    public function getImagePathAttribute($value)
+    {
+        return asset('storage/' . $value);
+    }
+
 }

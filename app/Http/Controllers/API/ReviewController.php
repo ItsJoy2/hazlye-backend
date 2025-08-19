@@ -27,7 +27,7 @@ class ReviewController extends Controller
 
     public function store(Request $request, $product)
     {
-        // Find product by ID or slug
+
         $product = Product::where('id', $product)
                    ->orWhere('slug', $product)
                    ->firstOrFail();
@@ -39,7 +39,6 @@ class ReviewController extends Controller
             'images' => 'max:5'
         ]);
 
-        // Check if user already reviewed this product
         $existingReview = Review::where('user_id', Auth::id())
             ->where('product_id', $product->id)
             ->first();

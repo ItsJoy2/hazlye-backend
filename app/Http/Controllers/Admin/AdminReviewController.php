@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+
 use id;
 use App\Models\Review;
 use App\Models\Product;
@@ -12,14 +13,26 @@ class AdminReviewController extends Controller
 {
     public function index()
     {
-        $reviews = Review::with(['user', 'product', 'images'])->latest()->get();
-        return view('admin.reviews.index', compact('reviews'));
-    }
+        $products = Product::pluck('name', 'id');
+        $query = Review::with(['user', 'product', 'images'])->latest();
 
+        // Add filters if they exist in the request
+        if (request()->has('is_approved') && request('is_approved') !== 'all') {
+            $query->where('is_approved', request('is_approved'));
+        }
+
+        if (request()->has('product_id') && request('product_id')) {
+            $query->where('product_id', request('product_id'));
+        }
+
+        $reviews = $query->paginate(10);
+
+        return view('admin.pages.reviews.index', compact('reviews', 'products'));
+    }
     public function create()
     {
         $products = Product::all();
-        return view('admin.reviews.create', compact('products'));
+        return view('admin.pages.reviews.create', compact('products'));
     }
 
     public function store(Request $request)
@@ -44,7 +57,7 @@ class AdminReviewController extends Controller
     public function edit(Review $review)
     {
         $products = Product::all();
-        return view('admin.reviews.edit', compact('review', 'products'));
+        return view('admin.pages.reviews.edit', compact('review', 'products'));
     }
 
     public function update(Request $request, Review $review)
