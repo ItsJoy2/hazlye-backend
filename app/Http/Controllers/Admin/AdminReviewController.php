@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
-use App\Models\Review;
-use App\Models\Product;
-use App\Models\ReviewImage;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\ReviewImage;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminReviewController extends Controller
 {
@@ -74,7 +74,8 @@ class AdminReviewController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to create review: ' . $e->getMessage());
+                ->with('error', 'Failed to create review: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -88,15 +89,20 @@ class AdminReviewController extends Controller
 
     public function destroy(Review $review)
     {
-        // Delete associated images from storage
-        foreach ($review->images as $image) {
-            Storage::disk('public')->delete($image->image_path);
-            $image->delete();
+        try {
+            // Delete associated images from storage
+            foreach ($review->images as $image) {
+                Storage::disk('public')->delete($image->image_path);
+                $image->delete();
+            }
+
+            $review->delete();
+
+            return redirect()->route('admin.reviews.index')
+                ->with('success', 'Review deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.reviews.index')
+                ->with('error', 'Failed to delete review: ' . $e->getMessage());
         }
-
-        $review->delete();
-
-        return redirect()->route('admin.reviews.index')
-            ->with('success', 'Review deleted successfully');
     }
 }

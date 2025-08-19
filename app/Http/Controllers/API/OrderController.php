@@ -483,12 +483,12 @@ class OrderController extends Controller
                 'ip' => $ipAddress,
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to save incomplete order',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Failed to save incomplete order',
+        //         'error' => $e->getMessage()
+        //     ], 500);
+        // }
     }
 
 
