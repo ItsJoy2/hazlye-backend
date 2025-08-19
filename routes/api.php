@@ -74,7 +74,7 @@ Route::get('/orders/incomplete', [OrderController::class, 'incompleteOrders']);
 // Route::get('/orders/incomplete/{order}', [OrderController::class, 'showIncomplete']);
 
 // Coupons
-Route::post('/coupons/validate', [CouponController::class, 'validate']);
+Route::post('/coupons/validate', [CouponController::class, 'validateCoupon']);
 
 // Reviews
 

@@ -368,7 +368,7 @@ class OrderController extends Controller
                 : null;
 
             $subtotal = 0;
-            $items = [];
+            // $items = [];
 
             if ($request->filled('items')) {
                 foreach ($request->items as $itemData) {
@@ -436,8 +436,6 @@ class OrderController extends Controller
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'district' => $request->district,
-                'thana' => $request->thana,
                 'subtotal' => (float) $subtotal,
                 'delivery_charge' => $deliveryOption->charge ?? 0,
                 'total' => (float) $subtotal + ($deliveryOption->charge ?? 0),

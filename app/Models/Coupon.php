@@ -18,7 +18,7 @@ class Coupon extends Model
         'end_date',
         'min_purchase',
         'is_active',
-        'apply_to_all', // New field
+        'apply_to_all',
     ];
 
     protected $casts = [
@@ -35,41 +35,69 @@ class Coupon extends Model
         return $this->belongsToMany(Product::class);
     }
 
-    public function isValidForProduct($subtotal, $productId = null): bool
+    public function isValidForProducts($productIds = []): bool
     {
         $now = now();
 
-        $valid = $this->is_active &&
-                $now->between($this->start_date, $this->end_date) &&
-                $subtotal >= $this->min_purchase;
+        $valid = $this->is_active && $now->between($this->start_date, $this->end_date);
 
         if (!$valid) return false;
 
         // If apply_to_all is true, the coupon is valid for all products
         if ($this->apply_to_all) return true;
 
-        // Otherwise check if the product is associated with the coupon
-        if ($productId) {
-            return $this->products()->where('product_id', $productId)->exists();
+        // Otherwise check if at least one product is associated with the coupon
+        if (!empty($productIds)) {
+            return $this->products()->whereIn('product_id', $productIds)->exists();
         }
 
         return false;
     }
 
-    public function calculateDiscount($subtotal, $productId = null)
+    public function calculateDiscountForProducts($cartItems)
     {
-        if (!$this->isValidForProduct($subtotal, $productId)) {
-            return 0;
+        $applicableProducts = [];
+        $totalDiscount = 0;
+
+        // Check if coupon is valid for any products in cart
+        $productIds = collect($cartItems)->pluck('product_id')->toArray();
+
+        if (!$this->isValidForProducts($productIds)) {
+            return [
+                'total_discount' => 0,
+                'applicable_products' => []
+            ];
         }
 
-        if ($this->type === 'fixed') {
-            return $this->amount;
+        foreach ($cartItems as $item) {
+            $productId = $item['product_id'];
+            $price = $item['price'];
+            $quantity = $item['quantity'];
+
+            // Check if this product is applicable for the coupon
+            if ($this->apply_to_all || $this->products()->where('product_id', $productId)->exists()) {
+                if ($this->type === 'fixed') {
+                    $discount = $this->amount * $quantity;
+                } elseif ($this->type === 'percentage') {
+                    $discount = ($price * $this->amount / 100) * $quantity;
+                } else {
+                    $discount = 0;
+                }
+
+                $totalDiscount += $discount;
+
+                $applicableProducts[] = [
+                    'product_id' => $productId,
+                    'price' => $price,
+                    'quantity' => $quantity,
+                    'discount' => $discount
+                ];
+            }
         }
 
-        if ($this->type === 'percentage') {
-            return ($subtotal * $this->amount) / 100;
-        }
-
-        return 0;
+        return [
+            'total_discount' => $totalDiscount,
+            'applicable_products' => $applicableProducts
+        ];
     }
 }

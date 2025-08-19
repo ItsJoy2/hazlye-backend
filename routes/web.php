@@ -172,7 +172,8 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
         'update' => 'admin.reviews.update',
         'destroy' => 'admin.reviews.destroy'
     ]);
-    Route::put('reviews/{review}/approve', [AdminReviewController::class, 'approve'])->name('admin.reviews.approve');
+    Route::post('reviews/{review}/approve', [AdminReviewController::class, 'approve'])->name('ad min.reviews.approve');
+
 
     // General Settings
     Route::get('general-settings', [GeneralSettingsController::class, 'index'])->name('admin.general.settings');

@@ -32,10 +32,18 @@
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
+                        <form action="{{ route('admin.reviews.index') }}" method="GET" class="form-inline mr-2">
+                            <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by Name / Product" style="width: 250px;">
+                            <button type="submit" class="btn btn-primary ml-2">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary ml-2">Clear</a>
+                            @endif
+                        </form>
+                        <table class="table table-striped table-hover table-head-bg-primary mt-4">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>ID</th>
                                     <th>Product</th>
                                     <th>User</th>
                                     <th>Rating</th>
@@ -48,7 +56,6 @@
                             <tbody>
                                 @forelse ($reviews as $review)
                                     <tr>
-                                        <td>{{ $review->id }}</td>
                                         <td>{{ $review->product->name }}</td>
                                         <td>{{ $review->user->name }}</td>
                                         <td>
@@ -75,11 +82,13 @@
                                                 <span class="badge badge-warning">Pending</span>
                                             @endif
                                         </td>
-                                        <td class="d-flex">
+                                        <td>
+                                            @include('admin.pages.reviews.partials.__actions')
+                                        </td>
+                                        {{-- <td class="d-flex">
                                             @if (!$review->is_approved)
                                                 <form action="{{ route('admin.reviews.approve', $review) }}" method="POST" class="mr-2">
                                                     @csrf
-                                                    @method('PUT')
                                                     <button type="submit" class="btn btn-sm btn-success" title="Approve">
                                                         <i class="fas fa-check"></i>
                                                     </button>
@@ -92,7 +101,7 @@
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
-                                        </td>
+                                        </td> --}}
                                     </tr>
                                 @empty
                                     <tr>
@@ -101,10 +110,11 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        @include('admin.modal.deletemodal')
                     </div>
 
                     <div class="d-flex justify-content-center mt-4">
-                        {{ $reviews->links() }}
+                        {{ $reviews->appends(['search' => request('search')])->links('admin.layouts.partials.__pagination') }}
                     </div>
                 </div>
             </div>

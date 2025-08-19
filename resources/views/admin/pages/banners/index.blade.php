@@ -67,7 +67,7 @@
                     @endforelse
                 </tbody>
             </table>
-
+            @include('admin.modal.deletemodal')
             <div class="mt-4">
                 {{ $banners->links('admin.layouts.partials.__pagination') }}
             </div>

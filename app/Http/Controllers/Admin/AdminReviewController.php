@@ -13,15 +13,26 @@ use Illuminate\Support\Str;
 
 class AdminReviewController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $reviews = Review::with(['user', 'product', 'images'])
-            ->orderBy('is_approved')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = Review::with(['user', 'product', 'images']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })->orWhereHas('product', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        $reviews = $query->orderBy('is_approved')
+                        ->orderBy('created_at', 'desc')
+                        ->paginate(20);
 
         return view('admin.pages.reviews.index', compact('reviews'));
     }
+
 
     public function create()
     {
@@ -79,12 +90,17 @@ class AdminReviewController extends Controller
         }
     }
 
-    public function approve(Review $review)
+    public function approve(Request $request, Review $review)
     {
-        $review->update(['is_approved' => true]);
+        try {
+            $review->update(['is_approved' => true]);
 
-        return redirect()->route('admin.reviews.index')
-            ->with('success', 'Review approved successfully');
+            return redirect()->route('admin.reviews.index')
+                ->with('success', 'Review approved successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.reviews.index')
+                ->with('error', 'Failed to approve review: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Review $review)

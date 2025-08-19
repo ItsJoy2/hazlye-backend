@@ -8,11 +8,14 @@ use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
-    public function validate(Request $request)
+    public function validateCoupon(Request $request)
     {
         $request->validate([
             'code' => 'required|string',
-            'subtotal' => 'required|numeric|min:0',
+            'cart_items' => 'required|array',
+            'cart_items.*.product_id' => 'required|exists:products,id',
+            'cart_items.*.price' => 'required|numeric|min:0',
+            'cart_items.*.quantity' => 'required|integer|min:1'
         ]);
 
         $coupon = Coupon::where('code', $request->code)
@@ -26,21 +29,38 @@ class CouponController extends Controller
             ], 404);
         }
 
-        if (!$coupon->isValid($request->subtotal)) {
+        // Calculate subtotal for minimum purchase check
+        $subtotal = collect($request->cart_items)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        // Check minimum purchase requirement
+        if ($subtotal < $coupon->min_purchase) {
             return response()->json([
                 'success' => false,
-                'message' => 'Coupon is not valid for this purchase'
+                'message' => 'Minimum purchase requirement not met'
             ], 400);
         }
 
-        $discount = $coupon->calculateDiscount($request->subtotal);
+        // Calculate discount for applicable products
+        $discountResult = $coupon->calculateDiscountForProducts($request->cart_items);
+
+        if ($discountResult['total_discount'] <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Coupon is not valid for any products in your cart'
+            ], 400);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Coupon applied successfully',
             'data' => [
                 'coupon' => $coupon,
-                'discount' => $discount
+                'total_discount' => $discountResult['total_discount'],
+                'applicable_products' => $discountResult['applicable_products'],
+                'subtotal' => $subtotal,
+                'discounted_total' => $subtotal - $discountResult['total_discount']
             ]
         ]);
     }
