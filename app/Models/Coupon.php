@@ -43,10 +43,8 @@ class Coupon extends Model
 
         if (!$valid) return false;
 
-        // If apply_to_all is true, the coupon is valid for all products
         if ($this->apply_to_all) return true;
 
-        // Otherwise check if at least one product is associated with the coupon
         if (!empty($productIds)) {
             return $this->products()->whereIn('product_id', $productIds)->exists();
         }
@@ -59,7 +57,6 @@ class Coupon extends Model
         $applicableProducts = [];
         $totalDiscount = 0;
 
-        // Check if coupon is valid for any products in cart
         $productIds = collect($cartItems)->pluck('product_id')->toArray();
 
         if (!$this->isValidForProducts($productIds)) {
@@ -69,15 +66,24 @@ class Coupon extends Model
             ];
         }
 
+        $applicableProductCount = 0;
+
+        foreach ($cartItems as $item) {
+            $productId = $item['product_id'];
+
+            if ($this->apply_to_all || $this->products()->where('product_id', $productId)->exists()) {
+                $applicableProductCount++;
+            }
+        }
+
         foreach ($cartItems as $item) {
             $productId = $item['product_id'];
             $price = $item['price'];
             $quantity = $item['quantity'];
 
-            // Check if this product is applicable for the coupon
             if ($this->apply_to_all || $this->products()->where('product_id', $productId)->exists()) {
                 if ($this->type === 'fixed') {
-                    $discount = $this->amount * $quantity;
+                    $discount = $applicableProductCount > 0 ? ($this->amount / $applicableProductCount) : 0;
                 } elseif ($this->type === 'percentage') {
                     $discount = ($price * $this->amount / 100) * $quantity;
                 } else {
