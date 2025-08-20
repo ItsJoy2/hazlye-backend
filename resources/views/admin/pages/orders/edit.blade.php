@@ -254,6 +254,30 @@
                                     {{ $order->status == 'shipped' ? 'readonly' : '' }}>{{ $order->courier_note }}</textarea>
                             </div>
                         </div>
+                        @if($order->status === 'courier_delivered' && !$order->courier_service_id)
+                        <div class="form-group">
+                            <label for="custom_link" class="form-label">Custom Link</label>
+                            <input type="url" name="custom_link" id="custom_link" class="form-control"
+                                value="{{ old('custom_link', $order->custom_link ?? '') }}"
+                                placeholder="https://example.com">
+                        </div>
+                    @elseif($order->status === 'courier_delivered' && $order->courier_service_id)
+                        <div class="form-group" hidden>
+                            <label class="form-label">Custom Link</label>
+                            <input type="url" class="form-control" value="{{ $order->custom_link }}" readonly>
+                        </div>
+                        @elseif($order->status === 'delivered' && $order->courier_service_id)
+                        <div class="form-group" hidden>
+                            <label class="form-label">Custom Link</label>
+                            <input type="url" class="form-control" value="{{ $order->custom_link }}" readonly>
+                        </div>
+                    @elseif($order->status === 'delivered')
+                        <div class="form-group">
+                            <label class="form-label">Custom Link</label>
+                            <input type="url" class="form-control" value="{{ $order->custom_link }}" readonly>
+                        </div>
+                    @endif
+
 
                         <div class="form-group">
                             <label for="comment">Comment (Optional)</label>
@@ -263,19 +287,20 @@
                         <button type="submit" class="btn btn-primary">Update Status</button>
                     </form>
 
-                    @if($order->status == 'shipped' && $order->tracking_code)
-                    <div class="mt-4 p-3 bg-light rounded">
-                        <h6>Courier Information</h6>
-                        <p><strong>Courier:</strong> {{ $order->courier->name ?? 'N/A' }}</p>
-                        <p><strong>Tracking Code:</strong> {{ $order->tracking_code }}</p>
-                        <p><strong>Consignment ID:</strong> {{ $order->consignment_id ?? 'N/A' }}</p>
-                        <a href="https://steadfast.com.bd/track/?tracking_number={{ $order->tracking_code }}"
-                           target="_blank"
-                           class="btn btn-sm btn-info">
-                           Track Package
-                        </a>
-                    </div>
+                    @if($order->courier_service_id && in_array($order->status, ['shipped', 'courier_delivered', 'delivered']))
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6>Courier Information</h6>
+                            <p><strong>Courier:</strong> {{ $order->courier->name ?? 'N/A' }}</p>
+                            <p><strong>Tracking Code:</strong> {{ $order->tracking_code }}</p>
+                            <p><strong>Consignment ID:</strong> {{ $order->consignment_id ?? 'N/A' }}</p>
+                            <a href="https://steadfast.com.bd/t/{{ $order->tracking_code }}"
+                            target="_blank"
+                            class="btn btn-sm btn-info">
+                            Track Order
+                            </a>
+                        </div>
                     @endif
+
                 </div>
             </div>
 

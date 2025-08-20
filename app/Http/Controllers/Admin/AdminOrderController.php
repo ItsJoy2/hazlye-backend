@@ -84,6 +84,7 @@ class AdminOrderController extends Controller
             'courier_service_id' => 'nullable|required_if:status,shipped|exists:courier_services,id',
             'delivery_note' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
+            'custom_link' => 'nullable|url|max:255',
         ]);
 
         $allowedTransitions = [
@@ -107,6 +108,10 @@ class AdminOrderController extends Controller
 
         DB::beginTransaction();
 
+        if ($validated['status'] === 'courier_delivered' || $validated['status'] === 'delivered') {
+            $order->custom_link = $request->custom_link ?? $order->custom_link;
+        }
+
         try {
             if ($validated['status'] === 'shipped' && $order->status === 'shipped') {
                 throw new \Exception('This order is already marked as shipped.');
@@ -120,6 +125,7 @@ class AdminOrderController extends Controller
             if (isset($validated['comment'])) {
                 $order->comment = $validated['comment'];
             }
+
 
             if ($validated['status'] === 'shipped') {
                 $courier = CourierService::findOrFail($validated['courier_service_id']);

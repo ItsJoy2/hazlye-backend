@@ -30,7 +30,8 @@ class Order extends Model
         'tracking_code',
         'consignment_id',
         'courier_service_id',
-        'admin_discount'
+        'admin_discount',
+        'custom_link'
     ];
 
 

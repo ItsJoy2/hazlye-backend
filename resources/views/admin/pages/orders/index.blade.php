@@ -12,7 +12,7 @@
         <div class="card-body">
             @include('admin.modal.confirmationmodal')
             @include('admin.modal.successmodal')
-            
+
             <div id="alert-container">
                 @include('admin.layouts.partials.__alerts')
             </div>
@@ -101,7 +101,7 @@
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th>IP Address</th>
-                                @if($status === 'delivered')
+                                @if(in_array($status, ['courier_delivered', 'delivered']))
                                     <th>Track Order</th>
                                 @endif
                                 <th>Actions</th>
@@ -152,16 +152,18 @@
                                 </td>
 
                                 <td>{{ $order->ip_address }}</td>
-                                @if($status === 'delivered')
+                                @if(in_array($order->status, ['shipped', 'courier_delivered', 'delivered']))
                                     <td>
-                                        @if($order->tracking_code)
-                                            <a href="https://steadfast.com.bd/t/{{ $order->tracking_code }}"
-                                            target="_blank"
-                                            class="btn btn-sm btn-info">
-                                            Track
+                                        @php
+                                            $trackUrl = $order->tracking_code
+                                                ? "https://steadfast.com.bd/t/{$order->tracking_code}"
+                                                : ($order->custom_link ?? null);
+                                        @endphp
+
+                                        @if($trackUrl)
+                                            <a href="{{ $trackUrl }}" target="_blank" class="btn btn-sm btn-info">
+                                                Track
                                             </a>
-                                        @else
-                                            <span class="text-muted">No tracking</span>
                                         @endif
                                     </td>
                                 @endif
