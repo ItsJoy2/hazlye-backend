@@ -13,7 +13,10 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with(['images', 'category', 'variants.color', 'variants.options.size'])
-            ->withCount('reviews')
+            ->withCount(['reviews' => function ($q) {
+                $q->where('is_approved', true);
+            }])
+            ->withAvg('reviews', 'rating')
             ->active()
             ->latest()
             ->paginate(12);
