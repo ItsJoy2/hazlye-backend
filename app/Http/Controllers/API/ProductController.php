@@ -45,6 +45,34 @@ class ProductController extends Controller
 
         $product->makeHidden('Purchase_price');
 
+        $product->loadCount(['reviews' => function ($q) {
+            $q->where('is_approved', true);
+        }]);
+
+        $product->loadAvg('reviews', 'rating');
+
+        $ratingProgress = \App\Models\Review::selectRaw('rating, COUNT(*) as total')
+            ->where('product_id', $product->id)
+            ->where('is_approved', true)
+            ->groupBy('rating')
+            ->pluck('total', 'rating');
+
+        $ratingBreakdown = [
+            5 => $ratingProgress->get(5, 0),
+            4 => $ratingProgress->get(4, 0),
+            3 => $ratingProgress->get(3, 0),
+            2 => $ratingProgress->get(2, 0),
+            1 => $ratingProgress->get(1, 0),
+        ];
+
+        $totalReviews = array_sum($ratingBreakdown);
+        $ratingPercentages = [];
+        foreach ($ratingBreakdown as $star => $count) {
+            $ratingPercentages[$star] = $totalReviews > 0
+                ? round(($count / $totalReviews) * 100, 2)
+                : 0;
+        }
+
         // Add full URL to all images
         if ($product->main_image) {
             $product->main_image = $this->getFullImageUrl($product->main_image);
