@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 class AdminCouponController extends Controller
 {
@@ -40,7 +42,7 @@ class AdminCouponController extends Controller
     $validated['is_active'] = $request->has('is_active');
     $validated['apply_to_all'] = $request->has('apply_to_all');
 
-    \DB::beginTransaction();
+    DB::beginTransaction();
     try {
         $coupon = Coupon::create($validated);
 
@@ -48,14 +50,14 @@ class AdminCouponController extends Controller
             $coupon->products()->sync($validated['products']);
         }
 
-        \DB::commit();
+        DB::commit();
 
         return redirect()->route('admin.coupons.index')
             ->with('success', 'Coupon created successfully');
 
     } catch (\Exception $e) {
-        \DB::rollBack();
-        \Log::error('Coupon creation failed: ' . $e->getMessage());
+        DB::rollBack();
+        Log::error('Coupon creation failed: ' . $e->getMessage());
         return back()->withInput()
             ->with('error', 'Failed to create coupon. Please try again.');
     }
@@ -87,7 +89,7 @@ class AdminCouponController extends Controller
     $validated['is_active'] = $request->has('is_active');
     $validated['apply_to_all'] = $request->has('apply_to_all');
 
-    \DB::beginTransaction();
+    DB::beginTransaction();
     try {
         $coupon->update($validated);
 
@@ -99,14 +101,14 @@ class AdminCouponController extends Controller
             $coupon->products()->detach();
         }
 
-        \DB::commit();
+        DB::commit();
 
         return redirect()->route('admin.coupons.index')
             ->with('success', 'Coupon updated successfully');
 
     } catch (\Exception $e) {
-        \DB::rollBack();
-        \Log::error('Coupon update failed: ' . $e->getMessage());
+        DB::rollBack();
+        Log::error('Coupon update failed: ' . $e->getMessage());
         return back()->withInput()
             ->with('error', 'Failed to update coupon. Please try again.');
     }

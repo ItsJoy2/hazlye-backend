@@ -57,6 +57,17 @@ class Coupon extends Model
         $applicableProducts = [];
         $totalDiscount = 0;
 
+        // Calculate total cart value for minimum purchase check
+        $cartTotal = collect($cartItems)->sum(fn($item) => $item['price'] * $item['quantity']);
+
+        // Check minimum purchase requirement
+        if ($cartTotal < $this->min_purchase) {
+            return [
+                'total_discount' => 0,
+                'applicable_products' => []
+            ];
+        }
+
         $productIds = collect($cartItems)->pluck('product_id')->toArray();
 
         if (!$this->isValidForProducts($productIds)) {

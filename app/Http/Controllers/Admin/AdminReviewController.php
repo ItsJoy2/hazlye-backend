@@ -47,27 +47,26 @@ class AdminReviewController extends Controller
             'name' => 'required|string|max:255',
             'rating' => 'required|integer|min:1|max:5',
             'description' => 'required|string|max:1000',
-            'is_approved' => 'required|boolean',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'is_approved' => 'sometimes|boolean',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:6144',
             'images' => 'max:5'
         ]);
 
         try {
-            // Create user with random Bangladeshi mobile number
-            $mobile = '01' . rand(3, 9) . rand(10000000, 99999999);
-
-            $user = User::create([
-                'name' => $request->name,
-                'mobile' => $mobile,
-                'password' => bcrypt('12345678')
-            ]);
+            $user = User::firstOrCreate(
+                ['name' => $request->name],
+                [
+                    'mobile' => '01' . rand(3, 9) . rand(10000000, 99999999),
+                    'password' => bcrypt('12345678')
+                ]
+            );
 
             $review = Review::create([
                 'user_id' => $user->id,
                 'product_id' => $request->product_id,
                 'rating' => $request->rating,
                 'description' => $request->description,
-                'is_approved' => $request->is_approved
+                'is_approved' => $request->has('is_approved') ? $request->is_approved : false
             ]);
 
             if ($request->hasFile('images')) {
@@ -121,4 +120,5 @@ class AdminReviewController extends Controller
                 ->with('error', 'Failed to delete review: ' . $e->getMessage());
         }
     }
+
 }

@@ -188,18 +188,23 @@ class OrderController extends Controller
                 if ($coupon) {
                     $productIds = collect($request->items)->pluck('product_id')->toArray();
 
-                    $applicableSubtotal = $subtotal;
-                    if (!$coupon->apply_to_all) {
-                        $applicableSubtotal = collect($items)
-                            ->filter(fn($item) => $coupon->products->contains('id', $item['product_id']))
-                            ->sum(fn($item) => $item['price'] * $item['quantity']);
-                    }
+                    // Calculate subtotal for minimum purchase check
+                    $subtotal = collect($items)->sum(fn($item) => $item['price'] * $item['quantity']);
 
-                    if (!$coupon->isValid($subtotal, $productIds)) {
+                    // Check minimum purchase requirement first
+                    if ($subtotal < $coupon->min_purchase) {
                         throw new \Exception('Coupon is not valid for this order. Minimum purchase: ' . $coupon->min_purchase);
                     }
 
-                    $discount = $coupon->calculateDiscount($subtotal, $productIds, $applicableSubtotal);
+                    // Check if coupon is valid for products
+                    if (!$coupon->isValidForProducts($productIds)) {
+                        throw new \Exception('Coupon is not valid for any products in your cart');
+                    }
+
+                    // Calculate discount using the correct method
+                    $discountResult = $coupon->calculateDiscountForProducts($items);
+                    $discount = $discountResult['total_discount'];
+
                     $couponCode = $coupon->code;
                     $couponDetails = [
                         'code' => $coupon->code,

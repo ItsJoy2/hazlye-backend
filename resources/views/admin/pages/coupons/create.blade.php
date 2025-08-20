@@ -253,7 +253,7 @@
             }
         });
     });
-    </script>
+</script>
 
     <style>
         .product-checkboxes-container {
