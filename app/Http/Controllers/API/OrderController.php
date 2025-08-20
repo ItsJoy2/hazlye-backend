@@ -42,14 +42,13 @@ class OrderController extends Controller
 
         $blocked = BlockedCustomer::where(function($query) use ($request) {
             $query->where('phone', $request->phone)
-                ->orWhere('ip_address', $request->ip());
-        })
-        ->exists();
+                  ->orWhere('ip_address', $request->ip());
+        })->exists();
 
         if ($blocked) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are blocked from placing orders. please contact with Admin.'
+                'message' => 'You are blocked from placing orders. Please contact Admin.'
             ], 403);
         }
 
@@ -65,7 +64,6 @@ class OrderController extends Controller
             'items.*.color_name' => 'nullable|string',
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'comment' => 'nullable|string',
-
         ]);
 
         if ($validator->fails()) {
@@ -108,10 +106,7 @@ class OrderController extends Controller
                         throw new \Exception("Color is required for product with variants: {$product->name}");
                     }
 
-                    $variant = $product->variants->first(function ($variant) use ($itemData) {
-                        return $variant->color->name === $itemData['color_name'];
-                    });
-
+                    $variant = $product->variants->first(fn($v) => $v->color->name === $itemData['color_name']);
                     if (!$variant) {
                         throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: " .
                             $product->variants->pluck('color.name')->implode(', '));
@@ -121,10 +116,7 @@ class OrderController extends Controller
                         throw new \Exception("Size is required for product with variants: {$product->name}");
                     }
 
-                    $option = $variant->options->first(function ($option) use ($itemData) {
-                        return $option->size->name == $itemData['size_name'];
-                    });
-
+                    $option = $variant->options->first(fn($o) => $o->size->name == $itemData['size_name']);
                     if (!$option) {
                         throw new \Exception("Size '{$itemData['size_name']}' not available for product: {$product->name}. Available sizes: " .
                             $variant->options->pluck('size.name')->implode(', '));
@@ -141,10 +133,8 @@ class OrderController extends Controller
                     $colorId = $variant->color->id;
                     $sizeId = $option->size->id;
                     $colorCode = $variant->color->code;
+                    $itemPrice = $option->price ?? ($product->discount_price ?? $product->regular_price);
 
-
-                    $itemPrice = $option->price ??
-                                ($product->discount_price ?? $product->regular_price);
                 } else {
                     if ($product->total_stock < $itemData['quantity']) {
                         throw new \Exception("Insufficient stock for product: {$product->name}. Available: {$product->total_stock}, Requested: {$itemData['quantity']}");
@@ -154,7 +144,6 @@ class OrderController extends Controller
                         $sizeName = $itemData['size_name'];
                         $sizeId = $product->size_id;
                     }
-
 
                     $itemPrice = $product->discount_price ?? $product->regular_price;
                 }
@@ -173,6 +162,7 @@ class OrderController extends Controller
                     'color_id' => $colorId,
                     'variant_id' => $variantId,
                     'option_id' => $optionId,
+                    'variant_option_id' => $optionId, // ✅ important
                     'color_code' => $colorCode,
                     'total_price' => $itemTotal
                 ];
@@ -187,21 +177,16 @@ class OrderController extends Controller
 
                 if ($coupon) {
                     $productIds = collect($request->items)->pluck('product_id')->toArray();
-
-                    // Calculate subtotal for minimum purchase check
                     $subtotal = collect($items)->sum(fn($item) => $item['price'] * $item['quantity']);
 
-                    // Check minimum purchase requirement first
                     if ($subtotal < $coupon->min_purchase) {
                         throw new \Exception('Coupon is not valid for this order. Minimum purchase: ' . $coupon->min_purchase);
                     }
 
-                    // Check if coupon is valid for products
                     if (!$coupon->isValidForProducts($productIds)) {
                         throw new \Exception('Coupon is not valid for any products in your cart');
                     }
 
-                    // Calculate discount using the correct method
                     $discountResult = $coupon->calculateDiscountForProducts($items);
                     $discount = $discountResult['total_discount'];
 
@@ -218,11 +203,7 @@ class OrderController extends Controller
             }
 
             $total = $subtotal + $deliveryOption->charge - $discount;
-
-            $latestOrder = Order::latest()->first();
-            // $datePart = now()->format('Ymd');
-            $randomDigits = str_pad(mt_rand(1, 99999), 6, '0', STR_PAD_LEFT);
-            $orderNumber = "H-{$randomDigits}";
+            $orderNumber = "H-" . str_pad(mt_rand(1, 99999), 6, '0', STR_PAD_LEFT);
 
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -245,6 +226,7 @@ class OrderController extends Controller
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
+                    'variant_option_id' => $item['variant_option_id'], // ✅ fix
                     'variant_id' => $item['variant_id'],
                     'size_id' => $item['size_id'],
                     'color_id' => $item['color_id'],
@@ -256,11 +238,9 @@ class OrderController extends Controller
                 ]);
 
                 if ($item['option_id']) {
-
                     $rowsAffected = ProductVariantOption::where('id', $item['option_id'])
                         ->decrement('stock', $item['quantity']);
                 } else {
-
                     $rowsAffected = Product::where('id', $item['product_id'])
                         ->decrement('total_stock', $item['quantity']);
                 }
@@ -295,20 +275,18 @@ class OrderController extends Controller
                         'coupon_applied' => $order->coupon_code,
                         'coupon_details' => $couponDetails
                     ],
-                    'items' => array_map(function ($item) {
-                        return [
-                            'product_id' => $item['product_id'],
-                            'product_name' => $item['product_name'],
-                            'variant' => [
-                                'color' => $item['color_name'],
-                                'color_code' => $item['color_code'],
-                                'size' => $item['size_name']
-                            ],
-                            'quantity' => $item['quantity'],
-                            'unit_price' => $item['price'],
-                            'total_price' => $item['price'] * $item['quantity']
-                        ];
-                    }, $items),
+                    'items' => array_map(fn($item) => [
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'],
+                        'variant' => [
+                            'color' => $item['color_name'],
+                            'color_code' => $item['color_code'],
+                            'size' => $item['size_name']
+                        ],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['price'],
+                        'total_price' => $item['price'] * $item['quantity']
+                    ], $items),
                     'created_at' => $order->created_at->toIso8601String()
                 ],
                 'inventory_updates' => $inventoryUpdates
@@ -328,7 +306,6 @@ class OrderController extends Controller
                 'request' => $request->all(),
                 'ip' => $ipAddress,
             ]);
-
 
             return response()->json([
                 'success' => false,
@@ -373,7 +350,7 @@ class OrderController extends Controller
                 : null;
 
             $subtotal = 0;
-            // $items = [];
+            $items = [];
 
             if ($request->filled('items')) {
                 foreach ($request->items as $itemData) {
@@ -409,7 +386,6 @@ class OrderController extends Controller
                         $optionId = $option->id ?? null;
 
                         $colorCode = $variant->color->code ?? null;
-
                         $itemPrice = $option->price ?? $itemPrice;
                     }
 
@@ -427,15 +403,16 @@ class OrderController extends Controller
                         'color_id' => $colorId,
                         'variant_id' => $variantId,
                         'option_id' => $optionId,
+                        'variant_option_id' => $optionId,
                         'color_code' => $colorCode,
                         'total_price' => $itemTotal
                     ];
                 }
             }
 
-            $randomDigits = str_pad(mt_rand(1, 99999), 6, '0', STR_PAD_LEFT);
-            $orderNumber = "H-{$randomDigits}";
+            $orderNumber = "H-" . str_pad(mt_rand(1, 99999), 6, '0', STR_PAD_LEFT);
 
+            // Create Order
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'name' => $request->name,
@@ -450,21 +427,21 @@ class OrderController extends Controller
                 'ip_address' => $ipAddress,
             ]);
 
-            // foreach ($items as $item) {
-            //     OrderItem::create([
-            //         'order_id' => $order->id,
-            //         'product_id' => $item['product_id'],
-            //         'variant_id' => $item['variant_id'],
-            //         'option_id' => $item['option_id'],
-            //         'size_id' => $item['size_id'],
-            //         'color_id' => $item['color_id'],
-            //         'product_name' => $item['product_name'],
-            //         'price' => $item['price'],
-            //         'quantity' => $item['quantity'],
-            //         'size_name' => $item['size_name'],
-            //         'color_name' => $item['color_name'],
-            //     ]);
-            // }
+            // Save Order Items to DB
+            foreach ($items as $item) {
+                $order->items()->create([
+                    'product_id' => $item['product_id'],
+                    'variant_option_id' => $item['variant_option_id'],
+                    'variant_id' => $item['variant_id'],
+                    'size_id' => $item['size_id'],
+                    'color_id' => $item['color_id'],
+                    'product_name' => $item['product_name'],
+                    'price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'size_name' => $item['size_name'],
+                    'color_name' => $item['color_name'],
+                ]);
+            }
 
             DB::commit();
 
@@ -495,27 +472,25 @@ class OrderController extends Controller
     }
 
 
+    public function incompleteOrders()
+    {
+        $orders = Order::where('status', 'incomplete')
+                    ->latest()
+                    ->get();
 
-public function incompleteOrders()
-{
-    $orders = Order::where('status', 'incomplete')
-                ->latest()
-                ->get();
+        return response()->json([
+            'success' => true,
+            'data' => $orders
+        ]);
+    }
 
-    return response()->json([
-        'success' => true,
-        'data' => $orders
-    ]);
-}
+    public function showIncomplete($id)
+    {
+        $order = Order::where('status', 'incomplete')->findOrFail($id);
 
-public function showIncomplete($id)
-{
-    $order = Order::where('status', 'incomplete')->findOrFail($id);
-
-    return response()->json([
-        'success' => true,
-        'data' => $order
-    ]);
-}
-
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
+    }
 }

@@ -29,7 +29,8 @@ class Order extends Model
         'courier_response',
         'tracking_code',
         'consignment_id',
-        'courier_service_id'
+        'courier_service_id',
+        'admin_discount'
     ];
 
 
@@ -38,6 +39,7 @@ class Order extends Model
         'delivery_charge' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
+        'admin_discount' => 'decimal:2',
     ];
 
     public function items()

@@ -13,7 +13,6 @@
     <div class="row">
         <div class="col-md-8">
             <form id="form-order-items" style="width: 100% !important" action="{{ route('admin.orders.update.items', $order->id) }}" method="POST">
-
                 @csrf
                 @method('PUT')
 
@@ -21,12 +20,12 @@
                     <div class="card-header"><h5>Order Items</h5></div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table style="" class="table table-striped table-hover table-head-bg-primary mt-4" id="order-items-table">
+                            <table class="table table-striped table-hover table-head-bg-primary mt-4" id="order-items-table">
                                 <thead>
                                     <tr>
                                         <th>Image</th>
                                         <th>Product</th>
-                                        <th>SKU</th>
+                                        <th>SKU / Variant SKU</th>
                                         <th>Price</th>
                                         <th>Qty</th>
                                         <th>Total</th>
@@ -35,13 +34,13 @@
                                 </thead>
                                 <tbody>
                                     @foreach($order->items as $index => $item)
-                                        <tr>
+                                        <tr data-item-id="{{ $item->id }}">
                                             <td>
-                                                @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
-                                                    <img src="{{ asset('storage/'.$order->items[0]->product->main_image) }}"
-                                                         alt="{{ $order->items[0]->product->name }}"
-                                                         width="50"
-                                                         class="img-thumbnail">
+                                                @php
+                                                    $img = $item->variantOption?->image ?? $item->product->main_image ?? null;
+                                                @endphp
+                                                @if($img)
+                                                    <img src="{{ asset('storage/'.$img) }}" width="50" class="img-thumbnail" alt="{{ $item->product_name }}">
                                                 @else
                                                     <span class="text-muted">No image</span>
                                                 @endif
@@ -49,78 +48,24 @@
                                             <td>
                                                 {{ $item->product_name }}
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
-
-                                                @if($item->product && $item->product->has_variants)
-                                                    <!-- Variant product - show dropdowns for size and color -->
-                                                    <div class="variant-options mt-2">
-                                                        <div class="">
-                                                            <div class="">
-                                                                <label>Size:</label>
-                                                                <select name="items[{{ $index }}][size]" class="form-control form-control-sm">
-                                                                    <option value="">Select Size</option>
-                                                                    @foreach($item->product->variants->flatMap->options as $option)
-                                                                        @if($option->size)
-                                                                            <option value="{{ $option->size->name }}"
-                                                                                {{ $item->size_name == $option->size->name ? 'selected' : '' }}>
-                                                                                {{ $option->size->name }}
-                                                                            </option>
-                                                                        @endif
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                            <div class="">
-                                                                <label>Color:</label>
-                                                                <select name="items[{{ $index }}][color]" class="form-control form-control-sm">
-                                                                    <option value="">Select Color</option>
-                                                                    @foreach($item->product->variants as $variant)
-                                                                        @if($variant->color)
-                                                                            <option value="{{ $variant->color->name }}"
-                                                                                {{ $item->color_name == $variant->color->name ? 'selected' : '' }}
-                                                                                data-color-code="{{ $variant->color->code }}">
-                                                                                {{ $variant->color->name }}
-                                                                            </option>
-                                                                        @endif
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <!-- Non-variant product - simple text inputs -->
-                                                    <div class="">
-                                                        <div class="">
-                                                            <label>Size:</label>
-                                                            <input type="text" name="items[{{ $index }}][size]"
-                                                                   value="{{ $item->size_name }}"
-                                                                   class="form-control form-control-sm">
-                                                        </div>
-                                                        <div class="">
-                                                            <label>Color:</label>
-                                                            <input type="text" name="items[{{ $index }}][color]"
-                                                                   value="{{ $item->color_name }}"
-                                                                   class="form-control form-control-sm">
-                                                        </div>
-                                                    </div>
+                                                <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $item->product_id }}">
+                                                @if($item->variant_option_id)
+                                                    <input type="hidden" name="items[{{ $index }}][variant_option_id]" value="{{ $item->variant_option_id }}">
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($item->product && $item->product->has_variants)
-                                                    {{ $item->variantOption->sku ?? 'N/A' }}
-                                                @else
-                                                    {{ $item->product->sku ?? 'N/A' }}
-                                                @endif
+                                                @php
+                                                    $sku = $item->product->sku ?? '';
+                                                    if($item->variantOption){
+                                                        $sku .= ' / '.$item->variantOption->sku;
+                                                    }
+                                                @endphp
+                                                {{ $sku }}
                                             </td>
-                                            <td>&#2547;{{ number_format($item->price, 2) }}</td>
-                                            <td>
-                                                <input type="number" name="items[{{ $index }}][quantity]"
-                                                       value="{{ $item->quantity }}"
-                                                       class="form-control form-control-sm"
-                                                       style="width:60px;">
-                                            </td>
-                                            <td>&#2547;{{ number_format($item->price * $item->quantity, 2) }}</td>
-                                            <td>
-                                                <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
-                                            </td>
+                                            <td>&#2547;{{ number_format($item->price,2) }}</td>
+                                            <td><input type="number" name="items[{{ $index }}][quantity]" value="{{ $item->quantity }}" class="form-control form-control-sm" style="width:60px;"></td>
+                                            <td>&#2547;{{ number_format($item->price * $item->quantity,2) }}</td>
+                                            <td><button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -128,18 +73,17 @@
                         </div>
 
                         <hr>
-                        <h6>Add Product by SKU:</h6>
+                        <h6>Add Product by Name / SKU / Variant SKU:</h6>
                         <div class="input-group mb-3 position-relative">
-                            <input type="text" name="new_sku" class="form-control" placeholder="Enter Product SKU" autocomplete="off">
-                            <input type="number" name="new_quantity" class="form-control" placeholder="Qty" value="1" style="max-width:100px;">
-                            <div id="sku-suggestions"></div>
+                            <input type="text" id="search-product" class="form-control" placeholder="Type name, SKU or Variant SKU" autocomplete="off">
+                            <input type="number" id="search-quantity" class="form-control" placeholder="Qty" value="1" style="max-width:100px;">
+                            <div id="sku-suggestions" class="position-absolute bg-white border" style="z-index:1000;width:100%;display:none;"></div>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Update Order Items</button>
                     </div>
                 </div>
             </form>
-
         </div>
 
         <div class="col-md-4">
@@ -503,6 +447,7 @@
 
         // Define allowed status transitions based on current status
         const allowedTransitions = {
+            'incomplete': ['pending', 'hold','processing', 'cancelled'],
             'pending': ['hold', 'processing', 'cancelled'],
             'hold': ['processing', 'cancelled'],
             'processing': ['shipped', 'courier_delivered', 'cancelled'],
@@ -589,3 +534,98 @@
         }
     });
     </script>
+
+
+<script>
+    $(document).ready(function(){
+        let selectedProducts = {};
+
+        function renderRow(product, variant = null, quantity = 1){
+            let id = variant ? 'v'+variant.id : 'p'+product.id;
+            if(selectedProducts[id]) return;
+            selectedProducts[id] = true;
+
+            let img = variant?.image ?? product.main_image ?? '';
+            let sku = variant?.sku ?? product.sku ?? '';
+            let name = product.name;
+            let price = variant?.price ?? (product.discount_price ?? product.regular_price);
+            let index = $('#order-items-table tbody tr').length;
+
+            let row = `
+                <tr data-item-id="">
+                    <td>${img ? `<img src="/storage/${img}" width="50" class="img-thumbnail">` : '<span class="text-muted">No image</span>'}</td>
+                    <td>
+                        ${name}
+                        <input type="hidden" name="items[${index}][product_id]" value="${product.id}">
+                        ${variant ? `<input type="hidden" name="items[${index}][variant_option_id]" value="${variant.id}">` : ''}
+                    </td>
+                    <td>${product.sku}${variant ? ' / '+variant.sku : ''}</td>
+                    <td>&#2547;${price.toFixed(2)}</td>
+                    <td><input type="number" name="items[${index}][quantity]" value="${quantity}" class="form-control form-control-sm" style="width:60px;"></td>
+                    <td>&#2547;${(price*quantity).toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+            $('#order-items-table tbody').append(row);
+        }
+
+        // Remove row
+        $(document).on('click','.remove-item',function(){
+            $(this).closest('tr').remove();
+        });
+
+        // Client-side search without extra route
+        let allProducts = @json(\App\Models\Product::with('variants.options')->get());
+        let allVariants = @json(\App\Models\ProductVariantOption::with('variant.product')->get());
+
+        $('#search-product').on('input',function(){
+            let query = $(this).val().toLowerCase();
+            if(query.length < 1){
+                $('#sku-suggestions').hide();
+                return;
+            }
+
+            let matches = [];
+
+            allProducts.forEach(p=>{
+                if(p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)){
+                    matches.push({product:p, variant:null});
+                }
+            });
+
+            allVariants.forEach(v=>{
+                let prodName = v.variant.product.name.toLowerCase();
+                if(prodName.includes(query) || v.sku.toLowerCase().includes(query) || v.variant.product.sku.toLowerCase().includes(query)){
+                    matches.push({product:v.variant.product, variant:v});
+                }
+            });
+
+            let html = '';
+            matches.forEach(m=>{
+                let image = m.variant?.image ?? m.product.main_image ?? '';
+                let sku = m.variant?.sku ?? m.product.sku ?? '';
+                html += `<div class="p-2 border-bottom suggestion-item" data-product='${JSON.stringify(m.product)}' data-variant='${JSON.stringify(m.variant ?? null)}'>
+                            <img src="/storage/${image}" width="40" class="me-2">${m.product.name} <small>(${sku})</small>
+                        </div>`;
+            });
+
+            $('#sku-suggestions').html(html).show();
+        });
+
+        // Click suggestion to add
+        $(document).on('click','.suggestion-item',function(){
+            let product = JSON.parse($(this).attr('data-product'));
+            let variant = $(this).attr('data-variant') ? JSON.parse($(this).attr('data-variant')) : null;
+            let qty = parseInt($('#search-quantity').val() || 1);
+            renderRow(product, variant, qty);
+            $('#sku-suggestions').hide();
+            $('#search-product').val('');
+        });
+
+        $(document).click(function(e){
+            if(!$(e.target).closest('#sku-suggestions,#search-product').length){
+                $('#sku-suggestions').hide();
+            }
+        });
+    });
+</script>

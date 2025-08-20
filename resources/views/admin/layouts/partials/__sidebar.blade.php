@@ -37,7 +37,7 @@
 						</li>
                         <li class="nav-item">
 							<a  data-bs-toggle="collapse" href="#orders">
-								<i class="fas fa-users"></i>
+								<i class="fas fa-shopping-cart"></i>
 								<p>Orders</p>
 								<span class="caret"></span>
 							</a>
@@ -118,7 +118,7 @@
 						</li>
                         <li class="nav-item">
 							<a href={{route('admin.orders.incomplete')}}>
-								<i class="far fa-money-bill-alt"></i>
+								<i class="fas fa-exclamation-circle"></i>
                                 <span class="sub-item">Incomplete Orders</span>
                                 <span class="badge badge-secondary float-right">
                                     {{ App\Models\Order::where('status', 'incomplete')->count() }}
@@ -127,134 +127,25 @@
 						</li>
                         <li class="nav-item">
 							<a href="{{route('admin.orders.shipped')}}">
-								<i class="far fa-money-bill-alt"></i>
+								<i class="fas fa-truck"></i>
 								<p>Courier Orders</p>
-								{{-- <span class="caret"></span> --}}
 							</a>
-							{{-- <div class="collapse" id="categories">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a href="{{route('admin.categories.index')}}">
-											<span class="sub-item">All Categories</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.categories.create')}}">
-											<span class="sub-item">Create Category</span>
-										</a>
-									</li>
-								</ul>
-							</div> --}}
 						</li>
                         <li class="nav-item">
 							<a href={{route('admin.customers.index')}}>
-								<i class="far fa-money-bill-alt"></i>
+								<i class="fas fa-user-tag"></i>
 								<p>Customers</p>
-								{{-- <span class="caret"></span> --}}
 							</a>
-							{{-- <div class="collapse" id="customers">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a  href="{{route('admin.customers.index')}}">
-											<span class="sub-item">Customers List</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.customers.blocked')}}">
-											<span class="sub-item">Block Customers</span>
-										</a>
-									</li>
-								</ul>
-							</div> --}}
 						</li>
                         <li class="nav-item">
 							<a href={{route('admin.customers.blocked')}}>
-								<i class="far fa-money-bill-alt"></i>
+								<i class="fas fa-user-lock"></i>
 								<p>Block Customers</p>
-								{{-- <span class="caret"></span> --}}
 							</a>
-							{{-- <div class="collapse" id="customers">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a  href="{{route('admin.customers.index')}}">
-											<span class="sub-item">Customers List</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.customers.blocked')}}">
-											<span class="sub-item">Block Customers</span>
-										</a>
-									</li>
-								</ul>
-							</div> --}}
-						</li>
-                        <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#categories">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Categories</p>
-								<span class="caret"></span>
-							</a>
-							<div class="collapse" id="categories">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a href="{{route('admin.categories.index')}}">
-											<span class="sub-item">All Categories</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.categories.create')}}">
-											<span class="sub-item">Create Category</span>
-										</a>
-									</li>
-								</ul>
-							</div>
-						</li>
-
-                        <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#colors">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Colors</p>
-								<span class="caret"></span>
-							</a>
-							<div class="collapse" id="colors">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a href="{{route('admin.colors.index')}}">
-											<span class="sub-item">All Colors</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.colors.create')}}">
-											<span class="sub-item">Color Management</span>
-										</a>
-									</li>
-								</ul>
-							</div>
-						</li>
-                        <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#sizes">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Sizes</p>
-								<span class="caret"></span>
-							</a>
-							<div class="collapse" id="sizes">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a href="{{route('admin.sizes.index')}}">
-											<span class="sub-item">All Sizes</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.sizes.create')}}">
-											<span class="sub-item">Add Size</span>
-										</a>
-									</li>
-								</ul>
-							</div>
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#products">
-								<i class="far fa-money-bill-alt"></i>
+								<i class="fas fa-box-open"></i>
 								<p>Products</p>
 								<span class="caret"></span>
 							</a>
@@ -274,92 +165,150 @@
 							</div>
 						</li>
                         <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#coupons">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Coupons</p>
-								<span class="caret"></span>
-							</a>
-							<div class="collapse" id="coupons">
-								<ul class="nav nav-collapse">
+                            <a data-bs-toggle="collapse" href="#variantSettings" aria-expanded="false">
+                                <i class="fas fa-sliders-h"></i>
+                                <p>Variant Settings</p>
+                                <span class="caret"></span>
+                            </a>
+                            <div class="collapse" id="variantSettings">
+                                <ul class="nav nav-collapse">
+
+                                    {{-- Categories --}}
                                     <li>
-										<a href="{{route('admin.coupons.index')}}">
-											<span class="sub-item">All Coupons</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.coupons.create')}}">
-											<span class="sub-item">Add Coupon</span>
-										</a>
-									</li>
-								</ul>
-							</div>
-						</li>
+                                        <a data-bs-toggle="collapse" href="#categoriesMenu" aria-expanded="false">
+                                            <span class="sub-item fw-bold">Categories</span>
+                                            <span class="caret"></span>
+                                        </a>
+                                        <div class="collapse" id="categoriesMenu">
+                                            <ul class="nav nav-collapse">
+                                                <li>
+                                                    <a href="{{ route('admin.categories.index') }}">
+                                                        <span class="sub-item">All Categories</span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('admin.categories.create') }}">
+                                                        <span class="sub-item">Create Category</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+
+                                    {{-- Colors --}}
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#colorsMenu" aria-expanded="false">
+                                            <span class="sub-item fw-bold">Colors</span>
+                                            <span class="caret"></span>
+                                        </a>
+                                        <div class="collapse" id="colorsMenu">
+                                            <ul class="nav nav-collapse">
+                                                <li>
+                                                    <a href="{{ route('admin.colors.index') }}">
+                                                        <span class="sub-item">All Colors</span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('admin.colors.create') }}">
+                                                        <span class="sub-item">Color Management</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+
+                                    {{-- Sizes --}}
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#sizesMenu" aria-expanded="false">
+                                            <span class="sub-item fw-bold">Sizes</span>
+                                            <span class="caret"></span>
+                                        </a>
+                                        <div class="collapse" id="sizesMenu">
+                                            <ul class="nav nav-collapse" style="margin-left:20px;">
+                                                <li>
+                                                    <a href="{{ route('admin.sizes.index') }}">
+                                                        <span class="sub-item">All Sizes</span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('admin.sizes.create') }}">
+                                                        <span class="sub-item">Add Size</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+
+                                    {{-- Coupons --}}
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#couponsMenu" aria-expanded="false">
+                                            <span class="sub-item fw-bold">Coupons</span>
+                                            <span class="caret"></span>
+                                        </a>
+                                        <div class="collapse" id="couponsMenu">
+                                            <ul class="nav nav-collapse">
+                                                <li>
+                                                    <a href="{{ route('admin.coupons.index') }}">
+                                                        <span class="sub-item">All Coupons</span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('admin.coupons.create') }}">
+                                                        <span class="sub-item">Add Coupon</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </li>
                         <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#delivery-options">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Delivery Options</p>
-								<span class="caret"></span>
-							</a>
-							<div class="collapse" id="delivery-options">
-								<ul class="nav nav-collapse">
+                            <a data-bs-toggle="collapse" href="#frontendSettings" aria-expanded="false">
+                                <i class="fas fa-cogs"></i>
+                                <p>Frontend Settings</p>
+                                <span class="caret"></span>
+                            </a>
+                            <div class="collapse" id="frontendSettings">
+                                <ul class="nav nav-collapse">
+
+                                    {{-- Home Section --}}
                                     <li>
-										<a href="{{route('admin.delivery-options.index')}}">
-											<span class="sub-item">All Options</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.delivery-options.create')}}">
-											<span class="sub-item">Add Delivery Options</span>
-										</a>
-									</li>
-								</ul>
-							</div>
-						</li>
-                        <li class="nav-item">
-							<a href="{{route('admin.homepage-sections.index')}}">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Home Section</p>
-								{{-- <span class="caret"></span> --}}
-							</a>
-							{{-- <div class="collapse" id="categories">
-								<ul class="nav nav-collapse">
+                                        <a href="{{ route('admin.homepage-sections.index') }}">
+                                            <span class="sub-item">Home Section</span>
+                                        </a>
+                                    </li>
+
+                                    {{-- Banners --}}
                                     <li>
-										<a href="{{route('admin.categories.index')}}">
-											<span class="sub-item">All Categories</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.categories.create')}}">
-											<span class="sub-item">Create Category</span>
-										</a>
-									</li>
-								</ul>
-							</div> --}}
-						</li>
-                        <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#banners">
-								<i class="far fa-money-bill-alt"></i>
-								<p>Banners</p>
-								<span class="caret"></span>
-							</a>
-							<div class="collapse" id="banners">
-								<ul class="nav nav-collapse">
-                                    <li>
-										<a  href="{{route('admin.banners.index')}}">
-											<span class="sub-item">Banners All</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{route('admin.banners.create')}}">
-											<span class="sub-item">Create Banners</span>
-										</a>
-									</li>
-								</ul>
-							</div>
-						</li>
+                                        <a data-bs-toggle="collapse" href="#bannersMenu" aria-expanded="false">
+                                            <span class="sub-item fw-bold">Banners</span>
+                                            <span class="caret"></span>
+                                        </a>
+                                        <div class="collapse" id="bannersMenu">
+                                            <ul class="nav nav-collapse">
+                                                <li>
+                                                    <a href="{{ route('admin.banners.index') }}">
+                                                        <span class="sub-item">Banners All</span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('admin.banners.create') }}">
+                                                        <span class="sub-item">Create Banners</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </li>
+
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#couriers">
-								<i class="far fa-money-bill-alt"></i>
+								<i class="fas fa-dolly"></i>
 								<p>Couriers Management</p>
 								<span class="caret"></span>
 							</a>
@@ -380,7 +329,7 @@
 						</li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#reviews">
-								<i class="fas fa-cog"></i>
+								<i class="fas fa-comments"></i>
 								<p>Reviews</p>
 								<span class="caret"></span>
 							</a>
@@ -401,12 +350,11 @@
 							</div>
 						</li>
                         <li class="nav-item">
-							<a data-bs-toggle="collapse" href="#settings">
+							<a href="{{route('admin.general.settings')}}">
 								<i class="fas fa-cog"></i>
-								<p>Settings</p>
-								<span class="caret"></span>
+								<p>General Settings</p>
 							</a>
-							<div class="collapse" id="settings">
+							{{-- <div class="collapse" id="settings">
 								<ul class="nav nav-collapse">
                                     <li>
 										<a href="{{route('admin.general.settings')}}">
@@ -415,7 +363,7 @@
 									</li>
 
 								</ul>
-							</div>
+							</div> --}}
 						</li>
 					</ul>
 				</div>

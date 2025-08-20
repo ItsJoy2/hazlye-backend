@@ -80,13 +80,14 @@ class AdminOrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,hold,processing,shipped,courier_delivered,delivered,cancelled',
+            'status' => 'required|string|in:incomplete,pending,hold,processing,shipped,courier_delivered,delivered,cancelled',
             'courier_service_id' => 'nullable|required_if:status,shipped|exists:courier_services,id',
             'delivery_note' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
         ]);
 
         $allowedTransitions = [
+            'incomplete' => ['pending', 'hold', 'processing', 'cancelled'],
             'pending' => ['hold', 'processing', 'cancelled'],
             'hold' => ['processing', 'cancelled'],
             'processing' => ['shipped','courier_delivered', 'cancelled'],
@@ -173,13 +174,13 @@ class AdminOrderController extends Controller
 
     public function edit(Order $order)
     {
-        $order->load(['items.product', 'coupon', 'deliveryOption', 'items.variantOption']);
+        $order->load(['items.product', 'items.variantOption', 'coupon', 'deliveryOption']);
         $couriers = CourierService::all();
         $deliveryOptions = DeliveryOption::where('is_active', true)->get();
 
-
         return view('admin.pages.orders.edit', compact('order', 'couriers', 'deliveryOptions'));
     }
+
 
     public function destroy($id)
 {
@@ -358,87 +359,52 @@ public function updateDeliveryCharge(Request $request, Order $order)
     ]);
 
     $order->update([
-        'delivery_option_id' => $request->delivery_option_id,
-        'delivery_charge' => $request->delivery_charge,
-        'admin_discount' => $request->admin_discount,
-        'total' => max(0, $order->subtotal - $order->discount - $request->admin_discount + $request->delivery_charge)
-    ]);
+    'delivery_option_id' => $request->delivery_option_id,
+    'delivery_charge' => $request->delivery_charge,
+    'admin_discount' => $request->admin_discount,
+    'total' => max(0, $order->subtotal - $order->discount - $request->admin_discount + $request->delivery_charge),
+]);
 
     return back()->with('success', 'Delivery information updated successfully.');
 }
 
 public function updateItems(Request $request, Order $order)
 {
-    if ($request->has('removed_ids')) {
-        OrderItem::whereIn('id', $request->removed_ids)
-                 ->where('order_id', $order->id)
-                 ->delete();
+    // Remove deleted items
+    if($request->has('removed_ids')){
+        OrderItem::whereIn('id',$request->removed_ids)->where('order_id',$order->id)->delete();
     }
 
-    if ($request->has('items')) {
-        foreach ($request->items as $itemData) {
-            if (!empty($itemData['id'])) {
+    if($request->has('items')){
+        foreach($request->items as $itemData){
+            if(!empty($itemData['id'])){
                 $item = OrderItem::find($itemData['id']);
-                if ($item) {
-                    $item->quantity = $itemData['quantity'];
-
-                    if (isset($itemData['size'])) {
-                        $item->size_name = $itemData['size'];
-                    }
-
-                    if (isset($itemData['color'])) {
-                        $item->color_name = $itemData['color'];
-                    }
-
+                if($item){
+                    $item->quantity = $itemData['quantity'] ?? $item->quantity;
                     $item->save();
                 }
-            }
-        }
-    }
-
-    if ($request->filled('new_sku')) {
-        $sku = $request->new_sku;
-        $quantity = $request->new_quantity ?? 1;
-
-        $product = Product::where('sku', $sku)->first();
-
-        if ($product) {
-            $order->items()->create([
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'price' => $product->discount_price ?? $product->regular_price,
-                'quantity' => $quantity,
-                'size_name' => $product->size->name ?? null,
-                'color_name' => null,
-            ]);
-        } else {
-            $variantOption = ProductVariantOption::where('sku', $sku)->first();
-
-            if ($variantOption) {
-                $variant = $variantOption->variant;
-                $product = $variant->product;
+            } else {
+                $product = Product::find($itemData['product_id']);
+                $variant = isset($itemData['variant_option_id']) ? ProductVariantOption::find($itemData['variant_option_id']) : null;
 
                 $order->items()->create([
                     'product_id' => $product->id,
                     'product_name' => $product->name,
-                    'price' => $variantOption->price,
-                    'quantity' => $quantity,
-                    'size_name' => $variantOption->size->name ?? null,
-                    'color_name' => $variant->color->name ?? null,
-                    'variant_option_id' => $variantOption->id,
+                    'price' => $variant?->price ?? ($product->discount_price ?? $product->regular_price),
+                    'quantity' => $itemData['quantity'] ?? 1,
+                    'variant_option_id' => $variant?->id,
+                    'size_name' => $variant?->size->name ?? $product->size?->name ?? null,
+                    'color_name' => $variant?->variant->color->name ?? null,
                 ]);
             }
-        }
-
-        if (!$product && !$variantOption) {
-            return back()->with('error', 'No product or variant found with SKU: ' . $sku);
         }
     }
 
     $this->recalculateOrderTotals($order);
 
-    return back()->with('success', 'Order items updated successfully.');
+    return back()->with('success','Order items updated successfully.');
 }
+
 
 protected function recalculateOrderTotals(Order $order)
 {
@@ -762,7 +728,6 @@ public function bulkDelete(Request $request)
         'order_ids.*' => 'exists:orders,id',
     ]);
 
-    // cancelled এবং incomplete অর্ডার ডিলিট করার জন্য
     $orders = Order::whereIn('id', $request->order_ids)
         ->whereIn('status', ['cancelled', 'incomplete'])
         ->get();
