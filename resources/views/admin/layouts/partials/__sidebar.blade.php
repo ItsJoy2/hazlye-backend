@@ -6,7 +6,7 @@
 
 					<a href="{{route('admin.dashboard')}}" class="logo">
                         @if($generalSettings->logo)
-                        <img src="{{ Storage::url($generalSettings->logo) }}" alt="{{ $generalSettings->app_name }}" class="navbar-brand" height="50">
+                        <img src="{{ asset('storage/' . str_replace('public/', '', $generalSettings->logo)) }}" alt="{{ $generalSettings->app_name }}" class="navbar-brand" height="50">
                     @else
                         <h1>{{ $generalSettings->app_name ?? 'App Name' }}</h1>
                     @endif
@@ -375,6 +375,28 @@
 											<span class="sub-item">Add Courier</span>
 										</a>
 									</li>
+								</ul>
+							</div>
+						</li>
+                        <li class="nav-item">
+							<a data-bs-toggle="collapse" href="#reviews">
+								<i class="fas fa-cog"></i>
+								<p>Reviews</p>
+								<span class="caret"></span>
+							</a>
+							<div class="collapse" id="reviews">
+								<ul class="nav nav-collapse">
+                                    <li>
+										<a href="{{route('admin.reviews.index')}}">
+											<span class="sub-item">All Reviews</span>
+										</a>
+									</li>
+                                    <li>
+										<a href="{{route('admin.reviews.create')}}">
+											<span class="sub-item">Create Review</span>
+										</a>
+									</li>
+
 								</ul>
 							</div>
 						</li>

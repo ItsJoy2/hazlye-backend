@@ -13,6 +13,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with(['images', 'category', 'variants.color', 'variants.options.size'])
+            ->withCount('reviews')
             ->active()
             ->latest()
             ->paginate(12);

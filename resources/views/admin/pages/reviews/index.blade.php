@@ -32,14 +32,14 @@
                     @endif
 
                     <div class="table-responsive">
-                        <div class="d-flex justify-content-end mb-3">
-                            <form action="{{ route('admin.reviews.index') }}" method="GET" class="form-inline">
-                                <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by Name / Product" style="width: 250px;">
+                        <div class="d-flex justify-content-end mb-3 ">
+                            <form action="{{ route('admin.reviews.index') }}" method="GET" class="form-inline d-flex" style=" background:none;border:none;margin:0">
+                                <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search..." style="width: 250px;">
                                 <button type="submit" class="btn btn-primary ml-2">
-                                    <i class="fas fa-search"></i> Search
+                                    <i class="fas fa-search"></i>
                                 </button>
                                 @if(request('search'))
-                                    <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary ml-2">Clear</a>
+                                    <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary ml-2" style="margin-left: 10px">X</a>
                                 @endif
                             </form>
                         </div>
