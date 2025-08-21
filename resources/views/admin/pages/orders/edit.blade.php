@@ -208,7 +208,7 @@
                     <h5>Update Order Status</h5>
                 </div>
                 <div class="card-body">
-                    <form id="order-status-form" action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                    <form id="order-status-form" action="{{ route('admin.orders.update-status', $order) }}" method="POST" style="width: auto;">
                         @csrf
                         @method('PUT')
 
