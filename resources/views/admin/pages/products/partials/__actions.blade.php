@@ -1,4 +1,4 @@
-<div class="btn-group btn-group-sm" role="group">
+<div class="btn-group btn-group-sm px-4" role="group">
     <a href="{{ route('admin.products.show', $product->id) }}"
        class="btn btn-info p-1 mx-1" title="View">
         <i class="fas fa-eye"></i>

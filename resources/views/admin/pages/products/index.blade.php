@@ -29,6 +29,7 @@
                             <th>Total Stock</th>
                             <th>Category</th>
                             <th>Variants</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="product-table">
@@ -52,12 +53,18 @@
                                     <span class="badge bg-secondary">{{ $variant->color->name ?? '' }}</span>
                                 @endforeach
                             </td>
+                            <td>
+                                @include('admin.pages.products.partials.__actions')
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
 
                 <div class="mt-3" id="no-results" style="display: none;">No products found.</div>
+            </div>
+            <div class="d-flex justify-content-center mt-4">
+                {{ $products->appends(['search' => request('search')])->links('admin.layouts.partials.__pagination') }}
             </div>
         </div>
     </div>
@@ -93,4 +100,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
