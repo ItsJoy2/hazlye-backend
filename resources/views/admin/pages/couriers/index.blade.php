@@ -57,6 +57,9 @@
             </table>
         </div>
 
+
+             @include('admin.modal.deletemodal')
+
         <div class="card-footer clearfix">
             <div class="mt-4">
                 {{ $couriers->links('admin.layouts.partials.__pagination') }}

@@ -97,8 +97,11 @@
                                     <td>{{ $order->tracking_code ?? 'N/A' }}</td>
                                     <td>{{ $order->updated_at->format('M d, Y h:i A') }}</td>
                                     <td>
-                                        {{-- <span class="badge badge-info">Shipped</span> --}}
+                                        <span class="badge bg-info">{{ $order->delivery_status_code }}</span>
+                                        {{-- <br>
+                                        <small>{{ $order->delivery_status_description }}</small> --}}
                                     </td>
+
                                     <td>
                                         @if($order->tracking_code)
                                             <a href="https://steadfast.com.bd/t/{{ $order->tracking_code }}"
@@ -123,7 +126,7 @@
                 </div>
 
                 <div class="card-footer clearfix">
-                    {{ $orders->appends(request()->query())->links() }}
+                    {{ $orders->appends(request()->query())->links('admin.layouts.partials.__pagination') }}
                 </div>
             </div>
         </div>

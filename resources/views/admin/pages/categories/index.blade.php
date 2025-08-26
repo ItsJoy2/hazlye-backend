@@ -13,8 +13,12 @@
 
             <div class="mt-4">
                 @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
             </div>
 
             <table class="table table-striped table-hover table-head-bg-primary mt-4">
@@ -55,6 +59,8 @@
                     @endforelse
                 </tbody>
             </table>
+
+             @include('admin.modal.deletemodal')
 
             <div class="mt-4">
                 {{ $categories->links('admin.layouts.partials.__pagination') }}

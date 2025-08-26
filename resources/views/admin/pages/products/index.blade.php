@@ -11,9 +11,12 @@
                 </a>
             </div>
         </div>
-        <div class="card-body">
-            @include('admin.layouts.partials.__alerts')
 
+
+        <div class="card-body">
+            <div class="mb-3 d-flex justify-content-end">
+                <input type="text" id="search" class="form-control" placeholder="Search...." style="width: 30%;">
+            </div>
             <div class="table-responsive">
                 <table class="table table-striped table-hover table-head-bg-primary mt-4" width="100%" cellspacing="0">
                     <thead>
@@ -22,21 +25,20 @@
                             <th>Name</th>
                             <th>Image</th>
                             <th>Buy Price</th>
-                            <th>Regular sell Price</th>
+                            <th>Regular Price</th>
                             <th>Total Stock</th>
                             <th>Category</th>
                             <th>Variants</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="product-table">
                         @foreach($products as $index => $product)
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $product->name }}</td>
                             <td>
                                 @if($product->main_image)
-                                    <img src="{{ asset('storage/'.$product->main_image) }}" alt="{{ $product->name }}" width="30" class="img-thumbnail">
+                                    <img src="{{ asset('storage/'.$product->main_image) }}" width="30" class="img-thumbnail">
                                 @else
                                     <span class="text-muted">No main image</span>
                                 @endif
@@ -47,21 +49,48 @@
                             <td>{{ $product->category->name ?? 'N/A' }}</td>
                             <td>
                                 @foreach($product->variants as $variant)
-                                    <span class="badge bg-secondary">{{ $variant->color->name }}</span>
+                                    <span class="badge bg-secondary">{{ $variant->color->name ?? '' }}</span>
                                 @endforeach
-                            </td>
-                            <td>
-                                @include('admin.pages.products.partials.__actions')
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
+
+                <div class="mt-3" id="no-results" style="display: none;">No products found.</div>
             </div>
-        </div>
-        <div class="card-footer clearfix">
-            {{ $products->links('admin.layouts.partials.__pagination') }}
         </div>
     </div>
 </div>
 @endsection
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const tableBody = document.getElementById('product-table');
+    const noResults = document.getElementById('no-results');
+
+    searchInput.addEventListener('keyup', function() {
+        let query = this.value;
+
+        fetch(`{{ route('admin.products.index') }}?search=${query}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.text())
+        .then(html => {
+            tableBody.innerHTML = html;
+
+            if(html.trim() === '') {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        })
+        .catch(err => console.log(err));
+    });
+});
+</script>
+

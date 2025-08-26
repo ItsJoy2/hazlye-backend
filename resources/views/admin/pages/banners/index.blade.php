@@ -36,7 +36,7 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $banner->title }}</td>
                         <td>
-                            <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" style="max-width: 100px; max-height: 50px;">
+                            <img src="{{ $banner->image }}" alt="{{ $banner->title }}" style="max-width: 100px; max-height: 50px;">
                         </td>
                         <td>{{ ucfirst($banner->page_type) }}</td>
                         <td>{{ $banner->position ? ucfirst($banner->position) : 'N/A' }}</td>

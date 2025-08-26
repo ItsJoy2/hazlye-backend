@@ -1,173 +1,210 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Order #{{ $order->order_number }}</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sohoj Kroy Invoice - Order #{{ $order->order_number }}</title>
     <style>
-        @font-face {
-            font-family: 'Noto Sans Bengali';
-            font-style: normal;
-            font-weight: 400;
-            src: url(data:font/truetype;charset=utf-8;base64,{{ base64_encode(file_get_contents(public_path('assets/admin/fonts/NotoSansBengali/TiroBangla-Regular.ttf'))) }}) format('truetype');
-        }
-
-        @page {
-            size: 2in auto;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
+        
         body {
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;
-            width: 2in;
-            margin: 0;
-            padding: 2px;
-            font-size: 8px;
-            line-height: 1.2;
+            background-color: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
         }
-        * {
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
+        
+        .invoice-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .header {
+        
+        .invoice-header {
             text-align: center;
-            margin-bottom: 3px;
-            padding-bottom: 3px;
-            border-bottom: 1px dashed #ccc;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
         }
-        .header h3 {
-            margin: 2px 0;
-            font-size: 9px;
-            font-weight: 700;
+        
+        .invoice-header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
-        .info-section {
-            margin-bottom: 3px;
-            padding-bottom: 3px;
-            border-bottom: 1px dashed #ccc;
+        
+        .order-info {
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 14px;
         }
-        .info-section p {
-            margin: 2px 0;
-            word-break: break-word;
+        
+        .courier-info {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
         }
-        .products {
+        
+        .courier-info p {
+            margin: 3px 0;
+        }
+        
+        .invoice-to {
+            margin-bottom: 15px;
+        }
+        
+        .invoice-to h2 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            text-decoration: underline;
+        }
+        
+        .invoice-to p {
+            margin: 3px 0;
+        }
+        
+        .address {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .product-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 3px;
+            margin: 20px 0;
         }
-        .products th {
-            font-size: 7px;
-            padding: 1px;
-            border-bottom: 1px solid #000;
+        
+        .product-table th, .product-table td {
+            padding: 8px 5px;
             text-align: left;
+            border-bottom: 1px solid #ddd;
         }
-        .products td {
-            padding: 1px;
-            vertical-align: top;
-            font-size: 8px;
+        
+        .product-table th {
+            font-weight: bold;
+            border-bottom: 2px solid #333;
         }
-        .product-name {
-            word-break: break-word;
-            max-width: 0.8in;
-        }
-        .footer {
-            text-align: center;
-            font-size: 7px;
-            margin-top: 3px;
-            padding-top: 3px;
-            border-top: 1px dashed #ccc;
-        }
-        .text-right {
+        
+        .product-table td:last-child, 
+        .product-table th:last-child {
             text-align: right;
         }
-        .tfoot-row {
-            border-top: 1px dashed #000;
+        
+        .totals {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px solid #333;
         }
-        .logo img {
-            max-height: 30px;
-            width: auto;
+        
+        .totals p {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .due-amount {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px dashed #333;
+            padding-top: 10px;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                background-color: white;
+            }
+            
+            .invoice-container {
+                box-shadow: none;
+                max-width: 100%;
+                padding: 15px;
+            }
+            
+            .invoice-header h1 {
+                font-size: 22px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
-            @if(isset($generalSettings->logo))
-                <img src="{{ Storage::url($generalSettings->logo) }}" alt="Hazlye" height="50px">
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <h1>Sohoj kroy</h1>
+            <div class="order-info">Order #{{ $order->order_number }}</div>
+        </div>
+        
+        <div class="courier-info">
+            <p><strong>Courier:</strong> {{ $order->courier->name ?? 'mohasagor' }}</p>
+            <p><strong>Delivery ID:</strong> {{ $order->tracking_code ?? $order->consignment_id ?? 'N/A' }}</p>
+        </div>
+        
+        <div class="invoice-to">
+            <h2>Invoice To:</h2>
+            <p><strong>{{ $order->name }}</strong></p>
+            <p>{{ $order->phone }}</p>
+            
+            <div class="address">
+                <p>- <strong>Address:</strong> {{ $order->address }},</p>
+                <p>{{ $order->thana }}, {{ $order->district }}</p>
+            </div>
+        </div>
+        
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($order->items as $item)
+                <tr>
+                    <td>{{ $item->product_name }}</td>
+                    <td>{{ $item->quantity }}</td>
+                    <td>{{ number_format($item->price, 2) }}৳</td>
+                    <td>{{ number_format($item->price * $item->quantity, 2) }}৳</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        
+        <div class="totals">
+            <p><span>Sub Total</span> <span>{{ number_format($order->subtotal, 2) }}৳</span></p>
+            <p><span>Delivery Fee</span> <span>{{ number_format($order->delivery_charge, 2) }}৳</span></p>
+            @if($order->discount > 0)
+            <p><span>Discount</span> <span>-{{ number_format($order->discount, 2) }}৳</span></p>
             @endif
         </div>
-        <h3>Order #{{ $order->order_number }}</h3>
-    </div>
-
-    <div class="info-section customer-info">
-        <p><strong>CUSTOMER:</strong> {{ $order->name }}</p>
-        <p><strong>PHONE:</strong> {{ $order->phone }}</p>
-        <p><strong>ADDRESS:</strong> {{ $order->address }}, {{ $order->thana }}, {{ $order->district }}</p>
-    </div>
-
-
-    <table class="products">
-        <thead>
-            <tr>
-                <th>ITEM</th>
-                <th>SIZE</th>
-                <th>QTY</th>
-                <th>PRICE</th>
-                {{-- <th class="product-img-cell">IMG</th> --}}
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($order->items as $item)
-            <tr>
-                <td class="product-name">{{ $item->product_name }}</td>
-                <td>{{ $item->size_name ?? '-' }}</td>
-                <td>{{ $item->quantity }}</td>
-                <td>{{ number_format($item->price, 2) }}৳</td>
-                {{-- <td class="product-img-cell">
-                    @if($item->product && $item->product->image)
-                        @php
-                            $imagePath = storage_path('public/storage/' . $item->product->image);
-                        @endphp
-                        @if(file_exists($imagePath))
-                            <img class="product-img" src="{{ $imagePath }}" alt="{{ $item->product_name }}">
-                        @else
-                            <span>-</span>
-                        @endif
-                    @else
-                        -
-                    @endif
-                </td> --}}
-            </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr class="tfoot-row">
-                <td colspan="2"><strong>TOTAL ITEMS</strong></td>
-                <td><strong>{{ $order->items->sum('quantity') }}</strong></td>
-                <td colspan="2"></td>
-            </tr>
-            {{-- <tr>
-                <td colspan="2"><strong>SUBTOTAL</strong></td>
-                <td colspan="2" class="text-right">{{ number_format($order->subtotal, 2) }}৳</td>
-            </tr>
-            @if($order->discount > 0)
-            <tr>
-                <td colspan="2"><strong>DISCOUNT</strong></td>
-                <td colspan="2" class="text-right">-{{ number_format($order->discount, 2) }}৳</td>
-            </tr>
-            @endif
-            <tr>
-                <td colspan="2"><strong>DELIVERY CHARGE</strong></td>
-                <td colspan="2" class="text-right">{{ number_format($order->delivery_charge, 2) }}৳</td>
-            </tr> --}}
-            <tr>
-                <td colspan="2"><strong>TOTAL PAYABLE</strong></td>
-                <td colspan="2" class="text-right" style="padding-right:10px;">{{ number_format($order->total, 2) }}৳</td>
-            </tr>
-        </tfoot>
-    </table>
-
-    <div class="footer">
-        Printed: {{ now()->format('d M Y H:i') }}
+        
+        <div class="due-amount">
+            <p><strong>Due Amount</strong></p>
+            <p>{{ number_format($order->total, 2) }}৳</p>
+        </div>
+        
+        <div class="footer">
+            <p>Printed: {{ now()->format('d M Y H:i') }}</p>
+            <p>Thank you for your business!</p>
+        </div>
     </div>
 </body>
 </html>

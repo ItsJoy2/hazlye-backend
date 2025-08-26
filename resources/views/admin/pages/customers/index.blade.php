@@ -15,16 +15,34 @@
             </div> --}}
         </div>
         <div class="card-body">
-            <div class="table-responsive">
+                    <div class="table-responsive">
+                @php
+                    $districts = config('bd_location');
+                    $selDist = request('district'); // Filter value
+                    $selThana = request('thana');   // Filter value
+                @endphp
                 <form method="GET" action="{{ route('admin.customers.index') }}" class="row g-3 mb-4">
                     <div class="col-md-3">
                         <input type="text" name="phone" class="form-control" placeholder="Phone" value="{{ request('phone') }}">
                     </div>
-                    <div class="col-md-3">
-                        <input type="text" name="district" class="form-control" placeholder="District" value="{{ request('district') }}">
+                   <div class="col-md-3">
+                        <select id="district" name="district" class="form-control">
+                            <option value="">Select District</option>
+                            @foreach($districts as $d => $thanas)
+                                <option value="{{ $d }}" {{ $selDist == $d ? 'selected' : '' }}>{{ $d }}</option>
+                            @endforeach
+                        </select>
                     </div>
+
                     <div class="col-md-3">
-                        <input type="text" name="thana" class="form-control" placeholder="Thana" value="{{ request('thana') }}">
+                        <select id="thana" name="thana" class="form-control" {{ $selDist ? '' : 'disabled' }}>
+                            <option value="">Select Thana</option>
+                            @if($selDist && isset($districts[$selDist]))
+                                @foreach($districts[$selDist] as $th)
+                                    <option value="{{ $th }}" {{ $selThana == $th ? 'selected' : '' }}>{{ $th }}</option>
+                                @endforeach
+                            @endif
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <button type="submit" class="btn btn-primary">Filter</button>
@@ -94,7 +112,7 @@
                                 <td class="text-right">&#2547;{{ $customer['total_spent'] }}</td>
                                 <td class="text-center">{{ $customer['last_order_at'] }}</td>
                                 <td class="text-center">
-                                    <a href="{{ route('admin.orders.index', ['phone' => $customer['phone']]) }}"
+                                    <a href="{{ route('admin.customers.orders_detail', ['phone' => $customer['phone']]) }}"
                                     class="btn btn-sm btn-info" title="View Orders">
                                         <i class="fas fa-list"></i>
                                     </a>
@@ -186,3 +204,24 @@
         margin-top: 6px;
     } */
 </style>
+<script>
+    const districts = @json($districts); // Config data
+
+    $(document).ready(function() {
+        $('#district').change(function() {
+            const selectedDistrict = $(this).val();
+            const $thana = $('#thana');
+
+            $thana.empty().append('<option value="">Select Thana</option>');
+
+            if(selectedDistrict && districts[selectedDistrict]) {
+                districts[selectedDistrict].forEach(function(th) {
+                    $thana.append('<option value="'+th+'">'+th+'</option>');
+                });
+                $thana.prop('disabled', false);
+            } else {
+                $thana.prop('disabled', true);
+            }
+        });
+    });
+</script>

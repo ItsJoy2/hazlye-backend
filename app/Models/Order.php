@@ -89,10 +89,15 @@ public function getCourierStatusAttribute()
 }
 
 
-protected $appends = ['pdf_url'];
+protected $appends = ['pdf_url', 'delivery_status'];
 
 public function getPdfUrlAttribute()
 {
     return $this->pdf_path ? Storage::url($this->pdf_path) : null;
+}
+
+public function getDeliveryStatusAttribute()
+{
+    return getDeliveryStatus($this);
 }
 }

@@ -190,6 +190,34 @@
     });
 </script>
 
+{{-- <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('name');
+        const slugInput = document.getElementById('slug');
+        let manuallyEdited = false;
+
+        // Auto-generate slug when name changes, but only if slug wasn't manually edited
+        nameInput.addEventListener('input', function() {
+            if (!manuallyEdited) {
+                slugInput.value = slugify(nameInput.value);
+            }
+        });
+
+        slugInput.addEventListener('input', function() {
+            manuallyEdited = true;
+        });
+
+        function slugify(text) {
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-]+/g, '')
+                .replace(/\-\-+/g, '-')
+                .replace(/^-+/, '')
+                .replace(/-+$/, '');
+        }
+    });
+</script> --}}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const nameInput = document.getElementById('name');
@@ -199,26 +227,57 @@
         // Auto-generate slug when name changes, but only if slug wasn't manually edited
         nameInput.addEventListener('input', function() {
             if (!manuallyEdited) {
-                slugInput.value = slugify(nameInput.value) + '-' + Math.random().toString(36).substring(2, 7);
+                slugInput.value = slugify(nameInput.value);
             }
         });
 
-        // Track if user manually edits the slug
         slugInput.addEventListener('input', function() {
             manuallyEdited = true;
         });
 
-        // Slugify function that works with Bangla characters
         function slugify(text) {
-            return text.toString().toLowerCase()
-                .replace(/\s+/g, '-')           // Replace spaces with -
-                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-                .replace(/^-+/, '')             // Trim - from start of text
-                .replace(/-+$/, '');             // Trim - from end of text
+            // First, transliterate Bangla → Avro-style English
+            const transliterated = avroTransliterate(text);
+
+            // Then, generate slug
+            return transliterated
+                .toString()
+                .toLowerCase()
+                .replace(/\s+/g, '-')        // Replace spaces with -
+                .replace(/[^\w\-]+/g, '')   // Remove all non-word chars
+                .replace(/\-\-+/g, '-')     // Replace multiple - with single -
+                .replace(/^-+/, '')         // Trim - from start
+                .replace(/-+$/, '');        // Trim - from end
+        }
+
+        function avroTransliterate(text) {
+            const map = {
+                'অ': 'o', 'আ': 'a', 'ই': 'i', 'ঈ': 'ee', 'উ': 'u', 'ঊ': 'oo',
+                'ঋ': 'ri', 'এ': 'e', 'ঐ': 'oi', 'ও': 'o', 'ঔ': 'ou',
+
+                'ক': 'k', 'খ': 'kh', 'গ': 'g', 'ঘ': 'gh', 'ঙ': 'ng',
+                'চ': 'ch', 'ছ': 'chh', 'জ': 'j', 'ঝ': 'jh', 'ঞ': 'n',
+                'ট': 't', 'ঠ': 'th', 'ড': 'd', 'ঢ': 'dh', 'ণ': 'n',
+                'ত': 't', 'থ': 'th', 'দ': 'd', 'ধ': 'dh', 'ন': 'n',
+                'প': 'p', 'ফ': 'ph', 'ব': 'b', 'ভ': 'bh', 'ম': 'm',
+                'য': 'j', 'র': 'r', 'ল': 'l', 'শ': 'sh', 'ষ': 'sh', 'স': 's',
+                'হ': 'h', 'ড়': 'r', 'ঢ়': 'rh', 'য়': 'y',
+
+                'া': 'a', 'ি': 'i', 'ী': 'ee', 'ু': 'u', 'ূ': 'oo',
+                'ে': 'e', 'ৈ': 'oi', 'ো': 'o', 'ৌ': 'ou',
+
+                'ং': 'ng', 'ঃ': 'h', 'ঁ': 'n'
+            };
+
+            let result = '';
+            for (let char of text) {
+                result += map[char] !== undefined ? map[char] : char;
+            }
+            return result;
         }
     });
 </script>
+
 
 <style>
     @media (min-width: 768px) {

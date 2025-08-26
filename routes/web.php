@@ -102,6 +102,9 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
 
     Route::get('/customers', [AdminOrderController::class, 'customerList'])->name('admin.customers.index');
+    Route::get('customers/orders/{phone}', [AdminOrderController::class, 'customerOrdersDetail'])
+    ->name('admin.customers.orders_detail');
+
 
     Route::post('/customers/block', [AdminOrderController::class, 'blockCustomer'])->name('admin.customers.block');
     Route::post('/customers/unblock', [AdminOrderController::class, 'unblockCustomer'])->name('admin.customers.unblock');

@@ -152,7 +152,7 @@
                                 </td>
 
                                 <td>{{ $order->ip_address }}</td>
-                                @if(in_array($order->status, ['shipped', 'courier_delivered', 'delivered']))
+                                @if(in_array($status, ['shipped', 'courier_delivered', 'delivered']))
                                     <td>
                                         @php
                                             $trackUrl = $order->tracking_code

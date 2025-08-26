@@ -19,11 +19,52 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->paginate(20);
+        $query = Product::with(['category', 'variants.color', 'variants.options']);
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                ->orWhere('sku', 'like', "%$search%")
+                ->orWhereHas('variants.options', function($q2) use ($search) {
+                    $q2->where('sku', 'like', "%$search%");
+                });
+            });
+        }
+
+        $products = $query->latest()->paginate(20);
+
+        if($request->ajax()) {
+            $html = '';
+            foreach($products as $index => $product) {
+                $html .= '<tr>';
+                $html .= '<td>'.($index + 1).'</td>';
+                $html .= '<td>'.$product->name.'</td>';
+                $html .= '<td>';
+                $html .= $product->main_image
+                        ? '<img src="'.asset('storage/'.$product->main_image).'" width="30" class="img-thumbnail">'
+                        : '<span class="text-muted">No main image</span>';
+                $html .= '</td>';
+                $html .= '<td>&#2547;'.number_format($product->buy_price,2).'</td>';
+                $html .= '<td>&#2547;'.number_format($product->regular_price,2).'</td>';
+                $html .= '<td>'.number_format($product->total_stock).' PCS</td>';
+                $html .= '<td>'.($product->category->name ?? 'N/A').'</td>';
+                $html .= '<td>';
+                foreach($product->variants as $variant){
+                    $html .= '<span class="badge bg-secondary">'.($variant->color->name ?? '').'</span> ';
+                }
+                $html .= '</td>';
+                $html .= '</tr>';
+            }
+            return $html;
+        }
+
         return view('admin.pages.products.index', compact('products'));
     }
+
 
     public function create()
     {

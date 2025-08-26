@@ -12,7 +12,7 @@ use App\Models\CourierService;
 use App\Models\DeliveryOption;
 use Illuminate\Support\Carbon;
 use App\Models\BlockedCustomer;
-use Barryvdh\DomPDF\Facade\Pdf;
+// use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\CustomersExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,9 +22,53 @@ use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Mpdf\Mpdf;
+use Mpdf\Config\FontVariables;
+use Mpdf\Config\ConfigVariables;
 
 class AdminOrderController extends Controller
 {
+
+    public function download(Order $order)
+    {
+        $order->load(['items.product', 'coupon']);
+        $couriers = CourierService::all();
+
+        $html = view('admin.layouts.invoice', compact('order','couriers'))->render();
+
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => [54, 200],
+            'default_font' => 'solaimanlipi',
+            'fontDir' => array_merge($fontDirs, [
+                public_path('assets/admin/fonts'),
+            ]),
+            'fontdata' => $fontData + [
+                'solaimanlipi' => [
+                    'R' => 'SolaimanLipi.ttf',
+                    'useOTL' => 0xFF,
+                ]
+            ],
+            'default_font_size' => 9,
+            'margin_left' => 3,
+            'margin_right' => 3,
+            'margin_top' => 3,
+            'margin_bottom' => 3,
+            'margin_header' => 0,
+            'margin_footer' => 0,
+        ]);
+
+        $mpdf->WriteHTML($html);
+
+        return $mpdf->Output('order-'.$order->order_number.'.pdf', 'D');
+    }
+
     public function index(Request $request)
     {
         $query = Order::with(['items', 'coupon', 'items.variantOption',  'deliveryOption' ])
@@ -229,33 +273,56 @@ class AdminOrderController extends Controller
         }
 
         $query = Order::select([
-                'name',
-                'phone',
-                DB::raw('MIN(address) as primary_address'),
-                DB::raw('MIN(district) as district'),
-                DB::raw('MIN(thana) as thana'),
+                'orders.name',
+                'orders.phone',
+                DB::raw('MIN(orders.address) as primary_address'),
+                DB::raw('MIN(orders.district) as district'),
+                DB::raw('MIN(orders.thana) as thana'),
                 DB::raw('COUNT(DISTINCT orders.id) as order_count'),
                 DB::raw('SUM(order_items.quantity) as total_products'),
                 DB::raw('SUM(orders.total) as total_spent'),
                 DB::raw('MAX(orders.created_at) as last_order_at')
             ])
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+            ->leftJoin('product_variant_options', 'product_variants.id', '=', 'product_variant_options.variant_id')
             ->where('orders.status', 'delivered')
-            ->groupBy('name', 'phone');
+            ->groupBy('orders.name', 'orders.phone');
 
+        // Filters
         if ($request->filled('phone')) {
-            $query->where('phone', 'like', '%' . $request->phone . '%');
+            $query->where('orders.phone', 'like', '%' . $request->phone . '%');
         }
-
         if ($request->filled('district')) {
-            $query->where('district', 'like', '%' . $request->district . '%');
+            $query->where('orders.district', 'like', '%' . $request->district . '%');
         }
-
         if ($request->filled('thana')) {
-            $query->where('thana', 'like', '%' . $request->thana . '%');
+            $query->where('orders.thana', 'like', '%' . $request->thana . '%');
         }
 
-        $allCustomers = $query->orderBy('total_spent', 'desc')->get();
+        // Search
+        if ($request->filled('search')) {
+            $searchTerm = strtolower($request->search);
+
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(orders.name) LIKE ?', ["%{$searchTerm}%"])
+                ->orWhereRaw('LOWER(orders.phone) LIKE ?', ["%{$searchTerm}%"])
+                ->orWhereIn('orders.phone', function($sub) use ($searchTerm) {
+                    $sub->select('orders.phone')
+                        ->from('orders')
+                        ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+                        ->join('products', 'order_items.product_id', '=', 'products.id')
+                        ->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                        ->leftJoin('product_variant_options', 'product_variants.id', '=', 'product_variant_options.variant_id')
+                        ->whereRaw('LOWER(products.name) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhereRaw('LOWER(products.sku) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhereRaw('LOWER(product_variant_options.sku) LIKE ?', ["%{$searchTerm}%"]);
+                });
+            });
+        }
+
+        $allCustomers = $query->orderBy('orders.phone')->get();
 
         $customersWithIds = $allCustomers->map(function ($customer) use ($customerIdMap) {
             return [
@@ -274,20 +341,9 @@ class AdminOrderController extends Controller
             return !is_null($customer['customer_id']);
         });
 
-
-        if ($request->filled('search')) {
-            $searchTerm = strtolower($request->search);
-            $customersWithIds = $customersWithIds->filter(function ($customer) use ($searchTerm) {
-                return str_contains(strtolower($customer['name']), $searchTerm) ||
-                       str_contains(strtolower($customer['phone']), $searchTerm) ||
-                       $customer['customer_id'] == $searchTerm;
-            });
-        }
-
-
         $customersWithIds = $customersWithIds->sortBy('customer_id')->values();
 
-
+        // Pagination
         $page = LengthAwarePaginator::resolveCurrentPage();
         $perPage = 20;
         $currentPageItems = $customersWithIds->slice(($page - 1) * $perPage, $perPage)->values();
@@ -311,27 +367,50 @@ class AdminOrderController extends Controller
 
 
 
-public function download(Order $order)
-{
-    $order->load([
-        'items.product',
-        'coupon',
-        'courier'
-    ]);
+    public function customerOrdersDetail($phone)
+    {
+        // Fetch delivered orders for the customer
+        $orders = Order::where('phone', $phone)
+            ->where('status', 'delivered')
+            ->with(['items.product', 'items.variantOption.variant.color', 'items.variantOption.size'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    foreach ($order->items as $item) {
-        if ($item->product && $item->product->thumbnail) {
-            $item->product->thumbnail_path = storage_path('app/public/' . $item->product->thumbnail);
-        }
+        $customerName = $orders->first()?->name ?? 'Unknown Customer';
+
+        return view('admin.pages.customers.orders_detail', compact('orders', 'customerName', 'phone'));
     }
 
-    $pdf = Pdf::loadView('admin.layouts.invoice', compact('order'))
-        ->setPaper([0, 0, 144, 9999], 'portrait')
-        ->setOption('enable-local-file-access', true)
-        ->setOption('defaultFont', 'Noto Sans Bengali');
 
-    return $pdf->download('order-'.$order->order_number.'.pdf');
-}
+// public function download(Order $order)
+// {
+//     $order->load([
+//         'items.product',
+//         'coupon',
+//         'courier'
+//     ]);
+
+//     $lineHeight = 8;
+//     $baseHeight = 200;
+//     $itemCount = count($order->items);
+//     $calculatedHeight = $baseHeight + ($itemCount * $lineHeight);
+
+//     $paperHeight = max($calculatedHeight, 150);
+//     $pdf = Pdf::loadView('admin.layouts.invoice', compact('order'))
+//         ->setPaper([0, 0, 144, $paperHeight], 'portrait')
+//         ->setOption('enable-local-file-access', true)
+//         ->setOption('defaultFont', 'SolaimanLipi')
+//         ->setOption('fontHeightRatio', 1.1)
+//         ->setOption('isRemoteEnabled', true)
+//         ->setOption('isHtml5ParserEnabled', true)
+//         ->setOption('fontDir', public_path('assets/admin/fonts'));
+
+//     return $pdf->download('order-'.$order->order_number.'.pdf');
+// }
+
+
+
+
 
 public function update(Request $request, Order $order)
 {
@@ -602,48 +681,61 @@ public function getVariants(Product $product)
     return response()->json($variants);
 }
 
-public function shippedOrders(Request $request)
-{
-    $query = Order::with(['items', 'coupon', 'items.variantOption', 'deliveryOption', 'courier'])
-        ->whereIn('status', ['shipped', 'courier_delivered', 'delivered'])
-        ->latest();
+    public function shippedOrders(Request $request)
+    {
+        $query = Order::with([
+                'items',
+                'coupon',
+                'items.variantOption',
+                'deliveryOption',
+                'courier'
+            ])
+            ->whereIn('status', ['shipped', 'courier_delivered'])
+            ->latest();
 
-    if ($request->filled('date_from')) {
-        $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('courier_service_id')) {
+            $query->where('courier_service_id', $request->courier_service_id);
+        }
+
+        if ($request->filled('tracking_code')) {
+            $query->where('tracking_code', 'like', '%' . $request->tracking_code . '%');
+        }
+
+        $orders = $query->paginate(10);
+
+        // Live fetch delivery status for each order
+        foreach($orders as $order) {
+            $status = getDeliveryStatus($order);
+            $order->delivery_status_code = $status['code'];
+            $order->delivery_status_description = $status['description'];
+        }
+
+        $dateFrom = $request->date_from ?? '';
+        $dateTo = $request->date_to ?? '';
+        $courierServiceId = $request->courier_service_id ?? '';
+        $trackingCode = $request->tracking_code ?? '';
+
+        $couriers = CourierService::all();
+
+        return view('admin.pages.orders.courier_order', compact(
+            'orders',
+            'dateFrom',
+            'dateTo',
+            'courierServiceId',
+            'trackingCode',
+            'couriers'
+        ));
     }
 
-    if ($request->filled('date_to')) {
-        $query->whereDate('created_at', '<=', $request->date_to);
-    }
 
-    // Filter by courier
-    if ($request->filled('courier_service_id')) {
-        $query->where('courier_service_id', $request->courier_service_id);
-    }
-
-    // Filter by tracking code
-    if ($request->filled('tracking_code')) {
-        $query->where('tracking_code', 'like', '%' . $request->tracking_code . '%');
-    }
-
-    $orders = $query->paginate(10);
-
-    $dateFrom = $request->date_from ?? '';
-    $dateTo = $request->date_to ?? '';
-    $courierServiceId = $request->courier_service_id ?? '';
-    $trackingCode = $request->tracking_code ?? '';
-
-    $couriers = CourierService::all();
-
-    return view('admin.pages.orders.courier_order', compact(
-        'orders',
-        'dateFrom',
-        'dateTo',
-        'courierServiceId',
-        'trackingCode',
-        'couriers'
-    ));
-}
 
 
 public function blockedCustomers(Request $request)

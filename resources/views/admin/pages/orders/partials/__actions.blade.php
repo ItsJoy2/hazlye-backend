@@ -10,8 +10,8 @@
     </a>
     @if($order->status !== 'incomplete')
         <a href="{{ route('admin.orders.download', $order) }}"
-            class="btn btn-secondary p-1 mx-1" title="Download PDF">
-            <i class="fas fa-file-pdf bg-none"></i>
+        class="btn btn-secondary p-1 mx-1" title="Download PDF">
+        <i class="fas fa-file-pdf"></i>
         </a>
     @endif
      @if($order->status === 'cancelled')
