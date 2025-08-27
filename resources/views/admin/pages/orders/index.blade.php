@@ -200,153 +200,206 @@
 @endsection
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
-    $(document).ready(function() {
-        $('#selectAllCheckbox').on('change', function() {
-            $('.order-checkbox:not(:disabled)').prop('checked', $(this).prop('checked'));
+$(document).ready(function() {
+
+    // ================================
+    // 1. Select / Deselect All Checkboxes
+    // ================================
+    $('#selectAllCheckbox').on('change', function() {
+        const checked = $(this).prop('checked');
+        $('.order-checkbox:not(:disabled)').prop('checked', checked);
+
+        // If checked, add hidden input to mark "all filtered"
+        if(checked) {
+            if($('#allFilteredInput').length === 0) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    id: 'allFilteredInput',
+                    name: 'all_filtered',
+                    value: true
+                }).appendTo('#bulkActionForm');
+            }
+        } else {
+            $('#allFilteredInput').remove();
+        }
+    });
+
+    // When individual checkbox changes, manage Select All
+    $('.order-checkbox').on('change', function() {
+        const allChecked = $('.order-checkbox:not(:disabled)').length === $('.order-checkbox:checked:not(:disabled)').length;
+        $('#selectAllCheckbox').prop('checked', allChecked);
+
+        if(allChecked) {
+            if($('#allFilteredInput').length === 0) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    id: 'allFilteredInput',
+                    name: 'all_filtered',
+                    value: true
+                }).appendTo('#bulkActionForm');
+            }
+        } else {
+            $('#allFilteredInput').remove();
+        }
+    });
+
+    // Optional buttons to select/deselect all visible checkboxes
+    $('#selectAllBtn').click(function() {
+        $('.order-checkbox:not(:disabled)').prop('checked', true);
+        $('#selectAllCheckbox').prop('checked', true);
+
+        if($('#allFilteredInput').length === 0) {
+            $('<input>').attr({
+                type: 'hidden',
+                id: 'allFilteredInput',
+                name: 'all_filtered',
+                value: true
+            }).appendTo('#bulkActionForm');
+        }
+    });
+
+    $('#deselectAllBtn').click(function() {
+        $('.order-checkbox:not(:disabled)').prop('checked', false);
+        $('#selectAllCheckbox').prop('checked', false);
+        $('#allFilteredInput').remove();
+    });
+
+
+    // ================================
+    // 2. Export Selected or All Filtered Orders
+    // ================================
+    $('#exportBtn').click(function() {
+        const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
+
+        const form = $('<form>', {
+            method: 'POST',
+            action: "{{ route('admin.orders.export') }}",
+            target: '_blank'
         });
 
-        $('#selectAllBtn').click(function() {
-            $('.order-checkbox:not(:disabled)').prop('checked', true);
-            $('#selectAllCheckbox').prop('checked', true);
-        });
+        form.append($('<input>', { type: 'hidden', name: '_token', value: "{{ csrf_token() }}" }));
 
-        $('#deselectAllBtn').click(function() {
-            $('.order-checkbox:not(:disabled)').prop('checked', false);
-            $('#selectAllCheckbox').prop('checked', false);
-        });
-
-        $('.order-checkbox').on('change', function() {
-            const allChecked = $('.order-checkbox:not(:disabled)').length === $('.order-checkbox:checked:not(:disabled)').length;
-            $('#selectAllCheckbox').prop('checked', allChecked);
-        });
-
-        $('#exportBtn').click(function() {
-            const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
-
+        if($('#allFilteredInput').length) {
+            // Export all filtered data
+            form.append($('<input>', { type: 'hidden', name: 'all_filtered', value: true }));
+            form.append($('<input>', { type: 'hidden', name: 'status', value: "{{ request('status', 'all') }}" }));
+            form.append($('<input>', { type: 'hidden', name: 'date_from', value: "{{ request('date_from') }}" }));
+            form.append($('<input>', { type: 'hidden', name: 'date_to', value: "{{ request('date_to') }}" }));
+            form.append($('<input>', { type: 'hidden', name: 'district', value: "{{ request('district') }}" }));
+            form.append($('<input>', { type: 'hidden', name: 'thana', value: "{{ request('thana') }}" }));
+            form.append($('<input>', { type: 'hidden', name: 'product_search', value: "{{ request('product_search') }}" }));
+        } else {
+            // Export selected checkboxes
             if(selectedOrders.length === 0) {
                 alert('Please select at least one order to export');
                 return;
             }
+            selectedOrders.each(function() {
+                form.append($('<input>', { type: 'hidden', name: 'order_ids[]', value: $(this).val() }));
+            });
+        }
 
+        $('body').append(form);
+        form.submit();
+    });
+
+
+    // ================================
+    // 3. Export All Button (Optional)
+    // ================================
+    $('#exportAllBtn').click(function() {
+        const dateFrom = $('input[name="date_from"]').val();
+        const dateTo = $('input[name="date_to"]').val();
+        const status = $('select[name="status"]').val();
+        const district = $('input[name="district"]').val();
+        const thana = $('input[name="thana"]').val();
+        const productSearch = $('input[name="product_search"]').val();
+
+        const form = $('<form>', {
+            method: 'POST',
+            action: "{{ route('admin.orders.export') }}",
+            target: '_blank'
+        });
+
+        form.append($('<input>', { type: 'hidden', name: '_token', value: "{{ csrf_token() }}" }));
+        form.append($('<input>', { type: 'hidden', name: 'date_from', value: dateFrom }));
+        form.append($('<input>', { type: 'hidden', name: 'date_to', value: dateTo }));
+        form.append($('<input>', { type: 'hidden', name: 'status', value: status }));
+        form.append($('<input>', { type: 'hidden', name: 'district', value: district }));
+        form.append($('<input>', { type: 'hidden', name: 'thana', value: thana }));
+        form.append($('<input>', { type: 'hidden', name: 'product_search', value: productSearch }));
+        form.append($('<input>', { type: 'hidden', name: 'all_filtered', value: true }));
+
+        $('body').append(form);
+        form.submit();
+    });
+
+
+    // ================================
+    // 4. Bulk Delete Orders
+    // ================================
+    $('#bulkDeleteBtn').click(function() {
+        const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
+
+        if(selectedOrders.length === 0) {
+            alert('Please select at least one order to delete');
+            return;
+        }
+
+        $('#confirmModal').modal('show');
+
+        $('#confirmModal .modal-title').text('Are You Sure?');
+        $('#confirmModal .modal-body p').html(`Do you really want to delete <strong>${selectedOrders.length}</strong> orders? This process cannot be undone.`);
+
+        $('#confirmButton').off('click');
+
+        $('#confirmButton').on('click', function() {
             const orderIds = selectedOrders.map(function() {
                 return $(this).val();
             }).get();
 
-            const form = $('<form>', {
-                'method': 'POST',
-                'action': "{{ route('admin.orders.export') }}"
+            $.ajax({
+                url: "{{ route('admin.orders.bulk-delete') }}",
+                method: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    order_ids: orderIds
+                },
+                beforeSend: function() {
+                    $('#confirmButton').html('<i class="fas fa-spinner fa-spin"></i> Deleting...');
+                },
+                success: function(response) {
+                    $('#confirmModal').modal('hide');
+                    $('#successModal').modal('show');
+                    $('#successModal .modal-title').text('Success');
+                    $('#successModal .modal-body p').html(`<strong>${selectedOrders.length}</strong> orders have been deleted successfully.`);
+                    setTimeout(function() { location.reload(); }, 2000);
+                },
+                error: function(xhr) {
+                    $('#confirmModal').modal('hide');
+                    $('#successModal').modal('show');
+                    $('#successModal .modal-title').text('Error');
+                    $('#successModal .modal-body p').html(`<div class="alert alert-danger">${xhr.responseJSON?.message || 'Something went wrong while deleting orders.'}</div>`);
+                    $('#confirmButton').html('Delete');
+                }
             });
-
-            form.append($('<input>', {
-                'type': 'hidden',
-                'name': '_token',
-                'value': "{{ csrf_token() }}"
-            }));
-
-            orderIds.forEach(function(id) {
-                form.append($('<input>', {
-                    'type': 'hidden',
-                    'name': 'order_ids[]',
-                    'value': id
-                }));
-            });
-
-            form.append($('<input>', {
-                'type': 'hidden',
-                'name': 'status',
-                'value': "{{ request('status', 'all') }}"
-            }));
-
-            form.append($('<input>', {
-                'type': 'hidden',
-                'name': 'date_from',
-                'value': "{{ request('date_from') }}"
-            }));
-
-            form.append($('<input>', {
-                'type': 'hidden',
-                'name': 'date_to',
-                'value': "{{ request('date_to') }}"
-            }));
-
-            // Submit the form
-            $('body').append(form);
-            form.submit();
-        });
-
-        $('#bulkDeleteBtn').click(function() {
-            const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
-
-            if(selectedOrders.length === 0) {
-                alert('Please select at least one order to delete');
-                return;
-            }
-
-            $('#confirmModal').modal('show');
-
-            // Set up modal content
-            $('#confirmModal .modal-title').text('Are You Sure?');
-            $('#confirmModal .modal-body p').html(`Do you really want to delete <strong>${selectedOrders.length}</strong> orders? This process cannot be undone.`);
-
-            $('#confirmButton').off('click');
-
-            $('#confirmButton').on('click', function() {
-                const orderIds = selectedOrders.map(function() {
-                    return $(this).val();
-                }).get();
-
-                $.ajax({
-                    url: "{{ route('admin.orders.bulk-delete') }}",
-                    method: 'POST',
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        order_ids: orderIds
-                    },
-                    beforeSend: function() {
-                        $('#confirmButton').html('<i class="fas fa-spinner fa-spin"></i> Deleting...');
-                    },
-                    success: function(response) {
-                        $('#confirmModal').modal('hide');
-
-                        // Show success modal
-                        $('#successModal').modal('show');
-                        $('#successModal .modal-title').text('Success');
-                        $('#successModal .modal-body p').html(`
-                            <strong>${selectedOrders.length}</strong> orders have been deleted successfully.
-                        `);
-
-                        // Optional: Reload the page after a delay
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(xhr) {
-                        $('#confirmModal').modal('hide');
-
-                        // Show error in success modal (reusing the same modal)
-                        $('#successModal').modal('show');
-                        $('#successModal .modal-title').text('Error');
-                        $('#successModal .modal-body p').html(`
-                            <div class="alert alert-danger">
-                                ${xhr.responseJSON?.message || 'Something went wrong while deleting orders.'}
-                            </div>
-                        `);
-
-                        $('#confirmButton').html('Delete');
-                    }
-                });
-            });
-        });
-
-        $('.auto-submit').on('change', function() {
-            setTimeout(function() {
-                $('#filterForm').submit();
-            }, 300);
         });
     });
+
+
+    // ================================
+    // 5. Auto-submit Filter Form
+    // ================================
+    $('.auto-submit').on('change', function() {
+        setTimeout(function() {
+            $('#filterForm').submit();
+        }, 300);
+    });
+
+});
 </script>
+
 
 
 

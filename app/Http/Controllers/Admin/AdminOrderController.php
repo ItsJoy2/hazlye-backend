@@ -789,25 +789,29 @@ public function unblockCustomer(Request $request)
 }
 public function export(Request $request)
 {
-    $request->validate([
-        'order_ids' => 'required|array',
-        'order_ids.*' => 'exists:orders,id',
-    ]);
+    if ($request->has('all_filtered')) {
+        // সার্ভার সাইডে ফিল্টার করা সব অর্ডার
+        $orders = Order::query()
+            ->whereIn('status', ['processing', 'shipped', 'courier_delivered', 'delivered'])
+            ->when($request->status !== 'all', fn($q) => $q->where('status', $request->status))
+            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->district, fn($q) => $q->where('district', $request->district))
+            ->when($request->thana, fn($q) => $q->where('thana', $request->thana))
+            ->with(['items.product', 'courier'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    } else {
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id',
+        ]);
 
-    $orders = Order::whereIn('id', $request->order_ids)
-        ->whereIn('status', ['processing', 'shipped', 'courier_delivered', 'delivered'])
-        ->when($request->status !== 'all', function($query) use ($request) {
-            $query->where('status', $request->status);
-        })
-        ->when($request->date_from, function($query) use ($request) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        })
-        ->when($request->date_to, function($query) use ($request) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        })
-        ->with(['items.product', 'courier'])
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::whereIn('id', $request->order_ids)
+            ->with(['items.product', 'courier'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
 
     if ($orders->isEmpty()) {
         return back()->with('error', 'No valid orders selected for export.');
@@ -815,11 +819,16 @@ public function export(Request $request)
 
     $fileName = 'orders-export-' . now()->format('Y-m-d-H-i-s') . '.xlsx';
 
-    return Excel::download(
-        new OrdersExport($orders, $request->status, $request->date_from, $request->date_to),
-        $fileName
-    );
+    $status = $request->status ?? 'all';
+
+return Excel::download(
+    new OrdersExport($orders, $status, $request->date_from, $request->date_to),
+    'orders-export-' . now()->format('Y-m-d-H-i-s') . '.xlsx'
+);
+
 }
+
+
 
 public function bulkDelete(Request $request)
 {
