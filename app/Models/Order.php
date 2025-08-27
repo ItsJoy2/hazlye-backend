@@ -31,7 +31,8 @@ class Order extends Model
         'consignment_id',
         'courier_service_id',
         'admin_discount',
-        'custom_link'
+        'custom_link',
+        'admin_comment'
     ];
 
 

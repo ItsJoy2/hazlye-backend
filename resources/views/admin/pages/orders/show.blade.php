@@ -11,52 +11,70 @@
 
     <div class="row">
         <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Order Items</h5>
+            <div class="card mb-12">
+                    <div class="card-header"><h5>Order Items</h5></div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-head-bg-primary mt-4" id="order-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Image</th>
+                                        <th>Product</th>
+                                        <th>SKU / Variant SKU</th>
+                                        <th>Price</th>
+                                        <th>Qty</th>
+                                        <th>Size</th>
+                                        <th>Color</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($order->items as $index => $item)
+                                        <tr data-item-id="{{ $item->id }}">
+                                            <td>
+                                                @php
+                                                    $img = $item->variantOption?->image ?? $item->product->main_image ?? null;
+                                                @endphp
+                                                @if($img)
+                                                    <img src="{{ asset('storage/'.$img) }}" width="50" class="img-thumbnail" alt="{{ $item->product_name }}">
+                                                @else
+                                                    <span class="text-muted">No image</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $item->product_name }}
+                                                <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+                                                <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $item->product_id }}">
+                                                @if($item->variant_option_id)
+                                                    <input type="hidden" name="items[{{ $index }}][variant_option_id]" value="{{ $item->variant_option_id }}">
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $sku = $item->product->sku ?? '';
+                                                    if($item->variantOption){
+                                                        $sku .= ' / '.$item->variantOption->sku;
+                                                    }
+                                                @endphp
+                                                {{ $sku }}
+                                            </td>
+                                            <td>&#2547;{{ number_format($item->price,2) }}</td>
+                                            <td><input type="number" name="items[{{ $index }}][quantity]" value="{{ $item->quantity }}" class="form-control form-control-sm" style="width:60px;"></td>
+                                            <td>
+                                                {{ $item->variantOption?->size?->name ?? $item->product->size?->name ?? '-' }}
+                                            </td>
+                                            <td>
+                                                {{ $item->variantOption?->variant?->color?->name ?? '-' }}
+                                            </td>
+                                            <td>&#2547;{{ number_format($item->price * $item->quantity,2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th>Qty</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($order->items as $item)
-                            <tr>
-                                <td>
-                                    @if($order->items->isNotEmpty() && $order->items[0]->product && $order->items[0]->product->main_image)
-                                        <img src="{{ asset('storage/'.$order->items[0]->product->main_image) }}"
-                                             alt="{{ $order->items[0]->product->name }}"
-                                             width="50"
-                                             class="img-thumbnail">
-                                    @else
-                                        <span class="text-muted">No image</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    {{ $item->product_name }}
-                                    @if($item->size_name)
-                                        <br><small>Size: {{ $item->size_name }}</small>
-                                    @endif
-                                    @if($item->color_name)
-                                        <br><small>Color: {{ $item->color_name }}</small>
-                                    @endif
-                                </td>
-                                <td>&#2547;{{ number_format($item->price, 2) }}</td>
-                                <td>{{ $item->quantity }}</td>
-                                <td>&#2547;{{ number_format($item->price * $item->quantity, 2) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
 
         <div class="col-md-4">
@@ -99,8 +117,9 @@
                     <p><strong>Name:</strong> {{ $order->name }}</p>
                     <p><strong>Phone:</strong> {{ $order->phone }}</p>
                     <p><strong>Address:</strong> {{ $order->address }}</p>
-                    <p><strong>District:</strong> {{ $order->district }}</p>
-                    <p><strong>Thana:</strong> {{ $order->thana }}</p>
+                    <p><strong>District:</strong> {{ $order->district  ?? 'N/A'}}</p>
+                    <p><strong>Thana:</strong> {{ $order->thana  ?? 'N/A'}}</p>
+                    <p><strong>Admin Comment:</strong> {{ $order->admin_comment ?? 'N/A' }}</p>
                 </div>
             </div>
 

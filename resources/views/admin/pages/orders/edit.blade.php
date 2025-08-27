@@ -28,6 +28,8 @@
                                         <th>SKU / Variant SKU</th>
                                         <th>Price</th>
                                         <th>Qty</th>
+                                        <th>Size</th>
+                                        <th>Color</th>
                                         <th>Total</th>
                                         <th>Action</th>
                                     </tr>
@@ -64,11 +66,18 @@
                                             </td>
                                             <td>&#2547;{{ number_format($item->price,2) }}</td>
                                             <td><input type="number" name="items[{{ $index }}][quantity]" value="{{ $item->quantity }}" class="form-control form-control-sm" style="width:60px;"></td>
+                                            <td>
+                                                {{ $item->variantOption?->size?->name ?? $item->product->size?->name ?? '-' }}
+                                            </td>
+                                            <td>
+                                                {{ $item->variantOption?->variant?->color?->name ?? '-' }}
+                                            </td>
                                             <td>&#2547;{{ number_format($item->price * $item->quantity,2) }}</td>
                                             <td><button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
+
                             </table>
                         </div>
 
@@ -197,6 +206,11 @@
                       <select id="thana" name="thana" class="form-control" required>
                         <option value="">Select Thana</option>
                       </select>
+                    </div>
+
+                     <div class="form-group mb-3">
+                        <label for="address"><strong>Admin Comment</strong></label>
+                        <textarea name="admin_comment" id="admin_comment" class="form-control" rows="2">{{ old('admin_comment', $order->admin_comment) }}</textarea>
                     </div>
 
                     <button type="submit" class="btn btn-sm btn-primary">Update Customer</button>
@@ -400,9 +414,9 @@
             const productId = $(this).data('product-id');
             const name = $(this).data('name');
             const price = parseFloat($(this).data('price')).toFixed(2);
-            const size = $(this).data('size');
-            const color = $(this).data('color');
-            const qty = $('#new_quantity_input').val() || 1;
+            const size = $(this).data('size') || '-';
+            const color = $(this).data('color') || '-';
+            const qty = $('#search-quantity').val() || 1;
 
             $('#order-items-table tbody').append(`
                 <tr>
@@ -411,14 +425,16 @@
                         <input type="hidden" name="items[${index}][product_id]" value="${productId}">
                         <input type="hidden" name="items[${index}][product_name]" value="${name}">
                         <input type="hidden" name="items[${index}][price]" value="${price}">
-                        <input type="hidden" name="items[${index}][size]" value="${size}">
-                        <input type="hidden" name="items[${index}][color]" value="${color}">
+                        <input type="hidden" name="items[${index}][size]" value="${size !== '-' ? size : ''}">
+                        <input type="hidden" name="items[${index}][color]" value="${color !== '-' ? color : ''}">
                     </td>
-                    <td>$${price}</td>
+                    <td>&#2547;${price}</td>
                     <td>
                         <input type="number" name="items[${index}][quantity]" value="${qty}" class="form-control form-control-sm" style="width:60px;">
                     </td>
-                    <td>$${(price * qty).toFixed(2)}</td>
+                    <td>${size}</td>
+                    <td>${color}</td>
+                    <td>&#2547;${(price * qty).toFixed(2)}</td>
                     <td>
                         <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
                     </td>
@@ -426,8 +442,8 @@
             `);
 
             suggestionBox.hide();
-            $('#new_sku_input').val('');
-            $('#new_quantity_input').val(1);
+            $('#search-product').val('');
+            $('#search-quantity').val(1);
         });
     });
 

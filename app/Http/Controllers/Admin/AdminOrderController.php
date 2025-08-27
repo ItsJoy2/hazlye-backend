@@ -420,6 +420,7 @@ public function update(Request $request, Order $order)
         'address' => 'required|string|max:1000',
         'district' => 'required|string',
         'thana'    => 'required|string',
+        'admin_comment'    => 'nullable|string',
     ]);
 
     $order->update([
@@ -428,6 +429,7 @@ public function update(Request $request, Order $order)
         'address' => $request->address,
         'district' => $request->district,
         'thana'    => $request->thana,
+        'admin_comment'    => $request->admin_comment,
     ]);
 
     return redirect()

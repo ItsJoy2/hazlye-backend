@@ -12,24 +12,27 @@
         <div class="col-lg-12">
             <div class="card shadow-sm border-left-warning">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-warning">Low Stock Products</h6>
+                    <h6 class="m-0 font-weight-bold text-warning">Low Stock Products ({{ $lowStockProducts }}) </h6>
                 </div>
                 <div class="card-body">
-                    <div id="lowStockCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div id="lowStockCarousel" class="carousel slide" data-bs-interval="false">
                         <div class="carousel-inner">
                             @foreach($lowStockProductsList->chunk(3) as $chunkIndex => $productsChunk)
-                            <div class="carousel-item @if($chunkIndex == 0) active @endif">
-                                <div class="row">
+                            <div class="carousel-item @if($chunkIndex == 0) active @endif px-4">
+                                <div class="row px-4 mx-0">
                                     @foreach($productsChunk as $product)
                                     <div class="col-md-4 mb-2">
-                                        <div class="card border-warning h-100">
+                                        <div class="card border-warning m-0">
                                             <div class="card-body d-flex flex-column ">
                                                 <h5 class="card-title">{{ $product->name }}</h5>
                                                 <div class="d-flex">
-                                                    <p class="card-text mb-1 mt-auto pt-2">Stock: <strong>{{ $product->total_stock }}</strong></p>
-                                                <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-warning m-0 mt-auto mb-1 mx-3">
-                                                    <i class="fas fa-edit me-1"></i>
-                                                </a>
+                                                    <p class="card-text mb-1 mt-auto pt-2">
+                                                        Stock: <strong>{{ $product->total_stock }}</strong>
+                                                    </p>
+                                                    <a href="{{ route('admin.products.edit', $product->id) }}"
+                                                        class="btn btn-sm btn-warning m-0 mt-auto mb-1 mx-3">
+                                                        <i class="fas fa-edit me-1"></i>
+                                                    </a>
                                                 </div>
                                             </div>
                                         </div>
@@ -38,21 +41,26 @@
                                 </div>
                             </div>
                             @endforeach
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="prev">
+                            <button class="carousel-control-prev bg-black mb-2" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="prev" style="width: 40px;">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Previous</span>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="next">
+                        <button class="carousel-control-next bg-black mb-2" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="next" style="width: 40px;">
                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Next</span>
                         </button>
+                        </div>
+                        <!-- Left & Right Buttons -->
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
     @endif
+
+
+
 
     <!-- Section 1: Summary Cards -->
     <div class="row mb-4">

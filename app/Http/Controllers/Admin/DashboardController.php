@@ -45,8 +45,8 @@ class DashboardController extends Controller
 
         // Product statistics
         $totalProducts = Product::count();
-        $lowStockProducts = Product::where('total_stock', '<', 5)->count();
-        $lowStockProductsList = Product::where('total_stock', '<', 5)->orderBy('total_stock', 'asc')->get();
+        $lowStockProducts = Product::where('total_stock', '<', 6)->count();
+        $lowStockProductsList = Product::where('total_stock', '<', 6)->orderBy('total_stock', 'asc')->get();
 
         // Total products sold calculation
         $totalProductsSold = OrderItem::sum('quantity');
@@ -123,7 +123,7 @@ class DashboardController extends Controller
             'totalProducts' => $totalProducts,
             'lowStockProducts' => $lowStockProducts,
             'totalProductsSold' => $totalProductsSold,
-            'lowStockProductsList' => $lowStockProductsList, // slider এর জন্য
+            'lowStockProductsList' => $lowStockProductsList,
 
             // Recent orders and best sellers
             'recentOrders' => $recentOrders,
