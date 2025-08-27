@@ -874,7 +874,7 @@ public function exportCustomers(Request $request)
     return Excel::download(new CustomersExport(null, $filters), 'all_customers.xlsx');
 }
 
-public function incompleteOrders(Request $request)
+    public function incompleteOrders(Request $request)
     {
         $orders = Order::where('status', 'incomplete')
             ->with('items', 'deliveryOption')
@@ -883,6 +883,60 @@ public function incompleteOrders(Request $request)
 
         return view('admin.pages.orders.incomplete_order', compact('orders'));
     }
+
+    public function exportOrder(Request $request)
+    {
+        $query = Order::with(['items.product', 'items.variantOption', 'deliveryOption']);
+
+        if ($request->status && $request->status != 'all') {
+            $query->where('status', $request->status);
+        } else {
+            $query->whereIn('status', ['processing','shipped','courier_delivered','delivered']);
+        }
+
+        if ($request->date_from) $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->date_to) $query->whereDate('created_at', '<=', $request->date_to);
+
+        if ($request->has('order_ids') && count($request->order_ids) > 0) {
+            $query->whereIn('id', $request->order_ids);
+        }
+
+        $orders = $query->get();
+        $couriers = CourierService::all();
+
+        $html = view('admin.layouts.order_report', compact('orders', 'couriers'))->render();
+
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'default_font' => 'solaimanlipi',
+            'fontDir' => array_merge($fontDirs, [public_path('assets/admin/fonts')]),
+            'fontdata' => $fontData + [
+                'solaimanlipi' => [
+                    'R' => 'SolaimanLipi.ttf',
+                    'useOTL' => 0xFF,
+                ]
+            ],
+            'default_font_size' => 10,
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+        ]);
+
+        $mpdf->WriteHTML($html);
+
+        return response($mpdf->Output('orders_report.pdf', 'I'))
+               ->header('Content-Type', 'application/pdf');
+    }
+
+
 
 
 }

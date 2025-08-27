@@ -97,6 +97,8 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::get('/product/{product}/variants', [AdminOrderController::class, 'getVariants']);
     Route::post('/orders/export', [AdminOrderController::class, 'export'])->name('admin.orders.export');
     Route::post('orders/bulk-delete', [AdminOrderController::class, 'bulkDelete'])->name('admin.orders.bulk-delete');
+    Route::post('/orders/export-order', [AdminOrderController::class, 'exportOrder'])->name('admin.orders.export.order');
+
 
 
 

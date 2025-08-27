@@ -17,49 +17,54 @@
                 @include('admin.layouts.partials.__alerts')
             </div>
 
-            <div class="mb-0">
+            <div class="row mb-4">
+                <div class="col-md-12 d-flex align-items-center">
+                    {{-- Existing Filters --}}
+                    <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 flex-grow-1" id="autoSubmitForm">
+                        <div class="col-md-2">
+                            <input type="date" name="date_from" class="form-control auto-submit" value="{{ $dateFrom }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="date_to" class="form-control auto-submit" value="{{ $dateTo }}">
+                        </div>
+                        @if($status === 'delivered')
+                            <div class="col-md-2">
+                                <input type="text" name="district" class="form-control auto-submit" placeholder="District" value="{{ $district }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" name="thana" class="form-control auto-submit" placeholder="Thana" value="{{ $thana }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" name="product_search" class="form-control auto-submit" placeholder="Product Name / SKU" value="{{ $productSearch }}">
+                            </div>
+                        @endif
+                        <div class="col-md-2">
+                            <select name="status" class="form-control auto-submit">
+                                <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
+                                <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
+                                <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
+                                <option value="shipped" {{ $status == 'shipped' ? 'selected' : '' }}>Ready to Shipped</option>
+                                <option value="courier_delivered" {{ $status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
+                                <option value="delivered" {{ $status == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                                <option value="cancelled" {{ $status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary d-none">Filter</button>
+                            <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Reset</a>
+                        </div>
+                    </form>
 
-                <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 mb-4" id="autoSubmitForm">
-                    {{-- Date Filters --}}
-                    <div class="col-md-2">
-                        <input type="date" name="date_from" class="form-control auto-submit" value="{{ $dateFrom }}">
+                    {{-- PDF Export Button --}}
+                    @if(in_array($status, ['processing', 'shipped', 'courier_delivered', 'delivered']))
+                    <div class="col-md-3 ms-2 d-flex align-items-center" style="margin-top:-30px;">
+                        <button type="button" class="btn btn-success" id="exportPdfBtn">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
                     </div>
-                    <div class="col-md-2">
-                        <input type="date" name="date_to" class="form-control auto-submit" value="{{ $dateTo }}">
-                    </div>
-
-                    {{-- Extra Filters for delivered status --}}
-                    @if($status === 'delivered')
-                        <div class="col-md-2">
-                            <input type="text" name="district" class="form-control auto-submit" placeholder="District" value="{{ $district }}">
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" name="thana" class="form-control auto-submit" placeholder="Thana" value="{{ $thana }}">
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" name="product_search" class="form-control auto-submit" placeholder="Product Name / SKU" value="{{ $productSearch }}">
-                        </div>
                     @endif
-
-                    {{-- Status Dropdown --}}
-                    <div class="col-md-2">
-                        <select name="status" class="form-control auto-submit">
-                            <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
-                            <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
-                            <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Order Confirmed</option>
-                            <option value="shipped" {{ $status == 'shipped' ? 'selected' : '' }}>Ready to Shipped</option>
-                            <option value="courier_delivered" {{ $status == 'courier_delivered' ? 'selected' : '' }}>Courier Delivered</option>
-                            <option value="delivered" {{ $status == 'delivered' ? 'selected' : '' }}>Delivered</option>
-                            <option value="cancelled" {{ $status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-12">
-                        <button type="submit" class="btn btn-primary d-none">Filter</button>
-                        <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Reset</a>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <!-- Bulk Actions Form -->
@@ -424,3 +429,32 @@
 
 
 
+<script>
+    $(document).ready(function() {
+        $('#exportPdfBtn').click(function() {
+            const dateFrom = $('input[name="date_from"]').val();
+            const dateTo = $('input[name="date_to"]').val();
+            const status = $('select[name="status"]').val();
+            const district = $('input[name="district"]').val();
+            const thana = $('input[name="thana"]').val();
+            const productSearch = $('input[name="product_search"]').val();
+
+            const form = $('<form>', {
+                method: 'POST',
+                action: "{{ route('admin.orders.export.order') }}",
+                target: '_blank'
+            });
+
+            form.append($('<input>', { type: 'hidden', name: '_token', value: "{{ csrf_token() }}" }));
+            form.append($('<input>', { type: 'hidden', name: 'date_from', value: dateFrom }));
+            form.append($('<input>', { type: 'hidden', name: 'date_to', value: dateTo }));
+            form.append($('<input>', { type: 'hidden', name: 'status', value: status }));
+            form.append($('<input>', { type: 'hidden', name: 'district', value: district }));
+            form.append($('<input>', { type: 'hidden', name: 'thana', value: thana }));
+            form.append($('<input>', { type: 'hidden', name: 'product_search', value: productSearch }));
+
+            $('body').append(form);
+            form.submit();
+        });
+    });
+</script>
