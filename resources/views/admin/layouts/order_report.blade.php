@@ -2,6 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
+<title>Export Data</title>
 <style>
     body {
         font-family: solaimanlipi, sans-serif;
@@ -88,11 +89,12 @@
     }
 
     .admin-comment {
-        background-color: #ffe5e5;
+        background-color: #ff6464;
         padding: 3px 6px;
         display: inline-block;
         border-radius: 4px;
         font-weight: bold;
+        font-size: 16px;
         color: #000;
     }
 
@@ -174,8 +176,8 @@
 
                 <p><span>Consignment ID:</span> {{ $order->tracking_code ?? 'N/A' }}</p>
                 <p><span>Courier Name:</span> {{ $order->deliveryOption?->courier_name ?? 'N/A' }}</p>
-                <p><span>Admin Comment:</span>
-                    <span class="admin-comment">{{ $order->admin_comment ?? 'N/A' }}</span>
+                <p ><span class="admin-comment">Admin Comment:</span>
+                    <span style="background: none;">{{ $order->admin_comment ?? 'N/A' }}</span>
                 </p>
             </td>
 

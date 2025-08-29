@@ -29,68 +29,6 @@ use Mpdf\Config\ConfigVariables;
 
 class AdminOrderController extends Controller
 {
-
-public function exportOrder(Request $request)
-{
-    $query = Order::with(['items.product', 'items.variantOption.variant.color', 'deliveryOption', 'courier']);
-
-    if ($request->status && $request->status != 'all') {
-        $query->where('status', $request->status);
-    } else {
-        $query->whereIn('status', ['processing','shipped','courier_delivered','delivered']);
-    }
-
-    if ($request->date_from) $query->whereDate('created_at', '>=', $request->date_from);
-    if ($request->date_to) $query->whereDate('created_at', '<=', $request->date_to);
-
-    if ($request->has('order_ids') && count($request->order_ids) > 0) {
-        $query->whereIn('id', $request->order_ids);
-    }
-
-    $orders = $query->get();
-    $courier = CourierService::all();
-    $generalSettings = GeneralSetting::first();
-
-    // Assign company info
-    foreach ($orders as $order) {
-        $order->company_name = $generalSettings->app_name ?? 'Company Name';
-        $order->company_phone = $generalSettings->contact_number_1 ?? 'N/A';
-    }
-
-    $html = view('admin.layouts.order_report', compact('orders','courier'))->render();
-
-    $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-    $fontDirs = $defaultConfig['fontDir'];
-
-    $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-    $fontData = $defaultFontConfig['fontdata'];
-
-    $mpdf = new \Mpdf\Mpdf([
-        'mode' => 'utf-8',
-        'format' => 'A4',
-        'default_font' => 'solaimanlipi',
-        'fontDir' => array_merge($fontDirs, [public_path('assets/admin/fonts')]),
-        'fontdata' => $fontData + [
-            'solaimanlipi' => [
-                'R' => 'SolaimanLipi.ttf',
-                'useOTL' => 0xFF,
-            ]
-        ],
-        'default_font_size' => 10,
-        'margin_left' => 10,
-        'margin_right' => 10,
-        'margin_top' => 10,
-        'margin_bottom' => 10,
-    ]);
-
-    $mpdf->WriteHTML($html);
-
-    return response($mpdf->Output('orders_report.pdf', 'I'))
-           ->header('Content-Type', 'application/pdf');
-}
-
-
-
     public function index(Request $request)
     {
         $query = Order::with(['items', 'coupon', 'items.variantOption',  'deliveryOption' ])
@@ -927,59 +865,64 @@ public function exportCustomers(Request $request)
         return view('admin.pages.orders.incomplete_order', compact('orders'));
     }
 
-    // public function exportOrder(Request $request)
-    // {
-    //     $query = Order::with(['items.product', 'items.variantOption', 'deliveryOption']);
+    public function exportOrder(Request $request)
+    {
+        $query = Order::with(['items.product', 'items.variantOption.variant.color', 'deliveryOption', 'courier']);
 
-    //     if ($request->status && $request->status != 'all') {
-    //         $query->where('status', $request->status);
-    //     } else {
-    //         $query->whereIn('status', ['processing','shipped','courier_delivered','delivered']);
-    //     }
+        if ($request->status && $request->status != 'all') {
+            $query->where('status', $request->status);
+        } else {
+            $query->whereIn('status', ['processing','shipped','courier_delivered','delivered']);
+        }
 
-    //     if ($request->date_from) $query->whereDate('created_at', '>=', $request->date_from);
-    //     if ($request->date_to) $query->whereDate('created_at', '<=', $request->date_to);
+        if ($request->date_from) $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->date_to) $query->whereDate('created_at', '<=', $request->date_to);
 
-    //     if ($request->has('order_ids') && count($request->order_ids) > 0) {
-    //         $query->whereIn('id', $request->order_ids);
-    //     }
+        if ($request->has('order_ids') && count($request->order_ids) > 0) {
+            $query->whereIn('id', $request->order_ids);
+        }
 
-    //     $orders = $query->get();
-    //     $couriers = CourierService::all();
+        $orders = $query->get();
+        $courier = CourierService::all();
+        $generalSettings = GeneralSetting::first();
 
-    //     $html = view('admin.layouts.order_report', compact('orders', 'couriers'))->render();
+        // Assign company info
+        foreach ($orders as $order) {
+            $order->company_name = $generalSettings->app_name ?? 'Company Name';
+            $order->company_phone = $generalSettings->contact_number_1 ?? 'N/A';
+            $order->company_logo = $generalSettings->logo ?? 'N/A';
+        }
 
-    //     $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-    //     $fontDirs = $defaultConfig['fontDir'];
+        $html = view('admin.layouts.order_report', compact('orders','courier'))->render();
 
-    //     $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-    //     $fontData = $defaultFontConfig['fontdata'];
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
 
-    //     $mpdf = new Mpdf([
-    //         'mode' => 'utf-8',
-    //         'format' => 'A4',
-    //         'default_font' => 'solaimanlipi',
-    //         'fontDir' => array_merge($fontDirs, [public_path('assets/admin/fonts')]),
-    //         'fontdata' => $fontData + [
-    //             'solaimanlipi' => [
-    //                 'R' => 'SolaimanLipi.ttf',
-    //                 'useOTL' => 0xFF,
-    //             ]
-    //         ],
-    //         'default_font_size' => 10,
-    //         'margin_left' => 10,
-    //         'margin_right' => 10,
-    //         'margin_top' => 10,
-    //         'margin_bottom' => 10,
-    //     ]);
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
 
-    //     $mpdf->WriteHTML($html);
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'default_font' => 'solaimanlipi',
+            'fontDir' => array_merge($fontDirs, [public_path('assets/admin/fonts')]),
+            'fontdata' => $fontData + [
+                'solaimanlipi' => [
+                    'R' => 'SolaimanLipi.ttf',
+                    'useOTL' => 0xFF,
+                ]
+            ],
+            'default_font_size' => 10,
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+        ]);
 
-    //     return response($mpdf->Output('orders_report.pdf', 'I'))
-    //            ->header('Content-Type', 'application/pdf');
-    // }
+        $mpdf->WriteHTML($html);
 
-
-
+        return response($mpdf->Output('orders_report.pdf', 'I'))
+            ->header('Content-Type', 'application/pdf');
+    }
 
 }

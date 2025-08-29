@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>Sticker Invoice</title>
+    <title> Invoice</title>
     <style>
         * {
             margin: 0;
