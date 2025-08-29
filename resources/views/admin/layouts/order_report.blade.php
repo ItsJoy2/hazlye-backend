@@ -3,17 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <style>
-body { font-family: solaimanlipi, sans-serif; font-size: 10pt; }
-.header { text-align: center; margin-bottom: 20px; }
-.header img { max-height: 80px; margin-bottom: 10px; }
-.header h2 { margin: 0; }
-.order { border: 1px solid #000; margin-bottom: 15px; padding: 5px; }
-.order-header { background: #f0f0f0; font-weight: bold; padding: 5px; }
-.items { width: 100%; border-collapse: collapse; margin-top: 5px; }
-.items th, .items td { border: 1px solid #000; padding: 5px; text-align: left; vertical-align: middle; }
-.product-image { width: 100px; height: 100px; object-fit: cover; }
-.variant-color { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #000; }
-.admin-comment { background-color: #ffcccc; color: #000; }
+    body {
+        font-family: solaimanlipi, sans-serif;
+        font-size: 10pt;
+        margin: 0;
+        padding: 0;
+        color: #333;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header img {
+        max-height: 180px;
+        margin-bottom: 10px;
+        justify-content:center;
+    }
+
+    .header h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    /* .order {
+        border: 1px solid #000;
+        margin-bottom: 15px;
+        padding: 8px;
+        border-radius: 6px;
+    } */
+
+    .order-header {
+        background: #f0f0f0;
+        font-weight: bold;
+        padding: 6px;
+        border-radius: 5px;
+        justify-content: center;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    /* Table based product card */
+    .product-card {
+        font-size: 16px;
+        width: 100%;
+        border: 1px solid #ddd;
+        margin-top: 8px;
+        border-radius: 6px;
+        background-color: #fafafa;
+        border-collapse: collapse;
+    }
+
+    .product-card td {
+        padding: 8px;
+        vertical-align: top;
+    }
+
+    .product-details p {
+        margin: 4px 0;
+        font-size: 11px;
+    }
+
+    .product-details p span {
+        font-weight: bold;
+        color: #000;
+    }
+
+    .product-image {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .variant-color {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid #000;
+        margin-left: 5px;
+    }
+
+    .admin-comment {
+        background-color: #ffe5e5;
+        padding: 3px 6px;
+        display: inline-block;
+        border-radius: 4px;
+        font-weight: bold;
+        color: #000;
+    }
+
+    hr {
+        margin: 10px 0;
+        border: 0;
+        height: 1px;
+        background-color: #ddd;
+    }
+
+    /* Print Optimization */
+    @media print {
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .order {
+            page-break-inside: avoid;
+        }
+
+        .product-card {
+            page-break-inside: avoid;
+        }
+    }
 </style>
 </head>
 <body>
@@ -24,67 +128,74 @@ body { font-family: solaimanlipi, sans-serif; font-size: 10pt; }
 
 <div class="header">
     @if($settings && $settings->logo)
-        <img src="{{ public_path('storage/'.$settings->logo) }}" alt="Logo" height="50px">
-        @else
-    <h2>{{ $settings->app_name ?? 'Orders Report' }}</h2>
+        <img src="{{ public_path('storage/'.$settings->logo) }}" alt="Logo" style="width: 180px;">
+    @else
+        <h2>{{ $settings->app_name ?? 'Orders Report' }}</h2>
     @endif
+    <p style="margin: 5px 0 0; font-size: 12px; color: #555;">
+        Generated Date: {{ now()->format('d M, Y') }}
+    </p>
 </div>
 <hr>
+
 @foreach($orders as $order)
 <div class="order">
     <div class="order-header">
         Order #{{ $order->order_number }} | Date: {{ $order->created_at->format('d M, Y') }}
     </div>
-    <table class="items">
-        <thead>
-            <tr>
-                <th>Image</th>
-                <th>Product Name (SKU)</th>
-                <th>Size</th>
-                <th>Variant Color</th>
-                <th>Consignment ID</th>
-                <th>Courier Name</th>
-                <th class="admin-comment">Admin Comment</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($order->items as $item)
-            <tr>
-                <td>
-                    @if($item->product && $item->product->main_image)
-                        <img src="{{ public_path('storage/'.$item->product->main_image) }}" class="product-image" alt="" >
-                    @else N/A @endif
-                </td>
-                <td>{{ $item->product?->name ?? 'N/A' }} ({{ $item->product?->sku ?? 'N/A' }})</td>
 
-                {{-- Size: ProductVariantOption > Size, fallback to Product->size --}}
-                <td>
+    @foreach($order->items as $item)
+    <table class="product-card">
+        <tr>
+
+            <!-- Product Details -->
+            <td class="product-details">
+                <p><span>Product Name (SKU):</span> {{ $item->product?->name ?? 'N/A' }} ({{ $item->product?->sku ?? 'N/A' }})</p>
+
+                <p><span>Size:</span>
                     @if($item->variantOption?->size)
                         {{ $item->variantOption->size->name ?? $item->variantOption->name ?? 'N/A' }}
-                    @elseif($item->product?->size)
-                        {{ $item->product->size->name ?? 'N/A' }}
+                    @elseif($item->size_name)
+                        {{  $item->size_name ?? 'N/A' }}
                     @else
                         N/A
                     @endif
-                </td>
+                </p>
 
-                {{-- Color: ProductVariantOption > Color --}}
-                <td>
-                    @if($item->variantOption?->color)
-                        <span class="variant-color" style="background-color: {{ $item->variantOption->color }}"></span>
+                <p><span>Color:</span>
+                    @if($item->variantOption?->variant?->color)
+                        {{ $item->variantOption->variant->color->name ?? 'N/A' }}
+                    @elseif($item->color_name)
+                        {{  $item->color_name ?? 'N/A' }}
                     @else
                         N/A
                     @endif
-                </td>
+                </p>
 
-                <td>{{ $order->tracking_code ?? 'N/A' }}</td>
-                <td>{{ $order->deliveryOption?->courier_name ?? 'N/A' }}</td>
-                <td class="admin-comment">{{ $order->admin_comment ?? 'N/A' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
+                <p><span>Consignment ID:</span> {{ $order->tracking_code ?? 'N/A' }}</p>
+                <p><span>Courier Name:</span> {{ $order->deliveryOption?->courier_name ?? 'N/A' }}</p>
+                <p><span>Admin Comment:</span>
+                    <span class="admin-comment">{{ $order->admin_comment ?? 'N/A' }}</span>
+                </p>
+            </td>
+
+             <!-- Product Image -->
+            <td width="200">
+                @if($item->product && $item->product->main_image)
+                    <img src="{{ public_path('storage/'.$item->product->main_image) }}" class="product-image" alt="">
+                @else
+                    <img src="{{ public_path('images/no-image.png') }}" class="product-image" alt="No Image">
+                @endif
+            </td>
+
+        </tr>
     </table>
+    @endforeach
 </div>
+
+@if(!$loop->last)
+    <div style="page-break-after: always;"></div>
+@endif
 @endforeach
 
 </body>

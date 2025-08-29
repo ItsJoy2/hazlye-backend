@@ -203,14 +203,12 @@
 <script>
 $(document).ready(function() {
 
-    // ================================
-    // 1. Select / Deselect All Checkboxes
-    // ================================
+
     $('#selectAllCheckbox').on('change', function() {
         const checked = $(this).prop('checked');
         $('.order-checkbox:not(:disabled)').prop('checked', checked);
 
-        // If checked, add hidden input to mark "all filtered"
+
         if(checked) {
             if($('#allFilteredInput').length === 0) {
                 $('<input>').attr({
@@ -225,7 +223,7 @@ $(document).ready(function() {
         }
     });
 
-    // When individual checkbox changes, manage Select All
+
     $('.order-checkbox').on('change', function() {
         const allChecked = $('.order-checkbox:not(:disabled)').length === $('.order-checkbox:checked:not(:disabled)').length;
         $('#selectAllCheckbox').prop('checked', allChecked);
@@ -244,7 +242,7 @@ $(document).ready(function() {
         }
     });
 
-    // Optional buttons to select/deselect all visible checkboxes
+
     $('#selectAllBtn').click(function() {
         $('.order-checkbox:not(:disabled)').prop('checked', true);
         $('#selectAllCheckbox').prop('checked', true);
@@ -266,9 +264,6 @@ $(document).ready(function() {
     });
 
 
-    // ================================
-    // 2. Export Selected or All Filtered Orders
-    // ================================
     $('#exportBtn').click(function() {
         const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
 
@@ -281,7 +276,7 @@ $(document).ready(function() {
         form.append($('<input>', { type: 'hidden', name: '_token', value: "{{ csrf_token() }}" }));
 
         if($('#allFilteredInput').length) {
-            // Export all filtered data
+
             form.append($('<input>', { type: 'hidden', name: 'all_filtered', value: true }));
             form.append($('<input>', { type: 'hidden', name: 'status', value: "{{ request('status', 'all') }}" }));
             form.append($('<input>', { type: 'hidden', name: 'date_from', value: "{{ request('date_from') }}" }));
@@ -290,7 +285,6 @@ $(document).ready(function() {
             form.append($('<input>', { type: 'hidden', name: 'thana', value: "{{ request('thana') }}" }));
             form.append($('<input>', { type: 'hidden', name: 'product_search', value: "{{ request('product_search') }}" }));
         } else {
-            // Export selected checkboxes
             if(selectedOrders.length === 0) {
                 alert('Please select at least one order to export');
                 return;
@@ -305,9 +299,7 @@ $(document).ready(function() {
     });
 
 
-    // ================================
-    // 3. Export All Button (Optional)
-    // ================================
+
     $('#exportAllBtn').click(function() {
         const dateFrom = $('input[name="date_from"]').val();
         const dateTo = $('input[name="date_to"]').val();
@@ -336,9 +328,6 @@ $(document).ready(function() {
     });
 
 
-    // ================================
-    // 4. Bulk Delete Orders
-    // ================================
     $('#bulkDeleteBtn').click(function() {
         const selectedOrders = $('.order-checkbox:checked:not(:disabled)');
 
