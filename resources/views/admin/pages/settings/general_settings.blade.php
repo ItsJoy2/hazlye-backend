@@ -44,7 +44,7 @@
                             <label for="logo">Logo (300x45px)</label>
                             <input type="file" id="logo" name="logo" class="form-control">
                             @if($generalSettings->logo)
-                                <img src="{{ asset('storage/' . str_replace('public/', '', $generalSettings->logo)) }}" alt="Current Logo" style="max-width: 300px;">
+                                <img src="{{ asset('storage/' . str_replace('public/', '', $generalSettings->logo)) }}" alt="Current Logo" style="max-width: 200px;">
                             @endif
                         </div>
                     </div>
