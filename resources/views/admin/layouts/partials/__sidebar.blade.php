@@ -307,7 +307,7 @@
                         </li>
                         <li class="nav-item">
 							<a data-bs-toggle="collapse" href="#delivery-options">
-								<i class="fas fa-truck"></i>
+								<i class="fas fa-shipping-fast"></i>
 								<p>Delivery Options</p>
 								<span class="caret"></span>
 							</a>
