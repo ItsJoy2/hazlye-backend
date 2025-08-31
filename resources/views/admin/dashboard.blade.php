@@ -12,7 +12,9 @@
         <div class="col-lg-12">
             <div class="card shadow-sm border-left-warning">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-warning">Low Stock Products ({{ $lowStockProducts }}) </h6>
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        Low Stock Products ({{ $lowStockProducts }})
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div id="lowStockCarousel" class="carousel slide" data-bs-interval="false">
@@ -23,17 +25,36 @@
                                     @foreach($productsChunk as $product)
                                     <div class="col-md-4 mb-2">
                                         <div class="card border-warning m-0">
-                                            <div class="card-body d-flex flex-column ">
-                                                <h5 class="card-title">{{ $product->name }}</h5>
-                                                <div class="d-flex">
-                                                    <p class="card-text mb-1 mt-auto pt-2">
-                                                        Stock: <strong>{{ $product->total_stock }}</strong>
-                                                    </p>
-                                                    <a href="{{ route('admin.products.edit', $product->id) }}"
-                                                        class="btn btn-sm btn-warning m-0 mt-auto mb-1 mx-3">
-                                                        <i class="fas fa-edit me-1"></i>
-                                                    </a>
-                                                </div>
+                                            <div class="card-body d-flex flex-column">
+                                                <h6 class="card-title text-small" style="font-size: 18px">
+                                                    {{ $product->name }}
+                                                    <span class="text-muted">({{ $product->sku }})</span>
+                                                </h6>
+
+                                                @if($product->variants->count() > 0)
+                                                    @foreach($product->variants as $variant)
+                                                        @foreach($variant->options->where('stock', '<', 6) as $option)
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <p class="card-text mb-1" style="font-size: 14px">
+                                                                    <strong>SKU:</strong> {{ $option->sku ?? 'N/A' }} |
+                                                                    <strong>Stock:</strong> {{ $option->stock }}
+                                                                </p>
+                                                            </div>
+                                                        @endforeach
+                                                    @endforeach
+                                                @else
+                                                    {{-- যদি প্রোডাক্টে কোনো ভ্যারিয়েন্ট না থাকে --}}
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <p class="card-text mb-1">
+                                                            Stock: <strong>{{ $product->total_stock }}</strong>
+                                                        </p>
+                                                    </div>
+                                                @endif
+
+                                                <a href="{{ route('admin.products.edit', $product->id) }}"
+                                                class="btn btn-sm btn-warning mt-2">
+                                                    <i class="fas fa-edit me-1"></i> Edit
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -41,23 +62,24 @@
                                 </div>
                             </div>
                             @endforeach
-                            <button class="carousel-control-prev bg-black mb-2" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="prev" style="width: 40px;">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next bg-black mb-2" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="next" style="width: 40px;">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                        </div>
-                        <!-- Left & Right Buttons -->
 
+                            <!-- Left & Right Buttons -->
+                            <button class="carousel-control-prev bg-black mb-2" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="prev" style="width: 40px;">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next bg-black mb-2" type="button" data-bs-target="#lowStockCarousel" data-bs-slide="next" style="width: 40px;">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     @endif
+
 
 
 

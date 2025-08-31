@@ -43,10 +43,24 @@ class DashboardController extends Controller
         $monthlyProfit = $this->calculateProfit(Order::where('created_at', '>=', $currentMonth)->with('items')->get());
         $totalProfit = $this->calculateProfit(Order::with('items')->get());
 
-        // Product statistics
         $totalProducts = Product::count();
-        $lowStockProducts = Product::where('total_stock', '<', 6)->count();
-        $lowStockProductsList = Product::where('total_stock', '<', 6)->orderBy('total_stock', 'asc')->get();
+        $totalProductsSold = OrderItem::sum('quantity');
+
+        $lowStockProductsList = Product::with(['variants.options'])
+            ->where(function ($query) {
+                $query->whereDoesntHave('variants', function ($q) {
+                    $q->has('options');
+                })->where('total_stock', '<', 6);
+
+                $query->orWhereHas('variants.options', function ($q) {
+                    $q->where('stock', '<', 6);
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $lowStockProducts = $lowStockProductsList->count();
+
 
         // Total products sold calculation
         $totalProductsSold = OrderItem::sum('quantity');
