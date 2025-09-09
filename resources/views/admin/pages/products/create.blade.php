@@ -7,20 +7,12 @@
             <h3>Create New Product</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" style="width: 680px;" id="product-form">
+            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" style="width: 100%;" id="product-form">
                 @csrf
 
                 <div class="card mb-4">
                     <div class="card-header">Basic Information</div>
                     <div class="card-body">
-                        <div class="form-group">
-                            <label for="sku">SKU</label>
-                            <input type="text" name="sku" id="sku" class="form-control @error('sku') is-invalid @enderror"
-                                   value="{{ old('sku') }}">
-                            @error('sku')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
                         <div class="form-group">
                             <label for="name">Product Name</label>
                             <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" oninput="generateSlug()">
@@ -158,7 +150,7 @@
                             <input type="hidden" name="removed_images" id="removed_images" value="">
                         </div>
 
-                        <div class="d-flex">
+                        <div class="d-flex flex-wrap flex-md-nowrap">
                             <div class="form-group form-check">
                                 <input type="checkbox" name="featured" id="featured" class="form-check-input" value="1" {{ old('featured') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="featured">Featured Product</label>
@@ -171,6 +163,15 @@
                                 <input type="checkbox" name="campaign" id="campaign" class="form-check-input" value="1" {{ old('campaign') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="campaign">Campaign Product</label>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sku">SKU</label>
+                            <input type="text" name="sku" id="sku" class="form-control @error('sku') is-invalid @enderror"
+                                   value="{{ old('sku') }}">
+                            @error('sku')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>

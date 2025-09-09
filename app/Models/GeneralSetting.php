@@ -27,5 +27,6 @@ class GeneralSetting extends Model
         'domain_verification',
         'header_scripts',
         'footer_scripts',
+        'footer_content',
     ];
 }

@@ -47,6 +47,10 @@
                                 <img src="{{ asset('storage/' . str_replace('public/', '', $generalSettings->logo)) }}" alt="Current Logo" style="max-width: 200px;">
                             @endif
                         </div>
+                        <div class="mb-3">
+                            <label for="footer_content">Footer Content</label>
+                            <textarea name="footer_content" class="form-control" rows="4">{{ old('footer_content', $generalSettings->footer_content) }}</textarea>
+                        </div>
                     </div>
 
                     <!-- Social Links -->

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    @php
+        use App\Models\GeneralSetting;
+        $generalSettings = GeneralSetting::first();
+    @endphp
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>
         {{ $generalSettings->app_name ?? 'Larabel' }}

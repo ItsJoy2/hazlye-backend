@@ -43,10 +43,12 @@
                 console.error('Error adding variant:', error);
                 showToast('Failed to add variant. Please try again.', 'error');
             } finally {
-                // Reset button state
+                // Reset button state ALWAYS
                 e.target.disabled = false;
-                e.target.innerHTML = originalText;
+                e.target.innerHTML = 'Add Variant';
+;
             }
+
         });
 
         // Event delegation for dynamic elements

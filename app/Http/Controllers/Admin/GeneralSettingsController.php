@@ -40,6 +40,7 @@ class GeneralSettingsController extends Controller
             'domain_verification' => 'nullable|string',
             'header_scripts' => 'nullable|string',
             'footer_scripts' => 'nullable|string',
+            'footer_content' => 'nullable|string',
 
         ]);
 
@@ -62,6 +63,7 @@ class GeneralSettingsController extends Controller
             'domain_verification',
             'header_scripts',
             'footer_scripts',
+            'footer_content',
         ]);
 
 
