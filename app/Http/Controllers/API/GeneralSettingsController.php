@@ -43,6 +43,7 @@ class GeneralSettingsController extends Controller
                 'domain_verification' => $settings->domain_verification,
                 'header_scripts' => $settings->header_scripts,
                 'footer_scripts' => $settings->footer_scripts,
+                'footer_content' => $settings->footer_content,
                 ]
         ]);
     }
