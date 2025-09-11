@@ -20,7 +20,7 @@
                class="form-control" placeholder="Stock" required
                value="{{ $option['stock'] ?? '' }}">
     </div>
-    <div class="col-md-2">
+    <div class="col-md-2 mt-2">
         <input type="text" name="variants[{{ $variantIndex }}][options][{{ $optionIndex }}][sku]"
                class="form-control" placeholder="SKU"
                value="{{ $option['sku'] ?? '' }}" required>

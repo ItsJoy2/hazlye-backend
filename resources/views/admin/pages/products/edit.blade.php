@@ -7,7 +7,7 @@
             <h3>Edit Product</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" style="width: 680px;" id="product-form">
+            <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" style="width: 100%;" id="product-form">
                 @csrf
                 @method('PUT')
 
