@@ -82,10 +82,10 @@
                         </div>
                         <div class="form-group">
                             <label for="total_stock">Total Stock</label>
-                            <input type="number" step="0.01" name="total_stock" id="total_stock" name="total_stock" id="total_stock" class="form-control @error('Purchase_price') is-invalid @enderror" value="{{ old('total_stock') }}>
-                            @error('Purchase_price')
+                            <input type="number" step="0.01" name="total_stock" id="total_stock" name="total_stock" id="total_stock" class="form-control @error('Purchase_price') is-invalid @enderror" value="{{ old('total_stock') }}">
+                            {{-- @error('Purchase_price')
                                 <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                            @enderror --}}
                         </div>
 
                         <div class="form-group">
