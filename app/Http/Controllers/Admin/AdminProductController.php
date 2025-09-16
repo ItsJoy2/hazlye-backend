@@ -120,7 +120,7 @@ class AdminProductController extends Controller
             'keyword_tags' => 'nullable|string',
             'keyword_tags.*' => 'string|max:255',
             'variants' => 'sometimes|array',
-            'variants.*.color_id' => 'required_with:variants|exists:colors,id',
+            'variants.*.color_id' => 'nullable|exists:colors,id',
             'variants.*.image' => 'required_with:variants|image|max:6144',
             'variants.*.options' => 'required_with:variants|array',
             'variants.*.options.*.size_id' => 'required_with:variants.*.options|exists:sizes,id',

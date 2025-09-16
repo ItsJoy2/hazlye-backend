@@ -1,5 +1,7 @@
 @extends('admin.layouts.app')
 
+
+
 @section('content')
 <div class="container-fluid">
     <div class="card">
@@ -10,8 +12,8 @@
             <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" style="width: 100%;" id="product-form">
                 @csrf
 
-                <div class="card mb-4">
-                    <div class="card-header">Basic Information</div>
+                <div class="card mb-4 text-black">
+                    <div class="card-header" style="font-size: 18px;" >Basic Information</div>
                     <div class="card-body">
                         <div class="form-group">
                             <label for="name">Product Name</label>
@@ -214,3 +216,9 @@
 
 @include('admin.pages.products.partials.__additionalScript')
 
+<style>
+    .form-group label{
+        color: black !important;
+        font-weight: bold;
+    }
+</style>

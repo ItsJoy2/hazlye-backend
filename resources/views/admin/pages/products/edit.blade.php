@@ -11,8 +11,8 @@
                 @csrf
                 @method('PUT')
 
-                <div class="card mb-4">
-                    <div class="card-header">Basic Information</div>
+                <div class="card mb-4 text-black">
+                    <div class="card-header" style="font-size: 18px;">Basic Information</div>
                     <div class="card-body">
                         <div class="form-group">
                             <label for="sku">SKU</label>
@@ -250,3 +250,9 @@
 
 @include('admin.pages.products.partials.__additionalScript')
 
+<style>
+    .form-group label{
+        color: black !important;
+        font-weight: bold;
+    }
+</style>

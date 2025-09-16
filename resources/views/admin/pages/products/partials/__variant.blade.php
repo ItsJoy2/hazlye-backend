@@ -9,7 +9,7 @@
 
         <div class="form-group">
             <label>Color</label>
-            <select name="variants[{{ $variantIndex }}][color_id]" class="form-control select2" required>
+            <select name="variants[{{ $variantIndex }}][color_id]" class="form-control select2">
                 <option value="">Select Color</option>
                 @foreach($colors as $color)
                     <option value="{{ $color->id }}"
