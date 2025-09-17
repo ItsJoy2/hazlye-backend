@@ -37,32 +37,20 @@ class Coupon extends Model
 
     public function isValidForProducts($productIds = []): bool
     {
-        // Ensure dates are Carbon instances
-        $start = $this->start_date ? \Illuminate\Support\Carbon::parse($this->start_date)->startOfDay() : null;
-        $end = $this->end_date ? \Illuminate\Support\Carbon::parse($this->end_date)->endOfDay() : null;
         $now = now();
 
-        // Check if coupon is active
-        if (!$this->is_active) {
-            return false;
-        }
+        $valid = $this->is_active && $now->between($this->start_date, $this->end_date);
 
-        // Check if coupon is within valid date range (if dates are set)
-        if (($start && $now->lt($start)) || ($end && $now->gt($end))) {
-            return false;
-        }
+        if (!$valid) return false;
 
-        // If coupon applies to all products, it’s valid
-        if ($this->apply_to_all) {
-            return true;
-        }
+        if ($this->apply_to_all) return true;
+
         if (!empty($productIds)) {
             return $this->products()->whereIn('product_id', $productIds)->exists();
         }
 
         return false;
     }
-
 
     public function calculateDiscountForProducts($cartItems)
     {

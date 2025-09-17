@@ -172,52 +172,52 @@ class OrderController extends Controller
             $couponCode = null;
             $couponDetails = null;
 
-            if ($request->coupon_code) {
-                $coupon = Coupon::with('products')->where('code', $request->coupon_code)->first();
+if ($request->coupon_code) {
+    $coupon = Coupon::with('products')->where('code', $request->coupon_code)->first();
 
-                if (!$coupon) {
-                    throw new \Exception('Coupon code not found');
-                }
+    if (!$coupon) {
+        throw new \Exception('Coupon code not found');
+    }
 
-                // Check if coupon is active
-                if (!$coupon->is_active) {
-                    throw new \Exception('Coupon is inactive');
-                }
+    // Check if coupon is active
+    if (!$coupon->is_active) {
+        throw new \Exception('Coupon is inactive');
+    }
 
-                // Check date validity
-                $now = now();
-                if (($coupon->start_date && $now->lt($coupon->start_date)) ||
-                    ($coupon->end_date && $now->gt($coupon->end_date))) {
-                    throw new \Exception('Coupon is not valid at this time');
-                }
+    // Check date validity
+    $now = now();
+    if (($coupon->start_date && $now->lt($coupon->start_date)) ||
+        ($coupon->end_date && $now->gt($coupon->end_date))) {
+        throw new \Exception('Coupon is not valid at this time');
+    }
 
-                $productIds = collect($request->items)->pluck('product_id')->toArray();
+    $productIds = collect($request->items)->pluck('product_id')->toArray();
 
-                // If apply_to_all is true, skip product check
-                if (!$coupon->apply_to_all && !$coupon->products()->whereIn('product_id', $productIds)->exists()) {
-                    throw new \Exception('Coupon is not valid for any products in your cart');
-                }
+    // If apply_to_all is true, skip product check
+    if (!$coupon->apply_to_all && !$coupon->products()->whereIn('product_id', $productIds)->exists()) {
+        throw new \Exception('Coupon is not valid for any products in your cart');
+    }
 
-                // Check minimum purchase
-                $subtotal = collect($items)->sum(fn($item) => $item['price'] * $item['quantity']);
-                if ($subtotal < $coupon->min_purchase) {
-                    throw new \Exception('Coupon requires minimum purchase of ' . $coupon->min_purchase);
-                }
+    // Check minimum purchase
+    $subtotal = collect($items)->sum(fn($item) => $item['price'] * $item['quantity']);
+    if ($subtotal < $coupon->min_purchase) {
+        throw new \Exception('Coupon requires minimum purchase of ' . $coupon->min_purchase);
+    }
 
-                // Calculate discount
-                $discountResult = $coupon->calculateDiscountForProducts($items);
-                $discount = $discountResult['total_discount'];
+    // Calculate discount
+    $discountResult = $coupon->calculateDiscountForProducts($items);
+    $discount = $discountResult['total_discount'];
 
-                $couponCode = $coupon->code;
-                $couponDetails = [
-                    'code' => $coupon->code,
-                    'discount_type' => $coupon->type,
-                    'discount_value' => (float) $coupon->amount,
-                    'min_purchase' => (float) $coupon->min_purchase,
-                    'apply_to_all' => $coupon->apply_to_all,
-                    'applicable_products' => $coupon->apply_to_all ? null : $coupon->products->pluck('id')
-                ];
-            }
+    $couponCode = $coupon->code;
+    $couponDetails = [
+        'code' => $coupon->code,
+        'discount_type' => $coupon->type,
+        'discount_value' => (float) $coupon->amount,
+        'min_purchase' => (float) $coupon->min_purchase,
+        'apply_to_all' => $coupon->apply_to_all,
+        'applicable_products' => $coupon->apply_to_all ? null : $coupon->products->pluck('id')
+    ];
+}
 
             $total = $subtotal + $deliveryOption->charge - $discount;
             $orderNumber = "H-" . str_pad(mt_rand(1, 99999), 6, '0', STR_PAD_LEFT);
