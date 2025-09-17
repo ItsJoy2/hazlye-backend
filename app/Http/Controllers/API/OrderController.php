@@ -162,7 +162,7 @@ class OrderController extends Controller
                     'color_id' => $colorId,
                     'variant_id' => $variantId,
                     'option_id' => $optionId,
-                    'variant_option_id' => $optionId, // ✅ important
+                    'variant_option_id' => $optionId,
                     'color_code' => $colorCode,
                     'total_price' => $itemTotal
                 ];

@@ -8,7 +8,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <form class="mt-4" style="width: 400px;" action="{{ route('admin.general.settings.update') }}" method="POST" enctype="multipart/form-data">
+    <form class="mt-4" style="width: 100%;" action="{{ route('admin.general.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="row">
@@ -102,11 +102,11 @@
                     <div class="tab-pane fade" id="custom-scripts" role="tabpanel">
                         <h4>Custom CSS/JS</h4>
                         <div class="form-group">
-                            <label>Header Scripts</label>
+                            <label>Head Data</label>
                             <textarea name="header_scripts" class="form-control" rows="4">{{ old('header_scripts', $generalSettings->header_scripts) }}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>Footer Scripts</label>
+                            <label>Body Data</label>
                             <textarea name="footer_scripts" class="form-control" rows="4">{{ old('footer_scripts', $generalSettings->footer_scripts) }}</textarea>
                         </div>
                     </div>
