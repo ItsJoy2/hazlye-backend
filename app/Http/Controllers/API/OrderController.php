@@ -102,8 +102,7 @@ class OrderController extends Controller
                 $itemPrice = 0;
 
                 if ($hasVariants) {
-                   $firstVariant = $product->variants->first();
-                    $hasColor = $firstVariant && $firstVariant->color !== null;
+                    $hasColor = $product->variants->first()?->color !== null;
 
                     if ($hasColor) {
                         if (empty($itemData['color_name'])) {
@@ -120,12 +119,10 @@ class OrderController extends Controller
                         $colorId = $variant->color->id;
                         $colorCode = $variant->color->code;
                     } else {
-                        // No color exists, use the first variant
-                        if (!$firstVariant) {
+                        $variant = $product->variants->first();
+                        if (!$variant) {
                             throw new \Exception("No variant available for product: {$product->name}");
                         }
-
-                        $variant = $firstVariant;
                     }
 
                     if (empty($itemData['size_name'])) {
