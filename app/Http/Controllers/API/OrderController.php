@@ -102,14 +102,27 @@ class OrderController extends Controller
                 $itemPrice = 0;
 
                 if ($hasVariants) {
-                    if (empty($itemData['color_name'])) {
-                        throw new \Exception("Color is required for product with variants: {$product->name}");
-                    }
+                    $hasColor = $product->variants->first()?->color !== null;
 
-                    $variant = $product->variants->first(fn($v) => $v->color->name === $itemData['color_name']);
-                    if (!$variant) {
-                        throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: " .
-                            $product->variants->pluck('color.name')->implode(', '));
+                    if ($hasColor) {
+                        if (empty($itemData['color_name'])) {
+                            throw new \Exception("Color is required for product with variants: {$product->name}");
+                        }
+
+                        $variant = $product->variants->first(fn($v) => $v->color->name === $itemData['color_name']);
+                        if (!$variant) {
+                            throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: " .
+                                $product->variants->pluck('color.name')->implode(', '));
+                        }
+
+                        $colorName = $variant->color->name;
+                        $colorId = $variant->color->id;
+                        $colorCode = $variant->color->code;
+                    } else {
+                        $variant = $product->variants->first();
+                        if (!$variant) {
+                            throw new \Exception("No variant available for product: {$product->name}");
+                        }
                     }
 
                     if (empty($itemData['size_name'])) {
