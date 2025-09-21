@@ -42,7 +42,7 @@ class OrderController extends Controller
 
         $blocked = BlockedCustomer::where(function($query) use ($request) {
             $query->where('phone', $request->phone)
-                  ->orWhere('ip_address', $request->ip());
+                ->orWhere('ip_address', $request->ip());
         })->exists();
 
         if ($blocked) {
@@ -80,14 +80,10 @@ class OrderController extends Controller
             $deliveryOption = DeliveryOption::findOrFail($request->delivery_option_id);
             $subtotal = 0;
             $items = [];
-            $inventoryUpdates = [
-                'items_updated' => 0,
-                'total_stock_reduced' => 0
-            ];
+            $inventoryUpdates = ['items_updated' => 0, 'total_stock_reduced' => 0];
 
             foreach ($request->items as $itemData) {
                 $product = Product::with(['variants.color', 'variants.options.size'])->findOrFail($itemData['product_id']);
-
                 $hasVariants = $product->has_variants;
 
                 $variant = null;
@@ -102,22 +98,27 @@ class OrderController extends Controller
                 $itemPrice = 0;
 
                 if ($hasVariants) {
-                    $hasColor = $product->variants->first()?->color !== null;
+                    $hasColor = $product->variants->contains(fn($v) => $v->color !== null);
 
                     if ($hasColor) {
                         if (empty($itemData['color_name'])) {
                             throw new \Exception("Color is required for product with variants: {$product->name}");
                         }
 
-                        $variant = $product->variants->first(fn($v) => $v->color->name === $itemData['color_name']);
+                        $variant = $product->variants->first(function ($v) use ($itemData) {
+                            return $v->color && $v->color->name === $itemData['color_name'];
+                        });
+
                         if (!$variant) {
-                            throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: " .
-                                $product->variants->pluck('color.name')->implode(', '));
+                            $availableColors = $product->variants
+                                ->filter(fn($v) => $v->color)
+                                ->pluck('color.name')->unique()->implode(', ');
+                            throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: {$availableColors}");
                         }
 
-                        $colorName = $variant->color->name;
-                        $colorId = $variant->color->id;
-                        $colorCode = $variant->color->code;
+                        $colorName = $variant->color->name ?? null;
+                        $colorId = $variant->color->id ?? null;
+                        $colorCode = $variant->color->code ?? null;
                     } else {
                         $variant = $product->variants->first();
                         if (!$variant) {
@@ -129,25 +130,22 @@ class OrderController extends Controller
                         throw new \Exception("Size is required for product with variants: {$product->name}");
                     }
 
-                    $option = $variant->options->first(fn($o) => $o->size->name == $itemData['size_name']);
+                    $option = $variant->options->first(fn($o) => $o->size && $o->size->name == $itemData['size_name']);
+
                     if (!$option) {
-                        throw new \Exception("Size '{$itemData['size_name']}' not available for product: {$product->name}. Available sizes: " .
-                            $variant->options->pluck('size.name')->implode(', '));
+                        $availableSizes = $variant->options->pluck('size.name')->implode(', ');
+                        throw new \Exception("Size '{$itemData['size_name']}' not available for product: {$product->name}. Available sizes: {$availableSizes}");
                     }
 
                     if ($option->stock < $itemData['quantity']) {
                         throw new \Exception("Insufficient stock for product: {$product->name}. Available: {$option->stock}, Requested: {$itemData['quantity']}");
                     }
 
-                    $colorName = $variant->color->name;
                     $sizeName = $option->size->name;
+                    $sizeId = $option->size->id;
                     $variantId = $variant->id;
                     $optionId = $option->id;
-                    $colorId = $variant->color->id;
-                    $sizeId = $option->size->id;
-                    $colorCode = $variant->color->code;
                     $itemPrice = $option->price ?? ($product->discount_price ?? $product->regular_price);
-
                 } else {
                     if ($product->total_stock < $itemData['quantity']) {
                         throw new \Exception("Insufficient stock for product: {$product->name}. Available: {$product->total_stock}, Requested: {$itemData['quantity']}");
@@ -185,52 +183,42 @@ class OrderController extends Controller
             $couponCode = null;
             $couponDetails = null;
 
-if ($request->coupon_code) {
-    $coupon = Coupon::with('products')->where('code', $request->coupon_code)->first();
+            if ($request->coupon_code) {
+                $coupon = Coupon::with('products')->where('code', $request->coupon_code)->first();
 
-    if (!$coupon) {
-        throw new \Exception('Coupon code not found');
-    }
+                if (!$coupon) throw new \Exception('Coupon code not found');
+                if (!$coupon->is_active) throw new \Exception('Coupon is inactive');
 
-    // Check if coupon is active
-    if (!$coupon->is_active) {
-        throw new \Exception('Coupon is inactive');
-    }
+                $now = now();
+                if (($coupon->start_date && $now->lt($coupon->start_date)) ||
+                    ($coupon->end_date && $now->gt($coupon->end_date))) {
+                    throw new \Exception('Coupon is not valid at this time');
+                }
 
-    // Check date validity
-    $now = now();
-    if (($coupon->start_date && $now->lt($coupon->start_date)) ||
-        ($coupon->end_date && $now->gt($coupon->end_date))) {
-        throw new \Exception('Coupon is not valid at this time');
-    }
+                $productIds = collect($request->items)->pluck('product_id')->toArray();
 
-    $productIds = collect($request->items)->pluck('product_id')->toArray();
+                if (!$coupon->apply_to_all && !$coupon->products()->whereIn('product_id', $productIds)->exists()) {
+                    throw new \Exception('Coupon is not valid for any products in your cart');
+                }
 
-    // If apply_to_all is true, skip product check
-    if (!$coupon->apply_to_all && !$coupon->products()->whereIn('product_id', $productIds)->exists()) {
-        throw new \Exception('Coupon is not valid for any products in your cart');
-    }
+                $subtotalCheck = collect($items)->sum(fn($item) => $item['price'] * $item['quantity']);
+                if ($subtotalCheck < $coupon->min_purchase) {
+                    throw new \Exception('Coupon requires minimum purchase of ' . $coupon->min_purchase);
+                }
 
-    // Check minimum purchase
-    $subtotal = collect($items)->sum(fn($item) => $item['price'] * $item['quantity']);
-    if ($subtotal < $coupon->min_purchase) {
-        throw new \Exception('Coupon requires minimum purchase of ' . $coupon->min_purchase);
-    }
+                $discountResult = $coupon->calculateDiscountForProducts($items);
+                $discount = $discountResult['total_discount'];
 
-    // Calculate discount
-    $discountResult = $coupon->calculateDiscountForProducts($items);
-    $discount = $discountResult['total_discount'];
-
-    $couponCode = $coupon->code;
-    $couponDetails = [
-        'code' => $coupon->code,
-        'discount_type' => $coupon->type,
-        'discount_value' => (float) $coupon->amount,
-        'min_purchase' => (float) $coupon->min_purchase,
-        'apply_to_all' => $coupon->apply_to_all,
-        'applicable_products' => $coupon->apply_to_all ? null : $coupon->products->pluck('id')
-    ];
-}
+                $couponCode = $coupon->code;
+                $couponDetails = [
+                    'code' => $coupon->code,
+                    'discount_type' => $coupon->type,
+                    'discount_value' => (float) $coupon->amount,
+                    'min_purchase' => (float) $coupon->min_purchase,
+                    'apply_to_all' => $coupon->apply_to_all,
+                    'applicable_products' => $coupon->apply_to_all ? null : $coupon->products->pluck('id')
+                ];
+            }
 
             $total = $subtotal + $deliveryOption->charge - $discount;
             $orderNumber = "H-" . str_pad(mt_rand(1, 99999), 6, '0', STR_PAD_LEFT);
@@ -248,7 +236,6 @@ if ($request->coupon_code) {
                 'status' => 'pending',
                 'comment' => $request->comment,
                 'delivery_option_id' => $request->delivery_option_id,
-                'variant_option_id' => $request->variant_option_id,
                 'ip_address' => $ipAddress,
             ]);
 
@@ -256,7 +243,7 @@ if ($request->coupon_code) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
-                    'variant_option_id' => $item['variant_option_id'], // ✅ fix
+                    'variant_option_id' => $item['variant_option_id'],
                     'variant_id' => $item['variant_id'],
                     'size_id' => $item['size_id'],
                     'color_id' => $item['color_id'],
@@ -283,49 +270,47 @@ if ($request->coupon_code) {
 
             DB::commit();
 
-            $responseData = [
-                'order' => [
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
-                    'customer' => [
-                        'name' => $order->name,
-                        'phone' => $order->phone,
-                        'address' => $order->address
-                    ],
-                    'delivery' => [
-                        'method' => $deliveryOption->name,
-                        'charge' => (float) $deliveryOption->charge,
-                        'estimated_days' => $deliveryOption->estimated_days
-                    ],
-                    'payment' => [
-                        'subtotal' => (float) $order->subtotal,
-                        'discount' => (float) $order->discount,
-                        'delivery_charge' => (float) $order->delivery_charge,
-                        'total' => (float) $order->total,
-                        'coupon_applied' => $order->coupon_code,
-                        'coupon_details' => $couponDetails
-                    ],
-                    'items' => array_map(fn($item) => [
-                        'product_id' => $item['product_id'],
-                        'product_name' => $item['product_name'],
-                        'variant' => [
-                            'color' => $item['color_name'],
-                            'color_code' => $item['color_code'],
-                            'size' => $item['size_name']
-                        ],
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['price'],
-                        'total_price' => $item['price'] * $item['quantity']
-                    ], $items),
-                    'created_at' => $order->created_at->toIso8601String()
-                ],
-                'inventory_updates' => $inventoryUpdates
-            ];
-
             return response()->json([
                 'success' => true,
                 'message' => 'Order created successfully',
-                'data' => $responseData
+                'data' => [
+                    'order' => [
+                        'order_number' => $order->order_number,
+                        'status' => $order->status,
+                        'customer' => [
+                            'name' => $order->name,
+                            'phone' => $order->phone,
+                            'address' => $order->address
+                        ],
+                        'delivery' => [
+                            'method' => $deliveryOption->name,
+                            'charge' => (float) $deliveryOption->charge,
+                            'estimated_days' => $deliveryOption->estimated_days
+                        ],
+                        'payment' => [
+                            'subtotal' => (float) $order->subtotal,
+                            'discount' => (float) $order->discount,
+                            'delivery_charge' => (float) $order->delivery_charge,
+                            'total' => (float) $order->total,
+                            'coupon_applied' => $order->coupon_code,
+                            'coupon_details' => $couponDetails
+                        ],
+                        'items' => array_map(fn($item) => [
+                            'product_id' => $item['product_id'],
+                            'product_name' => $item['product_name'],
+                            'variant' => [
+                                'color' => $item['color_name'],
+                                'color_code' => $item['color_code'],
+                                'size' => $item['size_name']
+                            ],
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['price'],
+                            'total_price' => $item['price'] * $item['quantity']
+                        ], $items),
+                        'created_at' => $order->created_at->toIso8601String()
+                    ],
+                    'inventory_updates' => $inventoryUpdates
+                ]
             ], 201);
 
         } catch (\Exception $e) {
@@ -344,6 +329,7 @@ if ($request->coupon_code) {
             ], 400);
         }
     }
+
 
     public function incomplete(Request $request)
     {
