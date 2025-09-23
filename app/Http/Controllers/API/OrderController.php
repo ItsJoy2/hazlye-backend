@@ -385,25 +385,55 @@ class OrderController extends Controller
                     $itemPrice = $product->discount_price ?? $product->regular_price;
 
                     if ($hasVariants) {
-                        if (!empty($itemData['color_name'])) {
-                            $variant = $product->variants->first(fn($v) => $v->color->name === $itemData['color_name']);
+                    $hasColor = $product->variants->contains(fn($v) => $v->color !== null);
+
+                    if ($hasColor) {
+                        if (empty($itemData['color_name'])) {
+                            throw new \Exception("Color is required for product with variants: {$product->name}");
                         }
 
-                        if (!empty($itemData['size_name']) && $variant) {
-                            $option = $variant->options->first(fn($o) => $o->size->name == $itemData['size_name']);
+                        $variant = $product->variants->first(function ($v) use ($itemData) {
+                            return $v->color && $v->color->name === $itemData['color_name'];
+                        });
+
+                        if (!$variant) {
+                            $availableColors = $product->variants
+                                ->filter(fn($v) => $v->color)
+                                ->pluck('color.name')->unique()->implode(', ');
+                            throw new \Exception("Color '{$itemData['color_name']}' not available for product: {$product->name}. Available colors: {$availableColors}");
                         }
 
                         $colorName = $variant->color->name ?? null;
                         $colorId = $variant->color->id ?? null;
-                        $variantId = $variant->id ?? null;
-
-                        $sizeName = $option->size->name ?? null;
-                        $sizeId = $option->size->id ?? null;
-                        $optionId = $option->id ?? null;
-
                         $colorCode = $variant->color->code ?? null;
-                        $itemPrice = $option->price ?? $itemPrice;
+                    } else {
+                        $variant = $product->variants->first();
+                        if (!$variant) {
+                            throw new \Exception("No variant available for product: {$product->name}");
+                        }
                     }
+
+                    if (empty($itemData['size_name'])) {
+                        throw new \Exception("Size is required for product with variants: {$product->name}");
+                    }
+
+                    $option = $variant->options->first(fn($o) => $o->size && $o->size->name == $itemData['size_name']);
+
+                    if (!$option) {
+                        $availableSizes = $variant->options->pluck('size.name')->implode(', ');
+                        throw new \Exception("Size '{$itemData['size_name']}' not available for product: {$product->name}. Available sizes: {$availableSizes}");
+                    }
+
+                    if ($option->stock < $itemData['quantity']) {
+                        throw new \Exception("Insufficient stock for product: {$product->name}. Available: {$option->stock}, Requested: {$itemData['quantity']}");
+                    }
+
+                    $sizeName = $option->size->name;
+                    $sizeId = $option->size->id;
+                    $variantId = $variant->id;
+                    $optionId = $option->id;
+                    $itemPrice = $option->price ?? ($product->discount_price ?? $product->regular_price);
+                }
 
                     $itemTotal = $itemPrice * $itemData['quantity'];
                     $subtotal += $itemTotal;

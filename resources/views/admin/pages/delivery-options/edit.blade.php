@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
-            <h3>Edit Delivery Options: {{ $size->name }}</h3>
+            <h3>Edit Delivery Options: {{ $option->name }}</h3>
         </div>
         <div class="card-body">
             <form action="{{ route('admin.delivery-options.update', $deliveryOption->id) }}" method="POST">
