@@ -8,13 +8,16 @@ use Illuminate\Http\Request;
 
 class DeliveryOptionController extends Controller
 {
-    public function index()
-    {
-        $deliveryOptions = DeliveryOption::where('is_active', true)->get();
+public function index()
+{
+    $deliveryOptions = DeliveryOption::where('is_active', true)
+        ->whereHas('freeDeliveryProducts')
+        ->with('freeDeliveryProducts') 
+        ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $deliveryOptions
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $deliveryOptions
+    ]);
+}
 }
