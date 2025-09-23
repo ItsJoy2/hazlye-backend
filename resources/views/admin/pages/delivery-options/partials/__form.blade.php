@@ -12,7 +12,7 @@
 <div class="form-group">
     <label for="charge">Delivery Charge</label>
     <input type="number" step="1" class="form-control @error('charge') is-invalid @enderror"
-           id="charge" name="charge" value="{{ old('charge', $deliveryOption->charge ?? '') }}" required>
+       id="charge" name="charge" value="{{ old('charge', isset($deliveryOption->charge) ? intval($deliveryOption->charge) : '') }}" required>
     @error('charge')
         <div class="text-danger">{{ $message }}</div>
     @enderror
