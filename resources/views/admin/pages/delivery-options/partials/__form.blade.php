@@ -11,7 +11,7 @@
 
 <div class="form-group">
     <label for="charge">Delivery Charge</label>
-    <input type="number" step="0.01" class="form-control @error('charge') is-invalid @enderror"
+    <input type="number" step="1" class="form-control @error('charge') is-invalid @enderror"
            id="charge" name="charge" value="{{ old('charge', $deliveryOption->charge ?? '') }}" required>
     @error('charge')
         <div class="text-danger">{{ $message }}</div>
